@@ -29,6 +29,12 @@
   - **Modos de Visualização Comutáveis**: Alternância instantânea entre **Grade Grande** (*Large Grid*), **Grade Compacta** (*Compact Grid*) e **Modo Tabela** (*Table View*).
   - **Filtros Rápidos por Polímero**: Badges interativos de contagem para filamentos **PLA**, **PETG**, **ABS/ASA** e **TPU**.
 
+- 📐 **Visualizador 3D Studio (`/models/[id]`)**:
+  - **Interface Completa do Stitch**: Viewport Three.js em tela cheia com HUD de dimensões milimétricas em tempo real (`X`, `Y`, `Z`), pílula de controles de câmera (`Iso`, `Frente`, `Topo`, `Reset`), rotação automática, modo Wireframe/Sólido e bounding box.
+  - **Barra Flutuante de Materiais**: Simulação de acabamento para **PLA**, **ABS**, **PETG** e **Fosco** com paleta de 12 cores de filamento e halo iluminado.
+  - **Captura "Capa 3D"**: Snapshot em alta resolução do ângulo atual persistido diretamente como thumbnail oficial.
+  - **Drawer Técnico Lateral**: Parâmetros recomendados de fatiamento (camada, tempo, filamento em gramas/metros, triângulos da malha), avaliação de compatibilidade de volume para mesas padrão (Bambu Lab 256mm e Voron 300mm), notas de bancada e gerenciamento de manuais PDF.
+
 - ⚡ **Motor 3D de Alta Velocidade (Three.js + Streaming Binário)**:
   - **Zero travamento**: Converte e armazena em cache arquivos `.3mf` pesados em STL Binário consolidado, resolvendo lentidão em arquivos complexos de fatiadores modernos.
   - **Orientação Correta de Impressão**: Malhas posicionadas em pé na mesa (`rotation.x = -Math.PI / 2`, apoiadas em `Y = 0`).

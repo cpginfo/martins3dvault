@@ -182,12 +182,8 @@ export default function Navbar({
           )}
         </div>
 
-        {/* Right Actions: NAS Status, Scan Button, Upload, Notifications */}
+        {/* Right Actions: Scan Button, Upload, Notifications */}
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-white/5">
-            <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-            <span className="text-xs text-on-surface font-mono">NAS Synology Conectado</span>
-          </div>
 
           <button
             onClick={handleGlobalScan}

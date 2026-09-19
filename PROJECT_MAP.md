@@ -78,8 +78,16 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
     │   ├── users/
     │   │   └── page.tsx           # Gestão de Usuários & Permissões: tabela RBAC (ADMIN, OPERATOR, VIEWER)
     │   │
+    │   ├── models/
+    │   │   └── [id]/
+    │   │       └── page.tsx       # Visualizador 3D Studio: viewport Three.js, HUD técnico de dimensões, parâmetros de fatiamento e drawer
+    │   │
+    │   ├── viewer/
+    │   │   └── [id]/
+    │   │       └── page.tsx       # Alias de rota para o Visualizador 3D Studio
+    │   │
     │   ├── metrics/
-    │   │   └── page.tsx           # Terminal de Oficina & Fila de Bancada: telemetria Moonraker/Klipper e Bento KPIs
+    │   │   └── page.tsx           # Métricas & Telemetria: telemetria de oficina e Bento KPIs
     │   │
     │   ├── login/
     │   │   └── page.tsx           # Tela de autenticação com fundo CAD isométrico e atalho de demonstração

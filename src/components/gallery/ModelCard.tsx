@@ -179,22 +179,32 @@ export default function ModelCard({
           </button>
         </td>
         <td className="py-2.5 px-3 text-right">
-          <button
-            type="button"
-            onClick={handleFavoriteClick}
-            className={`p-1 rounded-lg transition-colors ${
-              favorite
-                ? "text-amber-400"
-                : "text-on-surface-variant/40 hover:text-amber-400"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
+          <div className="flex items-center justify-end gap-1">
+            <a
+              href={`/models/${model.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="p-1 rounded-lg text-on-surface-variant/40 hover:text-cyan-400 hover:bg-white/5 transition-colors"
+              title="Abrir no Visualizador 3D Studio"
             >
-              star
-            </span>
-          </button>
+              <span className="material-symbols-outlined text-[18px]">view_in_ar</span>
+            </a>
+            <button
+              type="button"
+              onClick={handleFavoriteClick}
+              className={`p-1 rounded-lg transition-colors ${
+                favorite
+                  ? "text-amber-400"
+                  : "text-on-surface-variant/40 hover:text-amber-400"
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[18px]"
+                style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                star
+              </span>
+            </button>
+          </div>
         </td>
       </tr>
     );
@@ -247,23 +257,33 @@ export default function ModelCard({
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={handleFavoriteClick}
-            className={`p-1.5 rounded-lg backdrop-blur-md transition-colors pointer-events-auto shadow-md ${
-              favorite
-                ? "bg-surface-container-lowest/80 text-amber-400"
-                : "bg-surface-container-lowest/60 text-white/60 hover:text-amber-400 hover:bg-surface-container-lowest"
-            }`}
-            title={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-          >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
+          <div className="flex items-center gap-1 pointer-events-auto">
+            <a
+              href={`/models/${model.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="p-1.5 rounded-lg backdrop-blur-md bg-surface-container-lowest/70 hover:bg-cyan-950/90 text-white/70 hover:text-cyan-300 transition-all shadow-md opacity-0 group-hover:opacity-100"
+              title="Abrir no Visualizador 3D Studio"
             >
-              star
-            </span>
-          </button>
+              <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
+            </a>
+            <button
+              type="button"
+              onClick={handleFavoriteClick}
+              className={`p-1.5 rounded-lg backdrop-blur-md transition-colors shadow-md ${
+                favorite
+                  ? "bg-surface-container-lowest/80 text-amber-400"
+                  : "bg-surface-container-lowest/60 text-white/60 hover:text-amber-400 hover:bg-surface-container-lowest"
+              }`}
+              title={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            >
+              <span
+                className="material-symbols-outlined text-[18px]"
+                style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                star
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Bottom Badges Overlay: Dimensions & Files count */}

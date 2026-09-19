@@ -30,6 +30,34 @@ export default function CollectionsPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Stats from database
+  const [stats, setStats] = useState<{
+    totalModels: number;
+    totalFiles: number;
+    totalLibraries: number;
+    totalSizeBytes: number;
+  } | null>(null);
+
+  const formatBytes = (bytes: number) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar estatísticas:", err);
+    }
+  };
+
   const fetchCollections = async () => {
     setLoading(true);
     try {
@@ -47,6 +75,7 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     fetchCollections();
+    fetchStats();
   }, []);
 
   const handleOpenCreate = () => {
@@ -201,54 +230,51 @@ export default function CollectionsPage() {
                 </div>
               </div>
 
-              {/* Metric 3: Storage Occupancy */}
+              {/* Metric 3: Total Models in Vault */}
               <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
-                    Armazenamento NAS
+                    Total no Cofre
                   </span>
-                  <div className="p-1.5 rounded-lg bg-surface-container text-primary">
+                  <div className="p-1.5 rounded-lg bg-surface-container text-tertiary">
+                    <span className="material-symbols-outlined text-[20px]">database</span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
+                    {stats ? stats.totalModels : totalModelsInCollections}
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[11px] font-mono">
+                    <span className="text-on-surface-variant">Modelos Cadastrados</span>
+                    <span className="text-tertiary font-semibold">100% Indexados</span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-tertiary h-full rounded-full w-full"></div>
+                </div>
+              </div>
+
+              {/* Metric 4: Storage Used */}
+              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
+                    Espaço Ocupado
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-surface-container text-primary-container">
                     <span className="material-symbols-outlined text-[20px]">hard_drive</span>
                   </div>
                 </div>
                 <div className="mt-3">
                   <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
-                    1.4 <span className="text-xs text-outline font-normal">TB</span>
+                    {stats ? formatBytes(stats.totalSizeBytes) : "..."}
                   </div>
                   <div className="flex items-center justify-between mt-1 text-[11px] font-mono">
-                    <span className="text-on-surface-variant">Capacidade 4 TB</span>
-                    <span className="text-primary-container font-semibold">35%</span>
-                  </div>
-                </div>
-                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden flex">
-                  <div className="bg-primary-container h-full w-[24%]"></div>
-                  <div className="bg-secondary h-full w-[11%]"></div>
-                </div>
-              </div>
-
-              {/* Metric 4: Vault Sync Telemetry */}
-              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
-                    Sincronização
-                  </span>
-                  <div className="p-1.5 rounded-lg bg-surface-container text-tertiary">
-                    <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-                    <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
-                      Online
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 mt-1 text-[11px] text-tertiary font-mono">
-                    <span>Synology DS923+ RAID 5 OK</span>
+                    <span className="text-on-surface-variant">{stats ? `${stats.totalFiles} arquivos 3D` : "Calculando..."}</span>
+                    <span className="text-primary-container font-semibold">Disco OK</span>
                   </div>
                 </div>
                 <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden">
-                  <div className="bg-tertiary h-full rounded-full w-full"></div>
+                  <div className="bg-primary-container h-full rounded-full w-full"></div>
                 </div>
               </div>
             </section>

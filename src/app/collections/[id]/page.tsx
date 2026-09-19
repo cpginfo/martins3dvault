@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { FolderMinus } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import ModelCard, { ModelCardData } from "@/components/gallery/ModelCard";
@@ -230,10 +231,10 @@ export default function CollectionDetailPage(props: {
                     <button
                       type="button"
                       onClick={(e) => handleRemoveFromCollection(model.id, e)}
-                      className="absolute top-4 right-4 z-10 p-1.5 rounded-lg bg-surface-container-lowest/80 text-error hover:bg-error-container hover:text-white opacity-0 group-hover/wrapper:opacity-100 transition-opacity backdrop-blur-md shadow-md"
+                      className="absolute top-11 right-3.5 z-20 p-1.5 rounded-lg bg-surface-container-lowest/85 text-rose-400 hover:bg-rose-500 hover:text-white opacity-0 group-hover/wrapper:opacity-100 transition-all backdrop-blur-md shadow-md border border-white/10"
                       title="Desvincular desta coleção"
                     >
-                      <span className="material-symbols-outlined text-[16px]">folder_minus</span>
+                      <FolderMinus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}

@@ -40,6 +40,8 @@ interface ModelViewer3DProps {
   modelId: string;
   coverImageUrl?: string | null;
   onSnapshotSaved?: (coverUrl: string) => void;
+  onDimensionsCalculated?: (dims: { x: number; y: number; z: number }) => void;
+  onTriangleCountCalculated?: (tris: number) => void;
 }
 
 type MaterialType = "pla" | "abs" | "translucent" | "matte";
@@ -65,6 +67,8 @@ export default function ModelViewer3D({
   modelId,
   coverImageUrl,
   onSnapshotSaved,
+  onDimensionsCalculated,
+  onTriangleCountCalculated,
 }: ModelViewer3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -326,11 +330,33 @@ export default function ModelViewer3D({
               controlsRef.current.update();
             }
 
-            setDimensions({
+            const roundedDims = {
               x: Math.round(size.x * 10) / 10,
               y: Math.round(size.y * 10) / 10,
               z: Math.round(size.z * 10) / 10,
+            };
+            setDimensions(roundedDims);
+            if (onDimensionsCalculated) {
+              onDimensionsCalculated(roundedDims);
+            }
+
+            // Conta triângulos totais da malha
+            let totalTris = 0;
+            group.traverse((child) => {
+              if ((child as THREE.Mesh).isMesh) {
+                const m = child as THREE.Mesh;
+                if (m.geometry) {
+                  if (m.geometry.index) {
+                    totalTris += m.geometry.index.count / 3;
+                  } else if (m.geometry.attributes.position) {
+                    totalTris += m.geometry.attributes.position.count / 3;
+                  }
+                }
+              }
             });
+            if (totalTris > 0 && onTriangleCountCalculated) {
+              onTriangleCountCalculated(Math.round(totalTris));
+            }
           }
           setLoading(false);
           setLoadProgress(null);
@@ -507,168 +533,178 @@ export default function ModelViewer3D({
         </div>
       )}
 
-      {/* Floating Measurement Box HUD */}
-      {dimensions && (
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 p-2.5 rounded-lg bg-[#111422]/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-slate-300 shadow-xl">
-          <div className="flex items-center gap-2 font-semibold text-indigo-400">
-            <Box className="w-3.5 h-3.5" />
-            <span>Dimensões (mm)</span>
+      {/* Top Viewport Control Overlay */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none gap-2">
+        {/* Technical Dimension Badge Widget */}
+        {dimensions ? (
+          <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-lg p-2 px-3 shadow-2xl flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 text-cyan-400 font-medium text-xs">
+              <Box className="w-4 h-4" />
+              <span>Dimensões <span className="text-slate-500 font-mono text-[10px]">(mm)</span></span>
+            </div>
+            <div className="h-4 w-[1px] bg-slate-800"></div>
+            <div className="font-mono text-xs flex items-center gap-2 tracking-tight">
+              <span className="text-slate-400">X: <strong className="text-rose-400 font-semibold">{dimensions.x}</strong></span>
+              <span className="text-slate-400">Y: <strong className="text-emerald-400 font-semibold">{dimensions.y}</strong></span>
+              <span className="text-slate-400">Z: <strong className="text-cyan-400 font-semibold">{dimensions.z}</strong></span>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <span className="text-rose-400">X: {dimensions.x}</span>
-            <span className="text-emerald-400">Y: {dimensions.y}</span>
-            <span className="text-cyan-400">Z: {dimensions.z}</span>
-          </div>
-        </div>
-      )}
+        ) : <div />}
 
-      {/* Action Toolbar */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 p-1.5 rounded-xl bg-[#111422]/85 backdrop-blur-md border border-white/10 shadow-2xl">
-        {/* Camera Views Selector */}
-        <div className="flex items-center gap-1 pr-1 border-r border-white/10">
+        {/* Center Camera Controls Pill */}
+        <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-xl p-1 shadow-2xl flex items-center gap-1">
           <button
             onClick={() => setCameraView("iso")}
-            title="Visão Isométrica"
-            className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-200 bg-[#16212e] border border-cyan-500/30 hover:text-white transition"
           >
             Iso
           </button>
           <button
             onClick={() => setCameraView("front")}
-            title="Visão Frontal"
-            className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
           >
             Frente
           </button>
           <button
             onClick={() => setCameraView("top")}
-            title="Visão Superior (Topo)"
-            className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
           >
             Topo
           </button>
+          <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+          <button
+            onClick={() => setAutoRotate(!autoRotate)}
+            className={`p-1.5 rounded-lg transition ${
+              autoRotate ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+            }`}
+            title={autoRotate ? "Pausar Rotação" : "Iniciar Rotação"}
+          >
+            {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={() => setWireframe(!wireframe)}
+            className={`p-1.5 rounded-lg transition ${
+              wireframe ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+            }`}
+            title="Alternar Modo Wireframe / Sólido"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowBoundingBox(!showBoundingBox)}
+            className={`p-1.5 rounded-lg transition ${
+              showBoundingBox ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+            }`}
+            title="Alternar Caixa Delimitadora"
+          >
+            <Box className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setCameraView("reset")}
+            className="p-1.5 rounded-lg text-slate-300 hover:bg-[#182330] hover:text-cyan-400 transition"
+            title="Resetar Câmera"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Auto Rotate Toggle */}
-        <button
-          onClick={() => setAutoRotate(!autoRotate)}
-          title={autoRotate ? "Pausar Rotação" : "Iniciar Rotação"}
-          className={`p-2 rounded-lg transition-all ${
-            autoRotate ? "bg-indigo-600/30 text-indigo-400" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-        </button>
-
-        {/* Wireframe Toggle */}
-        <button
-          onClick={() => setWireframe(!wireframe)}
-          title="Alternar Modo Wireframe"
-          className={`p-2 rounded-lg transition-all ${
-            wireframe ? "bg-indigo-600/30 text-indigo-400" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-        </button>
-
-        {/* Bounding Box Toggle */}
-        <button
-          onClick={() => setShowBoundingBox(!showBoundingBox)}
-          title="Alternar Caixa Delimitadora"
-          className={`p-2 rounded-lg transition-all ${
-            showBoundingBox ? "bg-indigo-600/30 text-cyan-400" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <Box className="w-4 h-4" />
-        </button>
-
-        {/* Reset Camera View */}
-        <button
-          onClick={() => setCameraView("reset")}
-          title="Resetar Câmera"
-          className="p-2 rounded-lg text-slate-400 hover:text-white transition-all hover:bg-white/5"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
-
-        <div className="w-[1px] h-5 bg-white/10 mx-0.5" />
-
-        {/* Snapshot Cover Capture Button */}
-        <button
-          onClick={captureSnapshot}
-          disabled={savingSnapshot}
-          title="Capturar Ângulo Atual como Capa"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50"
-        >
-          {snapshotSuccess ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Salvo!</span>
-            </>
-          ) : (
-            <>
-              <Camera className="w-3.5 h-3.5" />
-              <span>{savingSnapshot ? "Salvando..." : "Capa 3D"}</span>
-            </>
-          )}
-        </button>
+        {/* Action Button: Snapshot / 3D Cover */}
+        <div className="pointer-events-auto">
+          <button
+            onClick={captureSnapshot}
+            disabled={savingSnapshot}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 border border-indigo-400/40 transition active:scale-95 disabled:opacity-50"
+          >
+            {snapshotSuccess ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                <span>Capa Salva!</span>
+              </>
+            ) : (
+              <>
+                <Camera className="w-4 h-4" />
+                <span>{savingSnapshot ? "Salvando..." : "Capa 3D"}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Bottom Material & Color Palette Selector */}
-      <div className="absolute bottom-4 left-4 z-10 flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-[#111422]/90 backdrop-blur-md border border-white/10 text-xs shadow-2xl max-w-[calc(100%-2rem)]">
-        <span className="text-slate-400 font-medium px-1 flex items-center gap-1">
-          <Palette className="w-3.5 h-3.5 text-indigo-400" /> Material:
-        </span>
-        <button
-          onClick={() => setMaterialType("pla")}
-          className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-            materialType === "pla" ? "bg-indigo-600 text-white shadow-md" : "text-slate-300 hover:bg-white/5"
-          }`}
-        >
-          PLA
-        </button>
-        <button
-          onClick={() => setMaterialType("abs")}
-          className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-            materialType === "abs" ? "bg-indigo-600 text-white shadow-md" : "text-slate-300 hover:bg-white/5"
-          }`}
-        >
-          ABS
-        </button>
-        <button
-          onClick={() => setMaterialType("translucent")}
-          className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-            materialType === "translucent" ? "bg-indigo-600 text-white shadow-md" : "text-slate-300 hover:bg-white/5"
-          }`}
-        >
-          PETG
-        </button>
-        <button
-          onClick={() => setMaterialType("matte")}
-          className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-            materialType === "matte" ? "bg-indigo-600 text-white shadow-md" : "text-slate-300 hover:bg-white/5"
-          }`}
-        >
-          Fosco
-        </button>
-
-        <div className="w-[1px] h-4 bg-white/10 mx-1 hidden sm:block" />
-
-        {/* Color Swatches */}
-        <div className="flex items-center gap-1.5 px-1 flex-wrap">
-          {FILAMENT_COLORS.map((c) => (
+      {/* Bottom Viewport Floating Control Bar (Filament Type & Color Swatches) */}
+      <div className="absolute bottom-4 left-4 z-20 pointer-events-auto max-w-[calc(100%-2rem)]">
+        <div className="bg-[#0b1017]/95 backdrop-blur-md border border-[#1d2b3a] rounded-2xl p-1.5 px-3 shadow-2xl flex items-center gap-3 flex-wrap">
+          {/* Material Switcher Group */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 pl-1 pr-1">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
+              <span className="font-medium text-[11px]">Material:</span>
+            </div>
             <button
-              key={c.hex}
-              onClick={() => setMaterialColor(c.hex)}
-              title={c.name}
-              style={{ backgroundColor: c.hex }}
-              className={`w-4 h-4 rounded-full border transition-all ${
-                materialColor === c.hex
-                  ? "border-white scale-125 ring-2 ring-indigo-500/80 shadow-md"
-                  : "border-white/20 opacity-80 hover:opacity-100 hover:scale-110"
+              onClick={() => setMaterialType("pla")}
+              className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                materialType === "pla"
+                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
               }`}
-            />
-          ))}
+            >
+              PLA
+            </button>
+            <button
+              onClick={() => setMaterialType("abs")}
+              className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                materialType === "abs"
+                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+              }`}
+            >
+              ABS
+            </button>
+            <button
+              onClick={() => setMaterialType("translucent")}
+              className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                materialType === "translucent"
+                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+              }`}
+            >
+              PETG
+            </button>
+            <button
+              onClick={() => setMaterialType("matte")}
+              className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                materialType === "matte"
+                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+              }`}
+            >
+              Fosco
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-5 w-[1px] bg-slate-800 hidden sm:block"></div>
+
+          {/* Color Swatches Palette */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {FILAMENT_COLORS.map((c) => {
+              const active = materialColor.toLowerCase() === c.hex.toLowerCase();
+              return (
+                <button
+                  key={c.hex}
+                  onClick={() => setMaterialColor(c.hex)}
+                  title={c.name}
+                  style={{ backgroundColor: c.hex }}
+                  className={`transition-all ${
+                    active
+                      ? "relative w-5 h-5 rounded-full ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0b1017] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                      : "w-4 h-4 rounded-full border border-slate-700 hover:scale-110"
+                  }`}
+                >
+                  {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   X,
   Download,
@@ -350,6 +351,16 @@ export default function ModelDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-surface-container-low border border-white/10 shadow-2xl overflow-hidden relative">
+        {/* Studio 3D Fullscreen Button */}
+        <Link
+          href={`/models/${model.id}`}
+          className="absolute top-4 right-16 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/90 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-all backdrop-blur-md shadow-lg hover:shadow-cyan-500/20"
+          title="Abrir no Visualizador 3D Studio"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Modo Studio 3D</span>
+        </Link>
+
         {/* Close Button */}
         <button
           onClick={onClose}

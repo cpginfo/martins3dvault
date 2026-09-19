@@ -146,12 +146,18 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-5">
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 text-on-surface-variant text-xs font-medium">
-                  <span className="material-symbols-outlined text-[16px]">folder_open</span>
-                  <Link href="/collections" className="hover:text-primary transition-colors">
-                    Coleções
+                  <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">home</span>
+                    <span>Início</span>
                   </Link>
-                  <span className="text-outline">/</span>
-                  <span className="hover:text-primary transition-colors">Hardware & Impressoras</span>
+                  {selectedCollection && (
+                    <>
+                      <span className="text-outline">/</span>
+                      <Link href="/collections" className="hover:text-primary transition-colors">
+                        Coleções
+                      </Link>
+                    </>
+                  )}
                   <span className="text-outline">/</span>
                 </div>
                 <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-surface-container-high border border-white/5">
@@ -161,11 +167,11 @@ export default function HomePage() {
                   <span className="text-xs text-on-surface font-semibold">
                     {selectedCollection
                       ? collections.find((c) => c.id === selectedCollection)?.name || "Coleção"
-                      : "Todos os Arquivos 3D"}
+                      : "Todos os Modelos 3D"}
                   </span>
                 </div>
                 <span className="px-2 py-0.5 rounded bg-surface-container-highest text-secondary text-[11px] font-mono">
-                  {filteredModels.length} Ativos
+                  {filteredModels.length} {filteredModels.length === 1 ? "Modelo" : "Modelos"}
                 </span>
               </div>
 
@@ -175,7 +181,7 @@ export default function HomePage() {
                   <span className="material-symbols-outlined text-[16px] text-tertiary">
                     check_circle
                   </span>
-                  <span>Sincronizado via Moonraker API</span>
+                  <span>Banco Sincronizado</span>
                 </div>
                 <Link
                   href="/collections"

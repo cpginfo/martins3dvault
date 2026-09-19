@@ -20,6 +20,7 @@
 *.tsbuildinfo
 next-env.d.ts
 .turbo
+stitch_export/
 
 # 3. Variáveis de Ambiente & Segredos (Preservar .env.example)
 .env

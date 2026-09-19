@@ -10,6 +10,27 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
 }
 
+interface CollectionSimple {
+  id: string;
+  name: string;
+  modelsCount: number;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: string;
+  activeColor: string;
+  hasPing?: boolean;
+  isCollections?: boolean;
+}
+
+interface NavSection {
+  group: string;
+  badge?: string;
+  items: NavItem[];
+}
+
 export default function Sidebar({
   isCollapsed: controlledCollapsed,
   onToggleCollapse,
@@ -19,6 +40,8 @@ export default function Sidebar({
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [collections, setCollections] = useState<CollectionSimple[]>([]);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
 
   const isCollapsed = controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
   const toggleCollapse = () => {
@@ -37,6 +60,36 @@ export default function Sidebar({
       .catch(() => {});
   }, []);
 
+  const fetchCollections = async () => {
+    try {
+      const res = await fetch("/api/collections");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCollections(
+            data.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              modelsCount: c.modelsCount || 0,
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao carregar coleções para a sidebar:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
+  useEffect(() => {
+    if (pathname.startsWith("/collections")) {
+      setCollectionsOpen(true);
+    }
+  }, [pathname]);
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -47,20 +100,6 @@ export default function Sidebar({
     }
   };
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: string;
-  activeColor: string;
-  hasPing?: boolean;
-}
-
-interface NavSection {
-  group: string;
-  badge?: string;
-  items: NavItem[];
-}
-
   const navItems: NavSection[] = [
     {
       group: "Repositórios Locais",
@@ -69,7 +108,8 @@ interface NavSection {
           name: "Coleções",
           href: "/collections",
           icon: "dataset",
-          activeColor: "text-primary",
+          activeColor: "text-primary-container",
+          isCollections: true,
         },
         {
           name: "Modelos 3D",
@@ -87,13 +127,12 @@ interface NavSection {
       ],
     },
     {
-      group: "Oficina de Impressão",
-      badge: "Oficina 01",
+      group: "Configurações",
       items: [
         {
-          name: "Terminal de Oficina & Bancada",
+          name: "Métricas",
           href: "/metrics",
-          icon: "precision_manufacturing",
+          icon: "analytics",
           activeColor: "text-secondary",
         },
         {
@@ -149,7 +188,7 @@ interface NavSection {
         </div>
 
         {/* Navigation Sections */}
-        <div className="py-3 flex flex-col gap-4 overflow-y-auto">
+        <div className="py-3 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
           {navItems.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {!isCollapsed && (
@@ -170,6 +209,112 @@ interface NavSection {
                     item.href === "/"
                       ? pathname === "/"
                       : pathname.startsWith(item.href);
+
+                  // Special dropdown treatment for "Coleções"
+                  if (item.isCollections && !isCollapsed) {
+                    return (
+                      <div key={item.href} className="flex flex-col">
+                        <div
+                          className={`group flex items-center justify-between px-3 py-2 rounded-lg transition-all text-sm font-medium ${
+                            isActive
+                              ? "bg-surface-container-highest text-on-surface font-semibold shadow-inner border border-white/10"
+                              : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                          }`}
+                        >
+                          <Link
+                            href="/collections"
+                            className="flex items-center gap-3 min-w-0 flex-1"
+                          >
+                            <span
+                              className={`material-symbols-outlined text-[22px] flex-shrink-0 transition-colors ${
+                                isActive
+                                  ? item.activeColor
+                                  : "text-on-surface-variant group-hover:text-on-surface"
+                              }`}
+                            >
+                              {item.icon}
+                            </span>
+                            <span className="truncate">{item.name}</span>
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCollectionsOpen((prev) => !prev);
+                            }}
+                            className="p-1 rounded hover:bg-white/10 text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center"
+                            title={collectionsOpen ? "Recolher lista de coleções" : "Expandir lista de coleções"}
+                          >
+                            <span
+                              className={`material-symbols-outlined text-[18px] transition-transform duration-200 ${
+                                collectionsOpen ? "rotate-180 text-primary-container" : ""
+                              }`}
+                            >
+                              expand_more
+                            </span>
+                          </button>
+                        </div>
+
+                        {/* Collections Dropdown List */}
+                        {collectionsOpen && (
+                          <div className="flex flex-col gap-0.5 pl-6 pr-1 py-1.5 mt-1 border-l-2 border-white/5 ml-5">
+                            <Link
+                              href="/collections"
+                              className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                                pathname === "/collections"
+                                  ? "text-primary-container bg-surface-container-highest font-bold"
+                                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2 truncate">
+                                <span className="material-symbols-outlined text-[14px]">grid_view</span>
+                                <span>Todas as Coleções</span>
+                              </span>
+                              <span className="text-[10px] font-mono text-outline px-1.5 py-0.5 rounded bg-surface-container">
+                                {collections.length}
+                              </span>
+                            </Link>
+
+                            {collections.length === 0 ? (
+                              <span className="px-2.5 py-1.5 text-[11px] text-outline font-mono italic">
+                                Nenhuma coleção cadastrada
+                              </span>
+                            ) : (
+                              collections.map((col) => {
+                                const isColActive = pathname === `/collections/${col.id}`;
+                                return (
+                                  <Link
+                                    key={col.id}
+                                    href={`/collections/${col.id}`}
+                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                                      isColActive
+                                        ? "text-secondary font-bold bg-surface-container-highest border border-secondary/20 shadow-sm"
+                                        : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                                    }`}
+                                    title={`${col.name} (${col.modelsCount} modelos)`}
+                                  >
+                                    <span className="flex items-center gap-2 truncate">
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                          isColActive ? "bg-secondary" : "bg-outline/50"
+                                        }`}
+                                      ></span>
+                                      <span className="truncate">{col.name}</span>
+                                    </span>
+                                    <span className="text-[10px] font-mono text-outline px-1 rounded bg-surface-container flex-shrink-0 ml-1">
+                                      {col.modelsCount}
+                                    </span>
+                                  </Link>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
 
                   return (
                     <Link
@@ -212,38 +357,8 @@ interface NavSection {
         </div>
       </div>
 
-      {/* Bottom Area: Storage NAS & User Profile */}
+      {/* Bottom Area: User Profile */}
       <div className="flex flex-col p-3 gap-3 bg-surface-container-lowest border-t border-white/5">
-        {/* Storage NAS Widget */}
-        {!isCollapsed ? (
-          <div className="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2 border border-white/5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-primary-container">
-                  hard_drive
-                </span>
-                <span className="text-xs font-semibold text-on-surface">Storage NAS</span>
-              </div>
-              <span className="text-xs text-secondary font-mono font-medium">35%</span>
-            </div>
-            <div className="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden flex">
-              <div className="bg-primary-container h-full w-[24%]" title="Modelos 3D"></div>
-              <div className="bg-secondary h-full w-[11%]" title="G-Codes & Slices"></div>
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-mono">
-              <span>1.4 TB / 4 TB</span>
-              <span className="text-tertiary">RAID 5 OK</span>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="flex justify-center p-2 rounded-lg bg-surface-container-low text-primary-container"
-            title="Storage NAS: 1.4 TB / 4 TB (35%)"
-          >
-            <span className="material-symbols-outlined text-[20px]">hard_drive</span>
-          </div>
-        )}
-
         {/* User Badge */}
         <div className="relative">
           <div className="flex items-center justify-between pt-1">

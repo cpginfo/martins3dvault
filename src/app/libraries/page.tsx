@@ -38,6 +38,34 @@ export default function LibrariesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
+  // Stats state from real database
+  const [stats, setStats] = useState<{
+    totalModels: number;
+    totalFiles: number;
+    totalLibraries: number;
+    totalSizeBytes: number;
+  } | null>(null);
+
+  const formatBytes = (bytes: number) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar estatísticas:", err);
+    }
+  };
+
   const fetchLibraries = async () => {
     try {
       const res = await fetch("/api/libraries");
@@ -54,6 +82,7 @@ export default function LibrariesPage() {
 
   useEffect(() => {
     fetchLibraries();
+    fetchStats();
   }, []);
 
   const handleScan = async (id: string) => {
@@ -61,7 +90,7 @@ export default function LibrariesPage() {
     try {
       const res = await fetch(`/api/libraries/${id}/scan`, { method: "POST" });
       if (res.ok) {
-        await fetchLibraries();
+        await Promise.all([fetchLibraries(), fetchStats()]);
       }
     } catch (err) {
       console.error("Erro ao escanear biblioteca:", err);
@@ -76,7 +105,7 @@ export default function LibrariesPage() {
       for (const lib of libraries) {
         await fetch(`/api/libraries/${lib.id}/scan`, { method: "POST" });
       }
-      await fetchLibraries();
+      await Promise.all([fetchLibraries(), fetchStats()]);
     } catch (err) {
       console.error("Erro ao escanear tudo:", err);
     } finally {
@@ -104,7 +133,7 @@ export default function LibrariesPage() {
       setNewLibName("");
       setNewLibPath("");
       setShowAddForm(false);
-      await fetchLibraries();
+      await Promise.all([fetchLibraries(), fetchStats()]);
     } catch (err: any) {
       setFormError(err.message || "Erro desconhecido ao salvar biblioteca");
     } finally {
@@ -126,11 +155,11 @@ export default function LibrariesPage() {
           isSidebarCollapsed ? "pl-20" : "pl-72"
         }`}
       >
-        <Navbar isSidebarCollapsed={isSidebarCollapsed} onScanTriggered={fetchLibraries} />
+        <Navbar isSidebarCollapsed={isSidebarCollapsed} onScanTriggered={() => { fetchLibraries(); fetchStats(); }} />
 
         <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
           <div className="flex flex-col w-full gap-6 pt-6">
-            {/* Top Engine Status HUD Banner from Stitch */}
+            {/* Top Engine Status HUD Banner */}
             <div className="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl p-6 border border-white/5">
               <div className="absolute -right-16 -top-16 w-96 h-96 rounded-full bg-secondary-container/10 blur-3xl pointer-events-none"></div>
               <div className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-primary-container/10 blur-2xl pointer-events-none"></div>
@@ -138,12 +167,12 @@ export default function LibrariesPage() {
               <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div className="flex items-start gap-4">
                   <div className="p-3.5 rounded-xl bg-surface-container-highest/60 flex items-center justify-center text-secondary shadow-inner border border-white/5">
-                    <span className="material-symbols-outlined text-[32px]">memory</span>
+                    <span className="material-symbols-outlined text-[32px]">folder_managed</span>
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-3">
                       <span className="text-xl font-bold text-on-surface tracking-tight">
-                        Motor de Indexação AdditiveCore
+                        Mapeamento de Pastas & Indexação
                       </span>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-tertiary text-[11px] font-mono border border-white/5">
                         <span
@@ -154,37 +183,25 @@ export default function LibrariesPage() {
                           }`}
                         ></span>
                         {isScanningAll || scanningId
-                          ? "Varredura em Execução"
-                          : "Motor de Scan: Inativo (Pronto)"}
+                          ? "Varredura em Execução..."
+                          : "Pronto para Varredura"}
                       </span>
                     </div>
                     <p className="text-xs text-on-surface-variant mt-1 max-w-2xl">
-                      Mapeador de nós heterogêneos para arquivos{" "}
+                      Gerencie as pastas do servidor local ou volumes de rede montados para catalogação automática de arquivos{" "}
                       <span className="font-mono text-primary">.STL</span>,{" "}
-                      <span className="font-mono text-secondary">.3MF</span>,{" "}
-                      <span className="font-mono text-tertiary">.STEP</span> e extração de
-                      metadados G-Code via checksum SHA-256 e Three.js.
+                      <span className="font-mono text-secondary">.3MF</span> e{" "}
+                      <span className="font-mono text-tertiary">.OBJ</span>.
                     </p>
-                    <div className="flex flex-wrap items-center gap-4 mt-3 text-on-surface-variant text-xs">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px] text-primary">
-                          speed
-                        </span>
-                        4.280 arqs/min
+                    <div className="flex flex-wrap items-center gap-4 mt-3 text-on-surface-variant text-xs font-mono">
+                      <span className="flex items-center gap-1 text-primary">
+                        <span className="material-symbols-outlined text-[16px]">folder</span>
+                        {libraries.length} {libraries.length === 1 ? "biblioteca configurada" : "bibliotecas configuradas"}
                       </span>
                       <span className="text-outline-variant">•</span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px] text-secondary">
-                          database
-                        </span>
-                        {totalIndexedModels} itens indexados
-                      </span>
-                      <span className="text-outline-variant">•</span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px] text-tertiary">
-                          schedule
-                        </span>
-                        Modo Contínuo Ativo
+                      <span className="flex items-center gap-1 text-secondary">
+                        <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
+                        {totalIndexedModels} modelos indexados
                       </span>
                     </div>
                   </div>
@@ -218,61 +235,67 @@ export default function LibrariesPage() {
                 </div>
               </div>
 
-              {/* Active Telemetry Metric Bars from Stitch */}
+              {/* Real Database Metric Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-4 border-t border-white/5">
                 <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
                   <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    Volume Rastreado
-                  </span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-bold text-on-surface font-mono">1.41 TB</span>
-                    <span className="text-[10px] text-secondary font-mono">+12.4 GB hoje</span>
-                  </div>
-                  <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
-                    <div className="bg-secondary h-full w-[68%]"></div>
-                  </div>
-                </div>
-
-                <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    Metadados 3MF/Slicer
-                  </span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-bold text-on-surface font-mono">100% ativos</span>
-                    <span className="text-[10px] text-tertiary font-mono">Extração OK</span>
-                  </div>
-                  <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
-                    <div className="bg-tertiary h-full w-[99%]"></div>
-                  </div>
-                </div>
-
-                <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    Thumbnails Headless
+                    Modelos Catalogados
                   </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-sm font-bold text-on-surface font-mono">
-                      {totalIndexedModels} geradas
+                      {stats ? stats.totalModels : totalIndexedModels}
                     </span>
-                    <span className="text-[10px] text-primary font-mono">WebGL OK</span>
+                    <span className="text-[10px] text-secondary font-mono">Vault</span>
                   </div>
                   <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
-                    <div className="bg-primary-container h-full w-[91%]"></div>
+                    <div className="bg-secondary h-full w-full"></div>
                   </div>
                 </div>
 
                 <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
                   <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    Integridade Checksum
+                    Arquivos 3D no Banco
                   </span>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-bold text-on-surface font-mono">SHA-256</span>
-                    <span className="text-[10px] text-secondary-container font-mono">
-                      0 conflitos
+                    <span className="text-sm font-bold text-on-surface font-mono">
+                      {stats ? stats.totalFiles : "..."}
+                    </span>
+                    <span className="text-[10px] text-tertiary font-mono">Prontos</span>
+                  </div>
+                  <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
+                    <div className="bg-tertiary h-full w-full"></div>
+                  </div>
+                </div>
+
+                <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
+                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
+                    Espaço Ocupado
+                  </span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm font-bold text-on-surface font-mono">
+                      {stats ? formatBytes(stats.totalSizeBytes) : "..."}
+                    </span>
+                    <span className="text-[10px] text-primary-container font-mono">Arquivos 3D</span>
+                  </div>
+                  <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
+                    <div className="bg-primary-container h-full w-full"></div>
+                  </div>
+                </div>
+
+                <div className="bg-surface-container p-3.5 rounded-lg flex flex-col gap-1 border border-white/5">
+                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
+                    Pastas Ativas
+                  </span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm font-bold text-on-surface font-mono">
+                      {libraries.filter((l) => l.enabled).length} de {libraries.length}
+                    </span>
+                    <span className="text-[10px] text-tertiary font-mono">
+                      {libraries.every((l) => l.existsOnDisk) ? "OK no Disco" : "Verificar"}
                     </span>
                   </div>
                   <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
-                    <div className="bg-secondary-container h-full w-[100%]"></div>
+                    <div className="bg-tertiary h-full w-full"></div>
                   </div>
                 </div>
               </div>

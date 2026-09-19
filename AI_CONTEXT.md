@@ -16,6 +16,14 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Sidebar Retrátil Persistente** (`Sidebar.tsx`): Menus por categoria, gauge de armazenamento RAID 5 e perfil do operador logado.
   - **Barra Superior Integrada** (`Navbar.tsx`): Busca global com atalho `⌘K`, filtros rápidos por extensão (`.STL`, `.3MF`, `G-Code`), status do NAS e acionamento de scan.
   - **Controles de Estúdio Estilo Eagle App** (`FilterBar.tsx`): Slider de zoom de miniaturas (180px a 400px), alternador de visualização (Grade Grande, Grade Compacta e Tabela), e badges de polímeros (PLA, PETG, ABS/ASA, TPU).
+- **Visualizador 3D Studio (`/models/[id]` e `/viewer/[id]`)**:
+  - Tela dedicada de visualização e fatiamento baseada na importação do Google Stitch (`Visualizador de Arquivo 3D`).
+  - Viewport 3D Three.js com HUD de dimensões milimétricas em tempo real (X, Y, Z), controles de câmera rápida (`Iso`, `Frente`, `Topo`, `Reset`), rotação automática, modo Wireframe/Sólido e bounding box.
+  - Captura instantânea de capa 3D (`Capa 3D`) gerando thumbnail oficial do modelo.
+  - Barra inferior flutuante com troca de material (`PLA`, `ABS`, `PETG`, `Fosco`) e paleta com 12 cores de filamento.
+  - Painel lateral (drawer) com breadcrumbs, renomeação de modelo inline, seleção de coleções, troca de capa, abas de arquivos, notas técnicas e manuais em PDF.
+  - Parâmetros recomendados de fatiamento (altura de camada, tempo estimado, consumo em gramas e metros, e contagem de triângulos da malha).
+  - Verificação algorítmica de compatibilidade de volume de mesa (Bambu Lab 256×256×256 mm, Voron 2.4 300×300 mm, etc.).
 - **Engine 3D de Alta Velocidade (Three.js + Streaming Binário)**:
   - Conversor de servidor para arquivos `.3mf` complexos (Bambu Studio, OrcaSlicer, Prusa), convertendo em tempo real e cacheando em formato STL Binário consolidado (`threemf-converter.ts` e `/api/assets/mesh`).
   - Trata o problema clássico de travamento em "100%" causado pelo `DOMParser` do Three.js em arquivos 3MF de mais de 200MB de XML.
@@ -24,11 +32,13 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Materiais de impressão: **PLA**, **ABS**, **PETG (Translúcido)** e **Fosco (Matte)**.
   - Paleta com 12 cores populares de filamento 3D.
   - Medições tridimensionais (Bounding Box em mm) e captura de thumbnail com 1 clique.
-- **Scanner Inteligente & Sincronização em Segundo Plano**:
+- **Scanner Inteligente & Regras de Pastas / Coleções**:
   - Varre recursivamente pastas locais ou montagens de rede (NFS/CIFS/SMB).
+  - **Coleções**: A pasta de primeiro nível (`dirParts[0]`) define a Coleção no banco. Subpastas pertencem à mesma coleção pai (o modelo de coleções é plano, não cria sub-coleções).
+  - **Modelos**: A pasta onde os arquivos 3D estão alocados define o Modelo (`folderPath`).
   - **Sincronização Bidirecional**: Itens removidos do disco são deletados do banco. Renomeações são detectadas por hash/tamanho.
-  - **Prioridade Absoluta para Capas Acompanhantes**: Arquivos de imagem (`.jpg`, `.png`, `.webp`) com o mesmo nome base (normalizado, ex: `Caneca FLAMENGO..3mf` e `Caneca Flamengo.jpg`) são automaticamente priorizados como a thumbnail oficial.
-- **Opções de Edição do Modelo no Modal**:
+  - **Prioridade Absoluta para Capas Acompanhantes**: Arquivos de imagem (`.jpg`, `.png`, `.webp`) com o mesmo nome base normalizado são automaticamente priorizados como a thumbnail oficial.
+- **Opções de Edição do Modelo no Modal e no Studio**:
   - Renomear título inline com persistência imediata (`PUT /api/models/[id]`).
   - Trocar imagem de capa por upload ou por seleção de imagens existentes na pasta (`POST /api/models/[id]/cover`).
   - Enviar e remover manuais de montagem em PDF (`POST` e `DELETE /api/models/[id]/manual`).
@@ -113,6 +123,10 @@ No Tailwind v4, os tokens personalizados do Stitch estão definidos via `@theme`
 - `text-secondary` (`#4cd7f6`)
 - `text-tertiary` (`#4edea3`)
 - `border-outline-variant` (`#414752`)
+
+### I. Ligaturas Quebradas no Material Symbols vs Lucide React
+O *Material Symbols* do Google depende de ligaturas de texto para renderizar ícones. Se um nome de ícone não existir exatamente no catálogo (ex: `folder_minus`), o motor de fontes do navegador substitui apenas o prefixo correspondente (`folder` -> 📁) e imprime o restante como texto literal (`_minus` -> `_MINUS`), quebrando a interface.
+**Regra**: Para botões de ação e ícones compostos, prefira sempre importar componentes SVG nativos do `lucide-react` (ex: `FolderMinus`, `Layers`, `Box`), garantindo renderização vetorial determinística e sem falha de ligatura.
 
 ---
 

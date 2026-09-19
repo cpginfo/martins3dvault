@@ -76,18 +76,7 @@ export default function LoginPage() {
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Telemetry Watermarks */}
-      <div className="hidden lg:flex absolute top-6 left-8 items-center gap-2 font-mono text-xs text-on-surface-variant/40 select-none">
-        <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-        <span>PIPELINE_STATUS: STANDBY</span>
-        <span className="text-outline-variant">•</span>
-        <span>MESH_CHECKSUM_OK</span>
-      </div>
-      <div className="hidden lg:flex absolute top-6 right-8 items-center gap-2 font-mono text-xs text-on-surface-variant/40 select-none">
-        <span>BUILD_VOL: 300x300x400mm</span>
-        <span className="text-outline-variant">•</span>
-        <span>OCTO_PORT: 8080</span>
-      </div>
+
 
       {/* Central Vault Card from Stitch */}
       <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
