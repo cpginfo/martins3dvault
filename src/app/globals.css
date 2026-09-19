@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --background: #090a10;
+  --foreground: #f1f5f9;
+  --card: #0f121d;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-hover: #151928;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --accent: #06b6d4;
+  --muted: #94a3b8;
+  --muted-dark: #64748b;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090a10;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2438;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d3652;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(15, 18, 29, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(17, 21, 34, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(22, 27, 44, 0.85);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Pulse animation for scanner */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.animate-glow {
+  animation: glow-pulse 2s infinite ease-in-out;
+}

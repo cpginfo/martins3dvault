@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("VIEWER") // ADMIN, EDITOR, VIEWER
+  avatar       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Library {
+  id         String    @id @default(cuid())
+  name       String
+  path       String    @unique // Caminho absoluto montado (ex: /libraries/colecao1)
+  enabled    Boolean   @default(true)
+  lastScanAt DateTime?
+  scanStatus String    @default("IDLE") // IDLE, SCANNING, ERROR
+  lastError  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  models   Model[]
+  scanJobs ScanJob[]
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  coverImage  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  models Model[]
+}
+
+model Model {
+  id               String      @id @default(cuid())
+  name             String
+  slug             String
+  folderPath       String      // Caminho relativo à Library
+  libraryId        String
+  library          Library     @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  collectionId     String?
+  collection       Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  description      String?
+  author           String?
+  license          String?
+  isFavorite       Boolean     @default(false)
+  isPrinted        Boolean     @default(false)
+  printedAt        DateTime?
+  coverImage       String?     // URL ou caminho para a thumbnail gerada/extraída
+  
+  // Especificações e notas de impressão
+  filamentType     String?     // PLA, PETG, ABS, TPU, RESIN, etc.
+  nozzleSize       Float?      // 0.4, 0.6, etc.
+  infillDensity    Int?        // porcentagem
+  layerHeight      Float?      // mm
+  printTimeMinutes Int?
+  notes            String?
+
+  tags             Tag[]
+  files            ModelFile[]
+  assets           ModelAsset[]
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([libraryId, folderPath])
+  @@index([name])
+}
+
+model ModelFile {
+  id            String   @id @default(cuid())
+  modelId       String
+  model         Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  fileName      String
+  relativePath  String
+  fileSize      BigInt
+  fileHash      String?
+  format        String   // STL, 3MF, OBJ, STEP
+  mimeType      String?
+  dimensionsX   Float?   // mm
+  dimensionsY   Float?   // mm
+  dimensionsZ   Float?   // mm
+  triangleCount Int?
+  isPrimary     Boolean  @default(false)
+  isPrinted     Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([modelId])
+}
+
+model ModelAsset {
+  id           String   @id @default(cuid())
+  modelId      String
+  model        Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  fileName     String
+  relativePath String
+  assetType    String   // IMAGE, PDF_MANUAL, GCODE, OTHER
+  fileSize     BigInt
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([modelId])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  models    Model[]
+  createdAt DateTime @default(now())
+}
+
+model ScanJob {
+  id            String    @id @default(cuid())
+  libraryId     String
+  library       Library   @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  status        String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  scannedCount  Int       @default(0)
+  addedCount    Int       @default(0)
+  updatedCount  Int       @default(0)
+  deletedCount  Int       @default(0)
+  log           String?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([libraryId])
+}
