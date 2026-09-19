@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-secondary":"#003640","on-tertiary-container":"#003b26","on-secondary-container":"#00424e","on-primary":"#552100","inverse-surface":"#dee2ec","surface-container":"#1b2027","on-secondary-fixed-variant":"#004e5c","secondary-container":"#03b5d3","tertiary-fixed":"#6ffbbe","on-primary-fixed-variant":"#783200","on-background":"#dee2ec","surface-tint":"#ffb690","surface-container-high":"#252a32","surface-container-low":"#171c23","on-error-container":"#ffdad6","surface":"#0f141b","on-tertiary-fixed-variant":"#005236","outline-variant":"#584237","inverse-primary":"#9d4300","on-secondary-fixed":"#001f26","secondary-fixed":"#acedff","on-tertiary-fixed":"#002113","secondary-fixed-dim":"#4cd7f6","surface-bright":"#343941","inverse-on-surface":"#2c3138","on-error":"#690005","surface-dim":"#0f141b","error-container":"#93000a","surface-variant":"#30353d","on-tertiary":"#003824","primary":"#ffb690","outline":"#a78b7d","surface-container-highest":"#30353d","secondary":"#4cd7f6","background":"#0f141b","primary-container":"#f97316","tertiary":"#4edea3","surface-container-lowest":"#090f15","primary-fixed":"#ffdbca","on-surface":"#dee2ec","on-surface-variant":"#e0c0b1","error":"#ffb4ab","primary-fixed-dim":"#ffb690","on-primary-fixed":"#341100","tertiary-container":"#00b07a","on-primary-container":"#582200","tertiary-fixed-dim":"#4edea3"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","gutter-desktop":"1.5rem","space-sm":"0.5rem","margin":"1rem","space-xs":"0.25rem","space-2xl":"2.5rem","space-lg":"1rem","margin-desktop":"2rem","space-md":"0.75rem","gutter":"1rem"},"fontFamily":{"body-sm":["Inter"],"body-lg":["Inter"],"label-sm":["JetBrains Mono"],"body-md":["Inter"],"label-md":["JetBrains Mono"],"label-lg":["JetBrains Mono"],"headline-sm":["Inter"],"display-lg-mobile":["Inter"],"code-sm":["JetBrains Mono"],"display-lg":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"]},"fontSize":{"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"code-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><img alt="Martins3DVault Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt2aOM_xpSvIPjN3gHbZLJGwVas72-Lu3aK7uY9X5YI-kON9JxC61eLbmnHRzXBYLSa3O09aSkOKejrcaBm7aXFio4gy_MnRXfqb-ohhybMWbvxnugWmSb05Jimv5rQYxtx4K8XDt6ICE9xWWZ4Zh-PFokhWsG5p-Y2gd99hg4Hrseb7zKC6OruywpMa8mdICSKYMMACGl7ZFV-wmBrif65GmIi62fDpnqFU2MBkgVRPKZv9pROyQs"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">Martins<span class="text-primary-container">3D</span>Vault</span><span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Additive Vault v2.4</span></div></div><button class="text-on-surface-variant hover:text-on-surface transition-colors p-space-xs"><span class="material-symbols-outlined text-[18px]">dock_to_left</span></button></div><div class="px-space-md py-space-sm"><span class="font-label-sm text-label-sm text-outline uppercase tracking-wider px-space-sm">Repositórios Locais</span></div><nav class="flex flex-col gap-space-xs px-space-md" data-active-classes="bg-surface-container-highest text-primary font-headline-sm rounded-lg"><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="colecoes" href="#"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-primary transition-colors">dataset</span><span class="font-body-md text-body-md">Coleções</span></a><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="modelos-3d" href="#"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-secondary transition-colors">view_in_ar</span><span class="font-body-md text-body-md">Modelos 3D</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="mapear-pastas-scan" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-tertiary transition-colors">sync_saved_locally</span><span class="font-body-md text-body-md">Mapear Pastas &amp; Scan</span></div><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary-container"></span></span></a><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="gestao-de-usuarios" href="#"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-primary-container transition-colors">admin_panel_settings</span><span class="font-body-md text-body-md">Gestão de Usuários</span></a></nav></div><div class="flex flex-col p-space-md gap-space-md bg-surface-container-lowest"><div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm"><div class="flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-primary-container">hard_drive</span><span class="font-label-md text-label-md text-on-surface">Storage NAS</span></div><span class="font-label-sm text-label-sm text-secondary font-code-sm">35%</span></div><div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden flex"><div class="bg-primary-container h-full w-[24%]"></div><div class="bg-secondary h-full w-[11%]"></div></div><div class="flex items-center justify-between text-on-surface-variant"><span class="font-label-sm text-label-sm">1.4 TB / 4 TB</span><span class="font-label-sm text-label-sm text-tertiary font-code-sm">RAID 5 OK</span></div></div><div class="flex items-center justify-between pt-space-xs"><div class="flex items-center gap-space-sm"><div class="relative"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdVIUde5QLp5ccpaTnHfdTwZvMBy6HPA_1ij8_0KVPPqa2uINvwT3pvvhX-CvSZI3egEPjEuV44Xty-gA1iqvB6VzrE9pG7cHF_np9mjhmA-9mMLvRUTusaqe7LurP5H1Z8kroFMLzeAy0-owAF7JU_Uifb1dMFve60GC9zfDz0RiDXE1C4wH8-OvAAQs1FB4SN2yW-Tv_8qJq1I1vw6do0_Axow4gMExzqOyxFsLkZxSqGthE9xj0"/><span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary rounded-full ring-2 ring-surface-container-lowest"></span></div><div class="flex flex-col"><span class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Rodrigo Martins</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span><span class="font-label-sm text-label-sm text-primary-container uppercase font-code-sm">Admin</span></div></div></div><button class="text-on-surface-variant hover:text-on-surface p-space-xs rounded-lg hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md flex-1 max-w-2xl"><div class="relative flex-1 flex items-center"><span class="material-symbols-outlined absolute left-space-md text-on-surface-variant text-[18px]">search</span><input class="w-full bg-surface-container-low pl-10 pr-16 py-space-xs text-body-sm font-body-sm text-on-surface rounded-lg placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary-container transition-all" placeholder="Pesquisar arquivos STL, 3MF, STEP, G-Code... (ex: Voron, Ender, Benchy)" type="text"/><div class="absolute right-space-sm flex items-center gap-space-xs px-space-xs py-0.5 rounded bg-surface-container-highest"><span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">⌘K</span></div></div><div class="hidden xl:flex items-center gap-space-xs"><button class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors">Todos</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-primary-container font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">.STL</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-secondary font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">.3MF</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">G-Code</button></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-on-surface font-code-sm">NAS Synology Conectado</span></div><button class="flex items-center gap-space-xs bg-primary-container text-on-primary font-headline-sm text-headline-sm px-space-md py-1.5 rounded-lg hover:bg-primary hover:text-on-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)]"><span class="material-symbols-outlined text-[18px]">sync</span><span class="font-label-md text-label-md font-semibold">Escanear Agora</span></button><button class="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary-container"></span></button><button class="p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">settings</span></button></div></header><main class="relative pt-16 bg-surface min-h-screen w-full px-space-lg"><div class="flex flex-col w-full">
+<section class="py-space-xl flex flex-col gap-space-xl">
+<!-- Header / Context Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary-container text-[20px]">admin_panel_settings</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Segurança Operacional &amp; Privilégios</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Gestão de Usuários &amp; Controle de Acesso</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+          Controle permissões de fatiamento direto, upload de modelos STL/STEP e envio imediato para instâncias Klipper e OctoPrint locais.
+        </p>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="flex items-center gap-space-xs bg-primary-container text-on-primary font-headline-sm text-headline-sm px-space-lg py-space-sm rounded-lg hover:bg-primary transition-all shadow-md" id="open-invite-modal">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md text-label-md font-semibold">+ Convidar / Novo Usuário</span>
+</button>
+</div>
+</div>
+<!-- Telemetry Cards Metric Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- Total Users -->
+<div class="relative overflow-hidden bg-surface-container-low p-space-lg rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Membros do Vault</span>
+<span class="p-space-xs rounded-lg bg-surface-container-highest text-primary-container">
+<span class="material-symbols-outlined text-[20px]">group</span>
+</span>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-sm">
+<span class="font-display-lg text-display-lg text-on-surface font-bold tracking-tight">6</span>
+<span class="font-label-sm text-label-sm text-tertiary font-code-sm">+2 este mês</span>
+</div>
+<div class="mt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">4 Operacionais • 2 Visitantes</span>
+<span class="font-label-sm text-label-sm text-outline">Capacidade 20 assentos</span>
+</div>
+</div>
+<!-- Active Users Now -->
+<div class="relative overflow-hidden bg-surface-container-low p-space-lg rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Usuários Ativos Agora</span>
+<div class="flex items-center gap-space-xs px-space-xs py-0.5 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-tertiary font-code-sm">Ao Vivo</span>
+</div>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-sm">
+<span class="font-display-lg text-display-lg text-secondary font-bold tracking-tight">3</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">em 2 nós Klipper</span>
+</div>
+<div class="mt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">Oficina #1, Rodrigo, Camila</span>
+<span class="font-label-sm text-label-sm text-secondary font-code-sm">Porta 7125</span>
+</div>
+</div>
+<!-- Storage Quota Gauge -->
+<div class="relative overflow-hidden bg-surface-container-low p-space-lg rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Capacidade por Cota</span>
+<span class="font-label-sm text-label-sm text-primary font-code-sm">1.4 TB / 4.0 TB</span>
+</div>
+<div class="mt-space-sm">
+<div class="flex justify-between items-center mb-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface">35% Consumo Global</span>
+<span class="font-label-sm text-label-sm text-tertiary">2.6 TB Disponíveis</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full w-[24%]" title="Rodrigo (Admin): 960 GB"></div>
+<div class="bg-secondary h-full w-[8%]" title="Camila (Designer): 320 GB"></div>
+<div class="bg-tertiary h-full w-[3%]" title="Oficina #1: 120 GB"></div>
+</div>
+</div>
+<div class="mt-space-xs flex items-center gap-space-md text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm">Admin</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm">Makers</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm">Operadores</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Layout: User Table + Access & Security Policy -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl">
+<!-- Users Table Section (8 Cols) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<div class="bg-surface-container-low p-space-md rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm w-full sm:w-auto">
+<span class="material-symbols-outlined text-outline text-[20px]">filter_list</span>
+<span class="font-label-md text-label-md text-on-surface">Filtrar por Papel:</span>
+<select class="bg-surface-container-highest text-on-surface px-space-sm py-1 rounded-lg text-body-sm font-body-sm focus:outline-none" id="filter-role">
+<option value="all">Todos os Níveis (6)</option>
+<option value="admin">Super Admin</option>
+<option value="maker">Maker / Editor</option>
+<option value="operator">Operador de Impressão</option>
+<option value="viewer">Apenas Leitura</option>
+</select>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span>Sincronização NAS:</span>
+<span class="text-tertiary font-code-sm">Ativa (syno-vault-01)</span>
+</div>
+</div>
+<div class="overflow-x-auto rounded-xl bg-surface-container-low shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high text-outline">
+<th class="py-space-md px-space-lg font-label-sm text-label-sm uppercase tracking-wider">Usuário</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider">Papel / Nível</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider">Pastas Autorizadas</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider">Cota Específica</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider">Último Acesso</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider">Status</th>
+<th class="py-space-md px-space-md font-label-sm text-label-sm uppercase tracking-wider text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm text-on-surface divide-none" id="users-tbody">
+<!-- User 1: Rodrigo Martins -->
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close up photographic profile portrait of a confident male tech engineer in additive manufacturing workshop with moody cinematic low key orange backlighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwoNVMJWa1tL6zl_oXhTCap97szgOjGcPWRRBYet-_3WmKmCUgfWAX6G7pk76OCS0IEQ1I1yxmAkgVY_mLPwBRFKZVOdPKx_kWYQsDn8OWboGGJkbQx7wHB4T7KYR_ERyIOg4WA0XoL8vyFNe46mvZ_3aiAvgjjCUI7T5F82v4tc7ZmmH1TLEt_FZ6P7Dkbc01uNYIYXf7mg5c0ZPiNMqGUgm87eI-6nS-OnVSxj2VBRBYqXZBekPu"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary rounded-full ring-2 ring-surface-container-low" title="Conectado"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Rodrigo Martins</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">rodrigo@martins3d.internal</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-primary-container/15 text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    Super Admin
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-secondary font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">folder_special</span>
+                    Todas as Pastas
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col font-code-sm text-label-sm">
+<span class="text-on-surface">960 GB / Ilimitado</span>
+<span class="text-tertiary">Sem teto de upload</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-on-surface-variant">
+                  Agora mesmo
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    Ativo
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<div class="relative inline-block text-left">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="rodrigo">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- User 2: Lucas Silva - Maker -->
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a young male maker wearing safety goggles resting on forehead surrounded by modern 3D printers and spool racks with soft cyan rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUWUQ3h1WHEHIh1OMRhauqosDDmlHxsRqpDukYJ0ZfiFK6ZKfDxdVCNBMR5oNtJVeyh98PqnI3JgpvxCDW8wrSScDcwIcELVXzCzC3FIr1COmo4aj9KTKLJ-8fZlJMSxiaYx0zfTy7Wx7PD9eprhYqf0_Rwik-pMsNWDk7M4hUQn-0IjVGz0ExVDSO8QTwe912dAclu4iZs3LoZNCAYHpM_1vN1KLCnWBkIIwLjRyzAaeHANuUGete"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-outline rounded-full ring-2 ring-surface-container-low" title="Desconectado"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Lucas Silva - Maker</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">lucas.maker@martins3d.internal</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Maker / Editor
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+                    Apenas Técnicas
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col font-code-sm text-label-sm">
+<span class="text-on-surface">142 GB / 250 GB</span>
+<div class="w-20 h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
+<div class="bg-secondary h-full w-[56%]"></div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-on-surface-variant">
+                  Ontem, 21:44
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    Ativo
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="lucas">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- User 3: Oficina Impressao 3D #1 -->
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+</div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary rounded-full ring-2 ring-surface-container-low" title="Conectado"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Oficina Impressão 3D #1</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">farm-core@octoprint.lan</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    Operador de Impressão
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">queue</span>
+                    Fila de Produção
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col font-code-sm text-label-sm">
+<span class="text-on-surface">120 GB / 500 GB</span>
+<div class="w-20 h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
+<div class="bg-tertiary h-full w-[24%]"></div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-on-surface-variant">
+                  Agora (Klipper Voron)
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    Ativo
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="oficina">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- User 4: Camila Designer -->
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait photo of a young female industrial CAD designer in front of dual monitors displaying 3D parametric models in a clean dark high tech studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0oBKsepScqofSAgIBx5beiBSv-T1hCfBfc8fdqY_XbBX_40B8BXU17t4_DYuFMVX6NI4k6aFxHWWePshRf_ibCr3ltpnZS67EUrYMuyTdETXXsM-E4ImW29n9Vl6fizEXrp9HA9rFGdgJ4suIRoPMSpzixs4oUZtkvnB_s-lDCOEZ1EZKZ5Beykr8rLpXvXWCUU_-ypkDajUQ9nry9PfLQa2_8k-yoE-lYglgtRgT7QMYjmtnb-xW"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary rounded-full ring-2 ring-surface-container-low" title="Conectada"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Camila Designer</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">camila.cad@martins3d.internal</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Maker / Editor
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+                    Apenas Miniaturas
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col font-code-sm text-label-sm">
+<span class="text-on-surface">320 GB / 400 GB</span>
+<div class="w-20 h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
+<div class="bg-primary-container h-full w-[80%]"></div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-on-surface-variant">
+                  Há 12 min
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    Ativo
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="camila">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- User 5: Visitante Externo (Pendente) -->
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary-container rounded-full ring-2 ring-surface-container-low" title="Pendente Convite"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Thiago Rezende</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">thiago@parceiro-externo.br</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-surface-container-highest text-outline font-label-sm text-label-sm">
+                    Apenas Leitura / Visitante
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                    Pasta Compartilhada #04
+                  </span>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-on-surface-variant">
+                  5 GB Limite
+                </td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-outline">
+                  Convite Enviado (48h)
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-container/15 text-primary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    Pendente
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="thiago">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- User 6: Operador Estagiário (Suspenso) -->
+<tr class="hover:bg-surface-container-high/60 transition-colors opacity-75">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">block</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Matheus F. (Estágio)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm truncate">matheus.temp@martins3d.internal</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-surface-container-highest text-outline font-label-sm text-label-sm">
+                    Operador de Impressão
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded bg-surface-container-highest text-outline font-code-sm text-label-sm">
+                    Nenhuma Pasta
+                  </span>
+</td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-outline">
+                  0 GB / Bloqueado
+                </td>
+<td class="py-space-md px-space-md font-code-sm text-label-sm text-outline">
+                  Há 18 dias
+                </td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container/50 text-error font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                    Suspenso
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="action-menu-btn p-space-xs rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" data-user="matheus">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Quick Access Role Legend -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-lg text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Hierarquia de Privilégios:</span>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Super Admin (Escrita total &amp; Configurações)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Maker / Editor (Upload &amp; Fatiamento)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Operador (Execução G-Code)</span>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:underline flex items-center gap-space-xs">
+<span>Exportar CSV de Usuários</span>
+<span class="material-symbols-outlined text-[14px]">download</span>
+</button>
+</div>
+</div>
+<!-- Security Policies & Audit Trail (4 Cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-xl">
+<!-- Policies Section -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">shield</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Políticas &amp; Segurança</h2>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-code-sm">Criptografia Local</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Toggle 1: Upload Publico -->
+<div class="flex items-start justify-between gap-space-md p-space-sm rounded-lg bg-surface-container-high/40">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Upload público anônimo</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Permitir upload de STL/3MF sem credenciais ativas</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+<input class="sr-only peer" id="toggle-anon-upload" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Toggle 2: 2FA Admins -->
+<div class="flex items-start justify-between gap-space-md p-space-sm rounded-lg bg-surface-container-high/40">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Exigir 2FA para Admins</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Autenticação TOTP obrigatória para alterar repositórios NAS</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+<input checked="" class="sr-only peer" id="toggle-2fa-admin" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Toggle 3: Klipper / Octoprint Dispatch -->
+<div class="flex items-start justify-between gap-space-md p-space-sm rounded-lg bg-surface-container-high/40">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Disparo Direto Klipper/OctoPrint</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Limitar envio imediato de G-code apenas a Makers e Admins autorizados</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+<input checked="" class="sr-only peer" id="toggle-klipper-limit" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Validade da Sessão Token:</span>
+<span class="text-primary font-code-sm">14 dias (Renovação Contínua)</span>
+</div>
+</div>
+<!-- Audit Trail Section -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">manage_search</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Logs de Auditoria Recentes</h2>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:underline">Ver Todos</button>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-body-sm">
+<!-- Audit Item 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-high/30 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-label-sm text-primary font-semibold">Oficina Impressão #1</span>
+<span class="font-code-sm text-label-sm text-outline">14:02:18</span>
+</div>
+<span class="text-on-surface">Disparou G-Code <code class="text-secondary font-code-sm">Voron_Plate_Core.gcode</code> via API Klipper.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">IP: 192.168.1.180 • Sucesso</span>
+</div>
+<!-- Audit Item 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-high/30 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-label-sm text-primary-container font-semibold">Rodrigo Martins</span>
+<span class="font-code-sm text-label-sm text-outline">12:35:41</span>
+</div>
+<span class="text-on-surface">Modificou permissões de pasta para <strong class="text-on-surface font-semibold">Camila Designer</strong>.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">IP: 192.168.1.100 (Host Local)</span>
+</div>
+<!-- Audit Item 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-high/30 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-label-sm text-outline font-semibold">Matheus F. (Estágio)</span>
+<span class="font-code-sm text-label-sm text-error">Ontem, 19:10</span>
+</div>
+<span class="text-on-surface text-on-surface-variant">Tentativa de download não autorizado em pasta restrita <code class="text-outline font-code-sm">/Engenharia-Militar/</code>.</span>
+<span class="font-label-sm text-label-sm text-error font-code-sm">HTTP 403 Forbidden • Acesso Suspenso</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Contextual Action Dropdown (Floating Template) -->
+<div class="fixed hidden z-50 w-56 rounded-xl bg-surface-container-highest shadow-xl p-space-xs flex flex-col gap-1 text-on-surface text-body-sm font-body-sm backdrop-blur-md" id="action-dropdown">
+<button class="action-edit-perm flex items-center gap-space-sm px-space-md py-space-xs rounded-lg hover:bg-surface-container-high text-left transition-colors">
+<span class="material-symbols-outlined text-[16px] text-secondary">tune</span>
+<span>Editar Permissões</span>
+</button>
+<button class="action-reset-pass flex items-center gap-space-sm px-space-md py-space-xs rounded-lg hover:bg-surface-container-high text-left transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary-container">lock_reset</span>
+<span>Redefinir Senha / PIN</span>
+</button>
+<button class="action-revoke-access flex items-center gap-space-sm px-space-md py-space-xs rounded-lg hover:bg-error-container text-error text-left transition-colors">
+<span class="material-symbols-outlined text-[16px]">person_off</span>
+<span>Revogar Acesso</span>
+</button>
+</div>
+<!-- Modal: Convidar / Novo Usuário -->
+<div class="fixed inset-0 z-50 hidden bg-surface-container-lowest/80 backdrop-blur-sm flex items-center justify-center p-space-md" id="invite-modal">
+<div class="bg-surface-container-low w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col">
+<div class="p-space-lg bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary-container text-[22px]">person_add</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Convidar Novo Operador / Maker</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-space-xs rounded-lg" id="close-invite-modal">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<form class="p-space-lg flex flex-col gap-space-md" id="invite-form" onsubmit="event.preventDefault();">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Nome Completo / Identificador de Estação</label>
+<input class="bg-surface-container-highest px-space-md py-space-xs rounded-lg text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary-container" placeholder="Ex: Lucas Silva ou Estação Klipper #3" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">E-mail Operacional</label>
+<input class="bg-surface-container-highest px-space-md py-space-xs rounded-lg text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary-container" placeholder="maker@empresa.com.br" required="" type="email"/>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Papel Operacional</label>
+<select class="bg-surface-container-highest px-space-md py-space-xs rounded-lg text-body-sm font-body-sm text-on-surface focus:outline-none">
+<option value="maker">Maker / Editor</option>
+<option value="operator">Operador de Impressão</option>
+<option value="viewer">Apenas Leitura / Visitante</option>
+<option value="admin">Super Admin</option>
+</select>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Cota de Armazenamento</label>
+<select class="bg-surface-container-highest px-space-md py-space-xs rounded-lg text-body-sm font-body-sm text-on-surface focus:outline-none">
+<option value="50">50 GB (Básico)</option>
+<option value="150">150 GB (Padrão)</option>
+<option value="500">500 GB (Engenharia)</option>
+<option value="unlimited">Ilimitado (Admin)</option>
+</select>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Pastas Permitidas</label>
+<div class="grid grid-cols-2 gap-space-xs text-body-sm font-body-sm">
+<label class="flex items-center gap-space-xs bg-surface-container-high p-space-xs rounded">
+<input checked="" class="accent-primary-container" type="checkbox"/>
+<span>Todas as Técnicas</span>
+</label>
+<label class="flex items-center gap-space-xs bg-surface-container-high p-space-xs rounded">
+<input checked="" class="accent-primary-container" type="checkbox"/>
+<span>Miniaturas &amp; Tabletop</span>
+</label>
+<label class="flex items-center gap-space-xs bg-surface-container-high p-space-xs rounded">
+<input class="accent-primary-container" type="checkbox"/>
+<span>G-Codes Pré-fatiados</span>
+</label>
+<label class="flex items-center gap-space-xs bg-surface-container-high p-space-xs rounded">
+<input class="accent-primary-container" type="checkbox"/>
+<span>Projetos Confidenciais</span>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-end gap-space-md pt-space-md">
+<button class="px-space-md py-space-xs text-body-md font-body-md text-on-surface-variant hover:text-on-surface" id="cancel-invite-btn" type="button">Cancelar</button>
+<button class="bg-primary-container text-on-primary font-headline-sm text-headline-sm px-space-lg py-space-xs rounded-lg hover:bg-primary transition-all shadow-md" id="submit-invite-btn" type="submit">
+            Gerar Convite Seguro
+          </button>
+</div>
+</form>
+</div>
+</div>
+<script>
+    (function () {
+      // Modal controls
+      const openBtn = document.getElementById('open-invite-modal');
+      const closeBtn = document.getElementById('close-invite-modal');
+      const cancelBtn = document.getElementById('cancel-invite-btn');
+      const modal = document.getElementById('invite-modal');
+      const inviteForm = document.getElementById('invite-form');
+
+      function openModal() {
+        modal.classList.remove('hidden');
+      }
+      function closeModal() {
+        modal.classList.add('hidden');
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+      if (inviteForm) {
+        inviteForm.addEventListener('submit', () => {
+          closeModal();
+          alert('Convite criptografado enviado com sucesso para a rede local!');
+        });
+      }
+
+      // Context Menu Dropdown
+      const actionDropdown = document.getElementById('action-dropdown');
+      const actionButtons = document.querySelectorAll('.action-menu-btn');
+
+      actionButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = btn.getBoundingClientRect();
+          actionDropdown.style.top = `${rect.bottom + 6}px`;
+          actionDropdown.style.left = `${rect.right - 224}px`;
+          actionDropdown.classList.toggle('hidden');
+        });
+      });
+
+      window.addEventListener('click', () => {
+        if (!actionDropdown.classList.contains('hidden')) {
+          actionDropdown.classList.add('hidden');
+        }
+      });
+
+      // Quick Dropdown Handlers
+      const editPermBtn = document.querySelector('.action-edit-perm');
+      const resetPassBtn = document.querySelector('.action-reset-pass');
+      const revokeBtn = document.querySelector('.action-revoke-access');
+
+      if (editPermBtn) {
+        editPermBtn.addEventListener('click', () => {
+          actionDropdown.classList.add('hidden');
+          openModal();
+        });
+      }
+
+      if (resetPassBtn) {
+        resetPassBtn.addEventListener('click', () => {
+          actionDropdown.classList.add('hidden');
+          alert('Link de recuperação temporário enviado para o operador.');
+        });
+      }
+
+      if (revokeBtn) {
+        revokeBtn.addEventListener('click', () => {
+          actionDropdown.classList.add('hidden');
+          if (confirm('Revogar permanentemente as chaves de API e acesso deste usuário?')) {
+            alert('Acesso revogado no cofre.');
+          }
+        });
+      }
+
+      // Filter Role selection micro-interaction
+      const filterRole = document.getElementById('filter-role');
+      const tbody = document.getElementById('users-tbody');
+
+      if (filterRole && tbody) {
+        filterRole.addEventListener('change', (e) => {
+          const val = e.target.value.toLowerCase();
+          const rows = tbody.querySelectorAll('tr');
+          rows.forEach(row => {
+            if (val === 'all') {
+              row.style.display = '';
+            } else if (val === 'admin' && row.textContent.includes('Super Admin')) {
+              row.style.display = '';
+            } else if (val === 'maker' && row.textContent.includes('Maker / Editor')) {
+              row.style.display = '';
+            } else if (val === 'operator' && row.textContent.includes('Operador de Impressão')) {
+              row.style.display = '';
+            } else if (val === 'viewer' && row.textContent.includes('Apenas Leitura')) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-secondary":"#003640","on-tertiary-container":"#003b26","on-secondary-container":"#00424e","on-primary":"#552100","inverse-surface":"#dee2ec","surface-container":"#1b2027","on-secondary-fixed-variant":"#004e5c","secondary-container":"#03b5d3","tertiary-fixed":"#6ffbbe","on-primary-fixed-variant":"#783200","on-background":"#dee2ec","surface-tint":"#ffb690","surface-container-high":"#252a32","surface-container-low":"#171c23","on-error-container":"#ffdad6","surface":"#0f141b","on-tertiary-fixed-variant":"#005236","outline-variant":"#584237","inverse-primary":"#9d4300","on-secondary-fixed":"#001f26","secondary-fixed":"#acedff","on-tertiary-fixed":"#002113","secondary-fixed-dim":"#4cd7f6","surface-bright":"#343941","inverse-on-surface":"#2c3138","on-error":"#690005","surface-dim":"#0f141b","error-container":"#93000a","surface-variant":"#30353d","on-tertiary":"#003824","primary":"#ffb690","outline":"#a78b7d","surface-container-highest":"#30353d","secondary":"#4cd7f6","background":"#0f141b","primary-container":"#f97316","tertiary":"#4edea3","surface-container-lowest":"#090f15","primary-fixed":"#ffdbca","on-surface":"#dee2ec","on-surface-variant":"#e0c0b1","error":"#ffb4ab","primary-fixed-dim":"#ffb690","on-primary-fixed":"#341100","tertiary-container":"#00b07a","on-primary-container":"#582200","tertiary-fixed-dim":"#4edea3"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","gutter-desktop":"1.5rem","space-sm":"0.5rem","margin":"1rem","space-xs":"0.25rem","space-2xl":"2.5rem","space-lg":"1rem","margin-desktop":"2rem","space-md":"0.75rem","gutter":"1rem"},"fontFamily":{"body-sm":["Inter"],"body-lg":["Inter"],"label-sm":["JetBrains Mono"],"body-md":["Inter"],"label-md":["JetBrains Mono"],"label-lg":["JetBrains Mono"],"headline-sm":["Inter"],"display-lg-mobile":["Inter"],"code-sm":["JetBrains Mono"],"display-lg":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"]},"fontSize":{"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"code-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><main class="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-space-lg"><div class="flex flex-col w-full items-center justify-center relative overflow-hidden py-space-xl px-margin">
+<!-- Subtle CAD Isometric Pattern & Ambient Glows -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden select-none">
+<svg class="absolute w-full h-full opacity-10 text-on-surface" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="83.138" id="cad-grid" patternunits="userSpaceOnUse" width="48">
+<path d="M48 0 L24 13.856 L0 0 M24 13.856 L24 41.569 M48 41.569 L24 55.425 L0 41.569 M24 55.425 L24 83.138 M48 83.138 L24 96.994 L0 83.138" fill="none" stroke="currentColor" stroke-width="0.75"></path>
+<circle cx="24" cy="13.856" fill="currentColor" opacity="0.4" r="1.5"></circle>
+<circle cx="24" cy="55.425" fill="currentColor" opacity="0.4" r="1.5"></circle>
+</pattern>
+</defs>
+<rect fill="url(#cad-grid)" height="100%" width="100%"></rect>
+</svg>
+<div class="absolute -top-32 -left-32 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+</div>
+<!-- Telemetry Watermark & Build Coordinates -->
+<div class="hidden lg:flex absolute top-6 left-8 items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant/40 select-none">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span>PIPELINE_STATUS: STANDBY</span>
+<span class="text-outline-variant">•</span>
+<span>MESH_CHECKSUM_OK</span>
+</div>
+<div class="hidden lg:flex absolute top-6 right-8 items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant/40 select-none">
+<span>BUILD_VOL: 300x300x400mm</span>
+<span class="text-outline-variant">•</span>
+<span>OCTO_PORT: 8080</span>
+</div>
+<!-- Central Vault Card -->
+<div class="relative w-full max-w-xl bg-surface-container/90 backdrop-blur-xl rounded-xl shadow-2xl p-space-xl md:p-space-2xl z-10 flex flex-col gap-space-xl">
+<!-- Top Hardware Telemetry Badge Strip -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs bg-surface-container-highest/60 px-space-sm py-1 rounded-lg">
+<span class="material-symbols-outlined text-secondary text-body-md" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">ENCRYPTED REPOSITORY</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant/70 font-label-sm text-label-sm">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>NODE: VLT-01</span>
+</div>
+</div>
+<!-- Header Section: Logo & Identity -->
+<div class="flex flex-col items-center text-center gap-space-sm">
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary-container to-secondary rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+<div class="relative w-20 h-20 rounded-lg bg-surface-container-lowest p-space-xs flex items-center justify-center shadow-md">
+<img alt="Martins3DVault Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt2aOM_xpSvIPjN3gHbZLJGwVas72-Lu3aK7uY9X5YI-kON9JxC61eLbmnHRzXBYLSa3O09aSkOKejrcaBm7aXFio4gy_MnRXfqb-ohhybMWbvxnugWmSb05Jimv5rQYxtx4K8XDt6ICE9xWWZ4Zh-PFokhWsG5p-Y2gd99hg4Hrseb7zKC6OruywpMa8mdICSKYMMACGl7ZFV-wmBrif65GmIi62fDpnqFU2MBkgVRPKZv9pROyQs"/>
+</div>
+</div>
+<div class="mt-space-xs">
+<h1 class="font-display-lg text-headline-lg md:text-display-lg text-on-surface tracking-tight flex items-center justify-center gap-space-xs">
+<span>Martins</span><span class="text-primary-container">3D</span><span>Vault</span>
+</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm mx-auto mt-1">
+          Gerenciador e Cofre Inteligente de Arquivos 3D (STL &amp; 3MF)
+        </p>
+</div>
+<!-- Format Compatibility Pills -->
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="px-space-sm py-0.5 rounded bg-primary-container/15 text-primary-container font-label-sm text-label-sm">.STL</span>
+<span class="px-space-sm py-0.5 rounded bg-secondary/15 text-secondary font-label-sm text-label-sm">.3MF</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">.STEP</span>
+<span class="px-space-sm py-0.5 rounded bg-tertiary/15 text-tertiary font-label-sm text-label-sm">.GCODE</span>
+</div>
+</div>
+<!-- Main Authentication Form -->
+<form class="flex flex-col gap-space-md" onsubmit="event.preventDefault();">
+<!-- Username Field -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-1" for="username">
+<span class="material-symbols-outlined text-body-sm text-primary">person</span>
+<span>Usuário ou E-mail</span>
+</label>
+<span class="font-code-sm text-label-sm text-on-surface-variant/60">LDAP / LOCAL</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/40 font-body-md text-body-md px-space-md py-space-sm rounded-lg focus:outline-none focus:bg-surface-container-high transition-all" id="username" placeholder="eng.martins@local.net" type="text" value="rodrigo.martins"/>
+<div class="absolute right-3 flex items-center gap-1 text-on-surface-variant/50">
+<span class="material-symbols-outlined text-body-md">badge</span>
+</div>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-1" for="password">
+<span class="material-symbols-outlined text-body-sm text-primary">key</span>
+<span>Chave de Acesso / Senha</span>
+</label>
+<a class="font-label-sm text-label-sm text-secondary hover:underline transition-all" href="#">Redefinir chave?</a>
+</div>
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/40 font-code-sm text-code-sm px-space-md py-space-sm pr-11 rounded-lg focus:outline-none focus:bg-surface-container-high transition-all" id="password" placeholder="••••••••••••" type="password" value="3d_Vault_Master_#24"/>
+<button class="absolute right-3 p-1 text-on-surface-variant/70 hover:text-on-surface transition-colors focus:outline-none" id="togglePassword" title="Alternar visibilidade" type="button">
+<span class="material-symbols-outlined text-body-md" id="eyeIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember device & Session info -->
+<div class="flex items-center justify-between pt-1">
+<label class="flex items-center gap-space-sm cursor-pointer select-none">
+<input checked="" class="w-4 h-4 accent-primary-container rounded bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lembrar deste terminal de bancada</span>
+</label>
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> TLS v1.3
+        </span>
+</div>
+<!-- Primary Sign In Button -->
+<button class="w-full mt-space-sm bg-primary-container hover:bg-surface-tint text-on-primary-container hover:text-on-primary font-headline-sm text-headline-sm py-3 px-space-md rounded-lg flex items-center justify-center gap-space-sm shadow-md transition-all active:scale-[0.99]" type="submit">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">vpn_key</span>
+<span>Entrar no Cofre</span>
+<span class="material-symbols-outlined text-body-md">arrow_forward</span>
+</button>
+</form>
+<!-- Quick Switcher: Saved Local Profiles for Workshop Floor -->
+<div class="flex flex-col gap-space-sm pt-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant/80 flex items-center gap-1">
+<span class="material-symbols-outlined text-body-sm text-secondary">devices</span>
+          Sessões Salvas na Bancada
+        </span>
+<span class="font-code-sm text-label-sm text-on-surface-variant/50">1-CLICK LOGIN</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-xs">
+<!-- Profile 1: Admin -->
+<button class="flex items-center sm:flex-col sm:items-start p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high transition-all text-left group" onclick="selectProfile('rodrigo.martins', 'Admin')" type="button">
+<div class="flex items-center gap-space-sm w-full">
+<div class="relative w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary font-headline-sm">
+<span class="material-symbols-outlined text-headline-sm">engineering</span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary-container ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-body-sm text-on-surface truncate group-hover:text-primary transition-colors">R. Martins</span>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+                Admin
+              </span>
+</div>
+</div>
+</button>
+<!-- Profile 2: Operator -->
+<button class="flex items-center sm:flex-col sm:items-start p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high transition-all text-left group" onclick="selectProfile('oficina.01', 'Operador')" type="button">
+<div class="flex items-center gap-space-sm w-full">
+<div class="relative w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary font-headline-sm">
+<span class="material-symbols-outlined text-headline-sm">precision_manufacturing</span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-body-sm text-on-surface truncate group-hover:text-secondary transition-colors">Oficina 01</span>
+<span class="font-label-sm text-label-sm text-secondary flex items-center gap-1">
+                Operador
+              </span>
+</div>
+</div>
+</button>
+<!-- Profile 3: Guest -->
+<button class="flex items-center sm:flex-col sm:items-start p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high transition-all text-left group" onclick="selectProfile('visitante.lab', 'Visitante')" type="button">
+<div class="flex items-center gap-space-sm w-full">
+<div class="relative w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant font-headline-sm">
+<span class="material-symbols-outlined text-headline-sm">visibility</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-body-sm text-on-surface truncate group-hover:text-on-surface-variant transition-colors">Visitante</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/70">Leitura</span>
+</div>
+</div>
+</button>
+</div>
+</div>
+<!-- SSO / Active Directory Integration Bar -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<button class="w-full bg-surface-container-highest/60 hover:bg-surface-container-highest text-on-surface font-label-md text-label-md py-space-sm px-space-md rounded-lg flex items-center justify-between transition-colors" type="button">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-body-lg">hub</span>
+<span>Autenticar via SSO / LDAP / Active Directory</span>
+</span>
+<span class="material-symbols-outlined text-body-sm text-on-surface-variant">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Hardware Telemetry Bottom Bar -->
+<footer class="mt-space-lg w-full max-w-xl flex flex-col sm:flex-row items-center justify-between gap-space-xs text-on-surface-variant/70 font-code-sm text-label-sm px-space-sm select-none">
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-on-surface">STATUS: ONLINE</span>
+<span class="text-outline-variant">•</span>
+<span>192.168.1.120:9443</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="text-on-surface-variant/50">BUILD 2024.11</span>
+<span class="text-outline-variant">•</span>
+<span class="text-primary-container font-label-sm">v2.4.1</span>
+</div>
+</footer>
+</div>
+<script>
+  // Toggle password visibility
+  const toggleBtn = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  if (toggleBtn && passwordInput && eyeIcon) {
+    toggleBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      eyeIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+    });
+  }
+
+  // Quick profile select micro-interaction
+  function selectProfile(username, role) {
+    const userInput = document.getElementById('username');
+    if (userInput) {
+      userInput.value = username;
+      userInput.classList.add('bg-surface-container-high');
+      setTimeout(() => {
+        userInput.classList.remove('bg-surface-container-high');
+      }, 300);
+    }
+  }
+</script></main></body></html>

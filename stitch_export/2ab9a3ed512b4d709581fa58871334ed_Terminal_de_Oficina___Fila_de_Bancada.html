@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-secondary":"#003640","on-tertiary-container":"#003b26","on-secondary-container":"#00424e","on-primary":"#552100","inverse-surface":"#dee2ec","surface-container":"#1b2027","on-secondary-fixed-variant":"#004e5c","secondary-container":"#03b5d3","tertiary-fixed":"#6ffbbe","on-primary-fixed-variant":"#783200","on-background":"#dee2ec","surface-tint":"#ffb690","surface-container-high":"#252a32","surface-container-low":"#171c23","on-error-container":"#ffdad6","surface":"#0f141b","on-tertiary-fixed-variant":"#005236","outline-variant":"#584237","inverse-primary":"#9d4300","on-secondary-fixed":"#001f26","secondary-fixed":"#acedff","on-tertiary-fixed":"#002113","secondary-fixed-dim":"#4cd7f6","surface-bright":"#343941","inverse-on-surface":"#2c3138","on-error":"#690005","surface-dim":"#0f141b","error-container":"#93000a","surface-variant":"#30353d","on-tertiary":"#003824","primary":"#ffb690","outline":"#a78b7d","surface-container-highest":"#30353d","secondary":"#4cd7f6","background":"#0f141b","primary-container":"#f97316","tertiary":"#4edea3","surface-container-lowest":"#090f15","primary-fixed":"#ffdbca","on-surface":"#dee2ec","on-surface-variant":"#e0c0b1","error":"#ffb4ab","primary-fixed-dim":"#ffb690","on-primary-fixed":"#341100","tertiary-container":"#00b07a","on-primary-container":"#582200","tertiary-fixed-dim":"#4edea3"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","gutter-desktop":"1.5rem","space-sm":"0.5rem","margin":"1rem","space-xs":"0.25rem","space-2xl":"2.5rem","space-lg":"1rem","margin-desktop":"2rem","space-md":"0.75rem","gutter":"1rem"},"fontFamily":{"body-sm":["Inter"],"body-lg":["Inter"],"label-sm":["JetBrains Mono"],"body-md":["Inter"],"label-md":["JetBrains Mono"],"label-lg":["JetBrains Mono"],"headline-sm":["Inter"],"display-lg-mobile":["Inter"],"code-sm":["JetBrains Mono"],"display-lg":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"]},"fontSize":{"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"code-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><img alt="Martins3DVault Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt2aOM_xpSvIPjN3gHbZLJGwVas72-Lu3aK7uY9X5YI-kON9JxC61eLbmnHRzXBYLSa3O09aSkOKejrcaBm7aXFio4gy_MnRXfqb-ohhybMWbvxnugWmSb05Jimv5rQYxtx4K8XDt6ICE9xWWZ4Zh-PFokhWsG5p-Y2gd99hg4Hrseb7zKC6OruywpMa8mdICSKYMMACGl7ZFV-wmBrif65GmIi62fDpnqFU2MBkgVRPKZv9pROyQs"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">Martins<span class="text-primary-container">3D</span>Vault</span><span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Additive Vault v2.4</span></div></div><button class="text-on-surface-variant hover:text-on-surface transition-colors p-space-xs"><span class="material-symbols-outlined text-[18px]">dock_to_left</span></button></div><div class="px-space-md pt-space-md pb-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-outline uppercase tracking-wider px-space-sm">Repositórios Locais</span></div><nav class="flex flex-col gap-space-xs px-space-md" data-active-classes="bg-surface-container-highest text-primary font-headline-sm rounded-lg"><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="colecoes" href="#">Coleções</a><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="modelos-3d" href="#">Modelos 3D</a><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="mapear-pastas-scan" href="#">Mapear Pastas &amp; Scan</a></nav><div class="px-space-md pt-space-md pb-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-outline uppercase tracking-wider px-space-sm">Oficina de Impressão</span><span class="font-label-sm text-label-sm text-secondary font-code-sm px-space-xs py-0.5 rounded bg-surface-container-highest">Oficina 01</span></div><nav class="flex flex-col gap-space-xs px-space-md" data-active-classes="bg-surface-container-highest text-primary font-headline-sm rounded-lg"><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="terminal-de-oficina-fila-de-bancada" href="#">Terminal de Oficina &amp; Fila de Bancada</a><a class="group flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="gestao-de-usuarios" href="#">Gestão de Usuários</a></nav></div><div class="flex flex-col p-space-md gap-space-md bg-surface-container-lowest"><div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm"><div class="flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-primary-container">hard_drive</span><span class="font-label-md text-label-md text-on-surface">Storage NAS</span></div><span class="font-label-sm text-label-sm text-secondary font-code-sm">35%</span></div><div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden flex"><div class="bg-primary-container h-full w-[24%]"></div><div class="bg-secondary h-full w-[11%]"></div></div><div class="flex items-center justify-between text-on-surface-variant"><span class="font-label-sm text-label-sm">1.4 TB / 4 TB</span><span class="font-label-sm text-label-sm text-tertiary font-code-sm">RAID 5 OK</span></div></div><div class="flex items-center justify-between pt-space-xs"><div class="flex items-center gap-space-sm"><div class="relative"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdVIUde5QLp5ccpaTnHfdTwZvMBy6HPA_1ij8_0KVPPqa2uINvwT3pvvhX-CvSZI3egEPjEuV44Xty-gA1iqvB6VzrE9pG7cHF_np9mjhmA-9mMLvRUTusaqe7LurP5H1Z8kroFMLzeAy0-owAF7JU_Uifb1dMFve60GC9zfDz0RiDXE1C4wH8-OvAAQs1FB4SN2yW-Tv_8qJq1I1vw6do0_Axow4gMExzqOyxFsLkZxSqGthE9xj0"/><span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span></div><div class="flex flex-col"><span class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Rodrigo Martins</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span class="font-label-sm text-label-sm text-secondary uppercase font-code-sm">Operador (Oficina 01)</span></div></div></div><button class="text-on-surface-variant hover:text-on-surface p-space-xs rounded-lg hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md flex-1 max-w-2xl"><div class="relative flex-1 flex items-center"><span class="material-symbols-outlined absolute left-space-md text-on-surface-variant text-[18px]">search</span><input class="w-full bg-surface-container-low pl-10 pr-16 py-space-xs text-body-sm font-body-sm text-on-surface rounded-lg placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary-container transition-all" placeholder="Pesquisar arquivos STL, 3MF, STEP, G-Code... (ex: Voron, Ender, Benchy)" type="text"/><div class="absolute right-space-sm flex items-center gap-space-xs px-space-xs py-0.5 rounded bg-surface-container-highest"><span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">⌘K</span></div></div><div class="hidden xl:flex items-center gap-space-xs"><button class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors">Todos</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-primary-container font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">.STL</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-secondary font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">.3MF</button><button class="px-space-sm py-1 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">G-Code</button></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-sm px-space-sm py-1 rounded-lg bg-surface-container-low"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px] text-secondary">precision_manufacturing</span><span class="font-label-sm text-label-sm text-on-surface font-code-sm">Farm: 4/5 Ativas</span></div><span class="w-1 h-3 bg-surface-container-highest rounded-full"></span><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-label-sm text-label-sm text-tertiary font-code-sm">NAS OK</span></div></div><button class="flex items-center gap-space-xs bg-primary-container text-on-primary font-headline-sm text-headline-sm px-space-md py-1.5 rounded-lg hover:bg-primary hover:text-on-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)]"><span class="material-symbols-outlined text-[18px]">sync</span><span class="font-label-md text-label-md font-semibold">Escanear Agora</span></button><button class="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary-container"></span></button><button class="p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">settings</span></button></div></header><main class="relative pt-16 bg-surface min-h-screen w-full px-space-lg"><div class="flex flex-col w-full pb-space-2xl gap-space-xl">
+<!-- Operational Breadcrumbs & Emergency Topbar -->
+<section class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md p-space-md rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex flex-col gap-space-xs">
+<div class="flex flex-wrap items-center gap-space-xs text-on-surface-variant">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary-container px-space-xs py-0.5 rounded bg-surface-container-highest">
+<span class="material-symbols-outlined text-[14px]">precision_manufacturing</span>
+          OFICINA 01 (OPERADOR)
+        </span>
+<span class="text-outline font-label-sm">/</span>
+<span class="font-label-sm text-label-sm text-secondary">Bancada Física Sul</span>
+<span class="text-outline font-label-sm">/</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">vlt-print-01.lan (192.168.1.180)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Fila de Produção &amp; Telemetria</h1>
+<span class="flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-surface-container-high text-tertiary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+          3 Ativas • 1 Standby
+        </span>
+</div>
+</div>
+<!-- Global Tactical Quick Actions -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-error">pause_circle</span>
+<span class="font-label-md text-label-md">Pausar Fila Geral</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-high text-secondary hover:bg-surface-container-highest transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">thermostat</span>
+<span class="font-label-md text-label-md">Calibrar Pré-aquecimento</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary-container text-on-primary-container font-headline-sm hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.3)]">
+<span class="material-symbols-outlined text-[18px]">post_add</span>
+<span class="font-label-md text-label-md font-semibold text-on-primary">Adicionar G-Code Direto</span>
+</button>
+</div>
+</section>
+<!-- 4-Bento KPI Telemetry Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- KPI 1 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Impressoras Operando</span>
+<div class="flex items-baseline gap-space-xs mt-space-xs">
+<span class="font-display-lg text-display-lg text-on-surface">3</span>
+<span class="font-headline-md text-headline-md text-outline">/ 4</span>
+</div>
+</div>
+<div class="p-space-xs rounded-lg bg-surface-container-highest text-secondary">
+<span class="material-symbols-outlined text-[24px]">view_in_ar</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Voron 2.4 • X1C #1 • Prusa MK4</span>
+<span class="text-tertiary">75% Carga</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden flex">
+<div class="h-full bg-primary-container w-[75%]"></div>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Job Ativo Prioritário</span>
+<span class="font-body-md text-body-md font-semibold text-primary truncate max-w-[190px] mt-space-xs">
+            Stealthburner_Main_Body_v2.gcode
+          </span>
+<span class="font-label-sm text-label-sm text-secondary mt-0.5">Voron 2.4 R2 350</span>
+</div>
+<div class="p-space-xs rounded-lg bg-surface-container-highest text-primary-container">
+<span class="material-symbols-outlined text-[24px]">hourglass_top</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Camada 342/510</span>
+<span class="text-primary font-code-sm">68% • Restam 1h 14m</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary w-[68%]"></div>
+</div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Filamento / Custo Hoje</span>
+<div class="flex items-baseline gap-space-xs mt-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">605g</span>
+<span class="font-label-md text-label-md text-tertiary">~R$ 54,40</span>
+</div>
+</div>
+<div class="p-space-xs rounded-lg bg-surface-container-highest text-tertiary">
+<span class="material-symbols-outlined text-[24px]">toll</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>420g ABS (Preto)</span>
+<span class="text-secondary">185g PETG (Ciano)</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden flex">
+<div class="h-full bg-outline-variant w-[69%]"></div>
+<div class="h-full bg-secondary w-[31%]"></div>
+</div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Eficiência de Produção</span>
+<div class="flex items-baseline gap-space-xs mt-space-xs">
+<span class="font-display-lg text-display-lg text-tertiary">98.4%</span>
+</div>
+</div>
+<div class="p-space-xs rounded-lg bg-surface-container-highest text-tertiary">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+          Zero falhas mecânicas
+        </span>
+<span class="font-code-sm text-outline">24h telemetry</span>
+</div>
+</div>
+</section>
+<!-- Main Multi-Column Split: Hardware Live Farm & Queue vs Tactical Right Rail -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left + Center Farm Engine (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Active Printers Section Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">developer_board</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Telemetria ao Vivo das Impressoras</h2>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Atualização contínua Klipper via WebSocket</span>
+</div>
+<!-- Printer 1: Voron 2.4 R2 350 (Hero Card) -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-md shadow-md">
+<!-- Card Top Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-primary-container animate-pulse"></span>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Voron 2.4 R2 350</span>
+<span class="px-space-xs py-0.5 rounded bg-primary-container/20 text-primary-container font-label-sm text-label-sm">IMPRIMINDO</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-secondary font-code-sm text-label-sm">CANbus EBB SB2209</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">ID: VORON-01-SUL • Bico CHT 0.4mm • ABS Premium</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-secondary">light_mode</span> LED Interno
+            </button>
+<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary">tune</span> Z-Offset (+0.02)
+            </button>
+</div>
+</div>
+<!-- Split View: Simulated Live Thermal Cam & Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<!-- Thermal Cam Viewport -->
+<div class="md:col-span-6 relative aspect-video rounded-lg overflow-hidden bg-surface-container-lowest group shadow-inner">
+<img class="w-full h-full object-cover opacity-80" data-alt="High-resolution workshop camera view of a Voron 2.4 corexy 3D printer building an orange stealthburner part on a textured PEI plate. The chamber is illuminated with crisp industrial LEDs, glowing hotend at 255 degrees Celsius, showing layer-by-layer deposition with high mechanical precision in a clean dark workshop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXNYGLFzcSoCDLLZBDKC0ZhmDY0XaFOpbcikDh-CZ-S1R9JckTPbUMBc_2TaRHC-EVak3IPBfbpAYrJfGuY9bulj4rp0k3GuMNIJ0JcqJKlAA02_DXGL7bGhIXIs1BAWCYPtOwfAyv7qU6Xr0SegC09dOOi6IocSrzdJmtBF38RvqnK-WLl_unviK67hJKXEx__xfGPUrphmV8yOl6Gp5pkUsa_SHJkGAQdf02AJ3Qh6xSVDYTZ-7X"/>
+<!-- Thermal & Telemetry HUD Overlay -->
+<div class="absolute inset-0 p-space-sm flex flex-col justify-between pointer-events-none">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-code-sm px-space-xs py-0.5 rounded bg-surface-container-lowest/80 text-tertiary">CAM-01: 1080p 30fps</span>
+<span class="font-label-sm text-label-sm font-code-sm px-space-xs py-0.5 rounded bg-primary-container text-on-primary font-bold">REC • 03:12:45</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-space-xs py-0.5 rounded text-secondary font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">speed</span> 280 mm/s
+                </div>
+<div class="flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-space-xs py-0.5 rounded text-primary font-code-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">air</span> FAN: 100%
+                </div>
+</div>
+</div>
+</div>
+<!-- Real-Time Thermal & Print Gauges -->
+<div class="md:col-span-6 flex flex-col justify-between gap-space-sm bg-surface-container p-space-md rounded-lg">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-code-sm">Arquivo em Execução</span>
+<span class="font-label-sm text-label-sm text-primary-container font-code-sm">Coleção: Peças Técnicas Voron</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Stealthburner_Main_Body_v2.gcode</span>
+</div>
+<!-- Temperature Telemetry Indicators -->
+<div class="grid grid-cols-3 gap-space-xs text-center py-space-xs bg-surface-container-low rounded-lg">
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline">Bico</span>
+<span class="font-headline-sm text-headline-sm text-primary font-code-sm">255°C</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">Alvo: 255°C</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline">Mesa</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-code-sm">105°C</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">Alvo: 105°C</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline">Câmara</span>
+<span class="font-headline-sm text-headline-sm text-tertiary font-code-sm">48°C</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">Isolamento OK</span>
+</div>
+</div>
+<!-- Progress Telemetry -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant font-code-sm">Progresso: 68% (342 de 510)</span>
+<span class="text-primary font-semibold font-code-sm">ETA: 01:14:22</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary-container transition-all duration-500 w-[68%]"></div>
+</div>
+</div>
+<!-- Operational Control Action Group -->
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 py-1.5 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary">pause</span> Pausar Impressão
+              </button>
+<button class="py-1.5 px-space-sm rounded-lg bg-error-container/20 text-error hover:bg-error-container/40 font-label-sm text-label-sm flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">cancel</span> Abortar
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Printers Dual Grid (Bambu X1C & Prusa MK4) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Printer 2: Bambu Lab X1-Carbon -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Bambu Lab X1-Carbon</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-code-sm">42%</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-outline">Arquivo em Execução:</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Multicolor_AMS_Dragon.3mf</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Coleção: Articulated Creatures</span>
+</div>
+<!-- AMS Slot Multi-Material Visualization -->
+<div class="p-space-xs rounded-lg bg-surface-container flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-code-sm">AMS Integrado (4 Cores):</span>
+<div class="grid grid-cols-4 gap-space-xs">
+<div class="p-1 rounded bg-surface-container-high flex flex-col items-center shadow-sm">
+<div class="w-3 h-3 rounded-full bg-primary-container mb-1"></div>
+<span class="font-code-sm text-[10px] text-on-surface">S1: Laranja</span>
+<span class="font-code-sm text-[9px] text-tertiary">ATIVO</span>
+</div>
+<div class="p-1 rounded bg-surface-container-high flex flex-col items-center shadow-sm">
+<div class="w-3 h-3 rounded-full bg-black mb-1"></div>
+<span class="font-code-sm text-[10px] text-on-surface">S2: Preto</span>
+<span class="font-code-sm text-[9px] text-outline">PRONTO</span>
+</div>
+<div class="p-1 rounded bg-surface-container-low flex flex-col items-center opacity-40">
+<div class="w-3 h-3 rounded-full bg-surface-tint mb-1"></div>
+<span class="font-code-sm text-[10px] text-on-surface-variant">S3: Vazio</span>
+</div>
+<div class="p-1 rounded bg-surface-container-low flex flex-col items-center opacity-40">
+<div class="w-3 h-3 rounded-full bg-surface-tint mb-1"></div>
+<span class="font-code-sm text-[10px] text-on-surface-variant">S4: Vazio</span>
+</div>
+</div>
+</div>
+<!-- Quick Temp Stats -->
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm font-code-sm px-space-xs">
+<span>Bico: <strong class="text-primary">220°C</strong></span>
+<span>Mesa: <strong class="text-secondary">60°C</strong></span>
+<span>Vel: <strong>320 mm/s</strong></span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary w-[42%]"></div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-secondary">movie</span> Timelapse
+            </button>
+<button class="flex-1 py-1.5 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-tertiary">notifications_active</span> Notificar
+            </button>
+</div>
+</div>
+<!-- Printer 3: Prusa MK4 (Job Finished / Waiting Removal) -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Prusa MK4</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-tertiary/20 text-tertiary font-label-sm text-label-sm font-code-sm">CONCLUÍDO</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-outline">Peça Pronta na Mesa:</span>
+<span class="font-body-md text-body-md font-semibold text-tertiary truncate">Gridfinity_Baseplate_4x4.gcode</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">Concluído há 18 minutos • 100% OK</span>
+</div>
+<!-- Cooldown Status -->
+<div class="p-space-sm rounded-lg bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">ac_unit</span>
+<span>Mesa Fria (32°C): Pronta p/ Descolar</span>
+</div>
+<span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
+</div>
+<!-- Clear Instructions -->
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Retire a placa flexível de aço mola, descole o objeto, limpe com álcool isopropílico 99% e confirme a bancada para a próxima impressão.
+            </p>
+</div>
+<button class="w-full py-2 rounded-lg bg-tertiary text-on-tertiary-container font-headline-sm text-label-md flex items-center justify-center gap-space-xs hover:bg-tertiary-fixed transition-all shadow-md">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Confirmar Desocupação &amp; Iniciar Próximo</span>
+</button>
+</div>
+</div>
+<!-- Fila de Espera de G-Codes & 3MF (Next in Queue) -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-md shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[22px]">queue_play_next</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Próximos da Fila de Bancada</h3>
+<span class="font-code-sm text-code-sm text-secondary bg-surface-container-highest px-space-xs py-0.5 rounded">3 Arquivos Prontos</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline">Modo de Despacho:</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-tertiary font-code-sm text-label-sm">FIFO Automático</span>
+</div>
+</div>
+<!-- Interactive Drag-and-Drop Queue Table -->
+<div class="flex flex-col gap-space-xs">
+<!-- Queue Item 1 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<button class="cursor-grab text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Enclosure_Hinge_Top.3mf</span>
+<span class="font-code-sm text-label-sm px-1.5 py-0.5 rounded bg-secondary-container/20 text-secondary">.3MF</span>
+<span class="font-label-sm text-label-sm text-primary font-code-sm">PRIORIDADE ALTA</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>Destino: <strong>Bambu Lab X1C</strong></span>
+<span>• Material: PETG Preto</span>
+<span>• Tempo Estimado: 1h 45m</span>
+<span>• Solicitante: Camila Designer</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end sm:self-auto">
+<button class="px-space-sm py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-bright font-label-sm text-label-sm transition-colors">
+                Ver Parâmetros
+              </button>
+<button class="px-space-sm py-1 rounded bg-primary-container text-on-primary hover:bg-primary font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span> Disparar
+              </button>
+</div>
+</div>
+<!-- Queue Item 2 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<button class="cursor-grab text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Z_Drive_Idler_Bracket.gcode</span>
+<span class="font-code-sm text-label-sm px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container">.GCODE</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>Destino: <strong>Voron 2.4</strong></span>
+<span>• Material: ABS+ Preto</span>
+<span>• Tempo Estimado: 3h 10m</span>
+<span>• Solicitante: Rodrigo Martins</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end sm:self-auto">
+<button class="px-space-sm py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-bright font-label-sm text-label-sm transition-colors">
+                Ver Parâmetros
+              </button>
+<button class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-colors">
+                Aguardar Fim
+              </button>
+</div>
+</div>
+<!-- Queue Item 3 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<button class="cursor-grab text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Nevermore_Micro_v5.stl</span>
+<span class="font-code-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">.STL</span>
+<span class="font-label-sm text-label-sm text-outline font-code-sm">AGUARDANDO FATIAMENTO</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>Destino: <strong>Fila Geral</strong></span>
+<span>• Sugerido: OrcaSlicer 0.20mm ABS</span>
+<span>• Solicitante: Fila NAS</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end sm:self-auto">
+<button class="px-space-sm py-1 rounded bg-secondary-container/20 text-secondary hover:bg-secondary-container/30 font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Fatiar na Nuvem
+              </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Tactical Side Rail: Telemetry Controls, Hardware Health & Emergency Stop (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Active Operator Terminal Badge Card -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Terminal Ativo</span>
+<span class="px-space-xs py-0.5 rounded bg-tertiary/20 text-tertiary font-code-sm text-label-sm">AUTORIZADO</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">badge</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Oficina 01 (Operador)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-sm">Terminal Bancada Sul • Sessão #8849</span>
+</div>
+</div>
+<div class="pt-space-xs flex items-center justify-between">
+<button class="text-secondary hover:text-primary transition-colors font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">switch_account</span> Trocar Perfil
+          </button>
+<span class="font-code-sm text-label-sm text-outline">Ping: 12ms</span>
+</div>
+</div>
+<!-- Critical Emergency Stop Control -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> Segurança de Bancada
+          </span>
+<span class="font-code-sm text-label-sm text-outline">M112 Protocol</span>
+</div>
+<button class="w-full py-space-md rounded-xl bg-error hover:bg-error/90 text-on-error font-headline-sm text-headline-sm flex flex-col items-center justify-center gap-1 transition-all shadow-[0_0_24px_rgba(255,180,171,0.25)] active:scale-95">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[24px]">power_settings_new</span>
+<span class="tracking-wider">PARADA DE EMERGÊNCIA (E-STOP)</span>
+</div>
+<span class="font-label-sm text-label-sm opacity-90">Corta aquecimento e motores de todas as máquinas</span>
+</button>
+</div>
+<!-- Hardware Maintenance & Spool Diagnostics -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">build_circle</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Alertas de Hardware</h4>
+</div>
+<span class="font-label-sm text-label-sm text-primary-container font-code-sm">2 Notificações</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Spool Alert -->
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">swap_driving_apps_wheel</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Carretel Voron 2.4</span>
+</div>
+<span class="font-code-sm text-label-sm text-primary">~15% Restante</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              ABS Preto pode não completar a peça inteira. Deixe um carretel de backup pronto no sensor de fim de filamento.
+            </p>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
+<div class="bg-primary h-full w-[15%]"></div>
+</div>
+</div>
+<!-- Axis Maintenance Alert -->
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-secondary">oil_barrel</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Eixo Z Prusa MK4</span>
+</div>
+<span class="font-code-sm text-label-sm text-secondary font-semibold">20h para Revisão</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Lubrificação preventiva recomendada nos fusos lineares conforme ciclo padrão de 300 horas de trabalho.
+            </p>
+</div>
+</div>
+</div>
+<!-- Live Environment Sensors (Temp & Humidity in Enclosure) -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Ambiente da Sala de Impressão</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]">sensors</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Temperatura Sala</span>
+<span class="font-headline-md text-headline-md text-on-surface font-code-sm">24.6°C</span>
+<span class="font-code-sm text-[10px] text-tertiary">Ideal (AC Ativo)</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Umidade Relativa</span>
+<span class="font-headline-md text-headline-md text-secondary font-code-sm">28% RH</span>
+<span class="font-code-sm text-[10px] text-secondary">Drybox OK</span>
+</div>
+</div>
+</div>
+<!-- Workshop Operational Log Stream -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Log de Atividades do Turno</span>
+<button class="text-secondary hover:underline font-label-sm text-label-sm font-code-sm">Exportar CSV</button>
+</div>
+<div class="flex flex-col gap-space-xs font-code-sm text-[11px] text-on-surface-variant">
+<div class="p-1.5 rounded bg-surface-container flex items-start gap-space-xs">
+<span class="text-tertiary">14:12</span>
+<span>Prusa MK4 concluiu <strong>Gridfinity_Baseplate_4x4</strong> sem erros.</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container flex items-start gap-space-xs">
+<span class="text-secondary">13:40</span>
+<span>Bambu X1C iniciou troca de filamento AMS para cor Slot 2 (Preto).</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container flex items-start gap-space-xs">
+<span class="text-primary">12:05</span>
+<span>Operador Rodrigo Martins calibrou Z-Offset na Voron 2.4 (+0.02mm).</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

@@ -2,18 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import {
-  Layers,
-  Plus,
-  Box,
-  Trash2,
-  Edit2,
-  FolderOpen,
-  X,
-  Check,
-  Sparkles,
-} from "lucide-react";
 
 interface CollectionItem {
   id: string;
@@ -27,6 +17,7 @@ interface CollectionItem {
 }
 
 export default function CollectionsPage() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -37,6 +28,7 @@ export default function CollectionsPage() {
   const [formDesc, setFormDesc] = useState("");
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCollections = async () => {
     setLoading(true);
@@ -98,15 +90,15 @@ export default function CollectionsPage() {
         }),
       });
 
-      if (res.ok) {
-        setIsCreateOpen(false);
-        fetchCollections();
-      } else {
-        const data = await res.json();
-        setErrorMsg(data.error || "Erro ao salvar coleção");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Falha ao salvar coleção");
       }
+
+      setIsCreateOpen(false);
+      fetchCollections();
     } catch (err: any) {
-      setErrorMsg(err.message || "Erro de conexão ao salvar");
+      setErrorMsg(err.message || "Ocorreu um erro ao salvar");
     } finally {
       setSaving(false);
     }
@@ -115,227 +107,342 @@ export default function CollectionsPage() {
   const handleDeleteCollection = async (id: string, name: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Tem certeza que deseja excluir a coleção "${name}"? Os modelos vinculados não serão deletados.`)) {
+    if (!confirm(`Tem certeza que deseja excluir a coleção "${name}"? Os modelos permanecerão no cofre.`)) {
       return;
     }
 
     try {
       const res = await fetch(`/api/collections/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setCollections((prev) => prev.filter((c) => c.id !== id));
+        fetchCollections();
       }
     } catch (err) {
-      console.error("Erro ao deletar coleção:", err);
+      console.error("Erro ao excluir coleção:", err);
     }
   };
 
+  const filtered = searchQuery
+    ? collections.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : collections;
+
+  const totalModelsInCollections = collections.reduce((acc, c) => acc + (c.modelsCount || 0), 0);
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#090a10]">
-      <Navbar onScanTriggered={fetchCollections} />
+    <div className="min-h-screen bg-surface flex flex-col">
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+      />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                <Layers className="w-6 h-6" />
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          isSidebarCollapsed ? "pl-20" : "pl-72"
+        }`}
+      >
+        <Navbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
+
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+          <div className="flex flex-col w-full gap-6">
+            {/* Quick Stats Metric Header Strip from Stitch */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
+              {/* Metric 1: Total Models */}
+              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
+                    Modelos em Coleções
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-surface-container text-primary-container">
+                    <span className="material-symbols-outlined text-[20px]">view_in_ar</span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
+                    {totalModelsInCollections}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="material-symbols-outlined text-[14px] text-tertiary">
+                      trending_up
+                    </span>
+                    <span className="text-[11px] text-tertiary font-mono">Organizados</span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-primary-container h-full rounded-full w-[78%]"></div>
+                </div>
               </div>
-              <span>Coleções</span>
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Agrupe e organize seus modelos 3D em pastas lógicas ou coleções personalizadas.
-            </p>
-          </div>
 
-          <button
-            onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nova Coleção</span>
-          </button>
-        </div>
+              {/* Metric 2: Active Collections */}
+              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
+                    Agrupamentos
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-surface-container text-secondary">
+                    <span className="material-symbols-outlined text-[20px]">folder_special</span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
+                    {collections.length}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="w-2 h-2 rounded-full bg-secondary"></span>
+                    <span className="text-[11px] text-on-surface-variant font-mono">
+                      Coleções Ativas no Vault
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-secondary h-full rounded-full w-[92%]"></div>
+                </div>
+              </div>
 
-        {/* Grid de Coleções */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="h-64 rounded-2xl bg-white/5 border border-white/5 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : collections.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {collections.map((col) => (
-              <Link
-                key={col.id}
-                href={`/collections/${col.id}`}
-                className="group relative flex flex-col rounded-2xl bg-[#0e111d] border border-white/10 hover:border-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 overflow-hidden"
+              {/* Metric 3: Storage Occupancy */}
+              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
+                    Armazenamento NAS
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-surface-container text-primary">
+                    <span className="material-symbols-outlined text-[20px]">hard_drive</span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
+                    1.4 <span className="text-xs text-outline font-normal">TB</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[11px] font-mono">
+                    <span className="text-on-surface-variant">Capacidade 4 TB</span>
+                    <span className="text-primary-container font-semibold">35%</span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden flex">
+                  <div className="bg-primary-container h-full w-[24%]"></div>
+                  <div className="bg-secondary h-full w-[11%]"></div>
+                </div>
+              </div>
+
+              {/* Metric 4: Vault Sync Telemetry */}
+              <div className="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-outline">
+                    Sincronização
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-surface-container text-tertiary">
+                    <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+                    <div className="text-2xl font-bold text-on-surface tracking-tight font-mono">
+                      Online
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 mt-1 text-[11px] text-tertiary font-mono">
+                    <span>Synology DS923+ RAID 5 OK</span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-highest h-1 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-tertiary h-full rounded-full w-full"></div>
+                </div>
+              </div>
+            </section>
+
+            {/* Sub-Header Bar & Create CTA */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-2 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-6 rounded bg-primary-container"></div>
+                <h1 className="text-lg font-semibold text-on-surface tracking-tight">
+                  Painel de Coleções
+                </h1>
+                <span className="text-xs font-mono text-on-surface-variant ml-2">
+                  {filtered.length} organizadas
+                </span>
+              </div>
+
+              <button
+                onClick={handleOpenCreate}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)]"
               >
-                {/* Visual Preview / Cover */}
-                <div className="relative w-full h-44 bg-[#080a12] border-b border-white/5 overflow-hidden flex items-center justify-center">
-                  {col.coverImage ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={col.coverImage}
-                      alt={col.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : col.previewThumbnails.length > 0 ? (
-                    <div className="w-full h-full grid grid-cols-2 gap-0.5 p-1 bg-white/5">
-                      {col.previewThumbnails.slice(0, 4).map((thumb, idx) => (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          key={idx}
-                          src={thumb}
-                          alt="preview"
-                          className="w-full h-full object-cover rounded"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-indigo-400 transition-colors">
-                      <FolderOpen className="w-12 h-12 stroke-[1.2]" />
-                      <span className="text-[11px] mt-2 font-medium">Sem modelos ainda</span>
-                    </div>
-                  )}
-
-                  {/* Badge de Contagem */}
-                  <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[11px] font-medium text-white flex items-center gap-1.5">
-                    <Box className="w-3 h-3 text-indigo-400" />
-                    <span>{col.modelsCount} {col.modelsCount === 1 ? "modelo" : "modelos"}</span>
-                  </div>
-
-                  {/* Actions Dropdown / Buttons */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => handleOpenEdit(col, e)}
-                      title="Editar Coleção"
-                      className="p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition-all"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
-                      title="Excluir Coleção"
-                      className="p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-rose-400 hover:text-rose-200 hover:bg-rose-500/20 transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Card Info */}
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
-                      {col.name}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                      {col.description || "Nenhuma descrição fornecida."}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Slug: {col.slug}</span>
-                    <span className="text-indigo-400 group-hover:underline">Abrir &rarr;</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-white/5 bg-white/[0.02]">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4">
-              <Layers className="w-8 h-8 text-indigo-400" />
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span>Nova Coleção</span>
+              </button>
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">Nenhuma coleção encontrada</h3>
-            <p className="text-sm text-slate-400 max-w-md mb-6">
-              Coleções são criadas automaticamente a partir das pastas organizadas na sua biblioteca (ex: Canecas, Santos, Desenhos) ou podem ser criadas manualmente aqui.
-            </p>
-            <button
-              onClick={handleOpenCreate}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Criar Primeira Coleção</span>
-            </button>
+
+            {/* Collections Grid */}
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-on-surface-variant">
+                <span className="material-symbols-outlined text-[36px] animate-spin text-primary-container">
+                  sync
+                </span>
+                <span className="text-xs font-mono">Carregando coleções...</span>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-surface-container-low border border-white/5 text-center gap-3">
+                <div className="p-4 rounded-full bg-surface-container-highest text-primary-container">
+                  <span className="material-symbols-outlined text-[36px]">folder_open</span>
+                </div>
+                <h3 className="font-semibold text-base text-on-surface">Nenhuma coleção cadastrada</h3>
+                <p className="text-xs text-on-surface-variant max-w-sm">
+                  Crie coleções temáticas como &quot;Upgrades Voron&quot;, &quot;Miniaturas RPG&quot; ou &quot;Peças Técnicas&quot;.
+                </p>
+                <button
+                  onClick={handleOpenCreate}
+                  className="mt-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  <span>Criar Primeira Coleção</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filtered.map((col) => (
+                  <Link
+                    key={col.id}
+                    href={`/collections/${col.id}`}
+                    className="group relative flex flex-col rounded-xl bg-surface-container-low border border-white/5 hover:border-primary-container/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 p-4 gap-3"
+                  >
+                    {/* Header: Icon & Actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="p-2.5 rounded-lg bg-surface-container-highest text-secondary group-hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-[24px]">folder</span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenEdit(col, e)}
+                          className="p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                          title="Editar coleção"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
+                          className="p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-surface-container-high transition-colors"
+                          title="Excluir coleção"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Titles */}
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-semibold text-sm text-on-surface group-hover:text-primary transition-colors truncate">
+                        {col.name}
+                      </h3>
+                      {col.description ? (
+                        <p className="text-xs text-on-surface-variant line-clamp-2">
+                          {col.description}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-outline italic">Sem descrição</p>
+                      )}
+                    </div>
+
+                    {/* Preview Thumbnails strip */}
+                    <div className="flex items-center gap-1.5 py-1">
+                      {col.previewThumbnails && col.previewThumbnails.length > 0 ? (
+                        col.previewThumbnails.slice(0, 4).map((thumb, idx) => (
+                          <div
+                            key={idx}
+                            className="w-10 h-10 rounded bg-surface-container-lowest overflow-hidden border border-white/5 flex-shrink-0"
+                          >
+                            <img
+                              src={thumb}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full h-10 rounded bg-surface-container-lowest flex items-center justify-center text-[10px] font-mono text-outline border border-white/5">
+                          Vazio
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer count */}
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[11px] font-mono text-on-surface-variant">
+                      <span>{col.modelsCount} modelos</span>
+                      <span className="text-secondary group-hover:translate-x-0.5 transition-transform">
+                        Abrir →
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </main>
+      </div>
 
       {/* Modal Criar / Editar Coleção */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md rounded-2xl bg-[#0f121d] border border-white/10 shadow-2xl p-6 relative">
-            <button
-              onClick={() => setIsCreateOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                <Layers className="w-5 h-5" />
-              </div>
-              <h2 className="text-lg font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-on-surface">
                 {editingCol ? "Editar Coleção" : "Nova Coleção"}
               </h2>
+              <button
+                onClick={() => setIsCreateOpen(false)}
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
             </div>
 
             {errorMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
+              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs">
                 {errorMsg}
               </div>
             )}
 
-            <form onSubmit={handleSaveCollection} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Nome da Coleção *
-                </label>
+            <form onSubmit={handleSaveCollection} className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Nome da Coleção</label>
                 <input
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Ex: Canecas Geek, Miniaturas D&D, Decorativos..."
-                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                  placeholder="Ex: Peças Técnicas Voron 2.4"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Descrição
-                </label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Descrição (Opcional)</label>
                 <textarea
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  placeholder="Breve descrição dos modelos desta coleção..."
+                  placeholder="Finalidade, especificações ou notas de impressão..."
                   rows={3}
-                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" />
-                  <span>{saving ? "Salvando..." : editingCol ? "Salvar Alterações" : "Criar Coleção"}</span>
+                  {saving ? "Salvando..." : editingCol ? "Salvar Alterações" : "Criar Coleção"}
                 </button>
               </div>
             </form>

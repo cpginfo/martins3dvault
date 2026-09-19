@@ -1,25 +1,26 @@
 # Mapa do Projeto - Martins3DVault (v1.2.0)
 
-Este documento serve como o **mapa técnico completo e exaustivo** da arquitetura do Martins3DVault. Ele foi projetado para que qualquer engenheiro de software ou modelo de inteligência artificial compreenda instantaneamente a estrutura de diretórios, o fluxo de dados, a modelagem de banco de dados e os contratos de API.
+Este documento serve como o **mapa técnico completo e exaustivo** da arquitetura do Martins3DVault. Ele foi projetado para que qualquer engenheiro de software ou modelo de inteligência artificial compreenda instantaneamente a estrutura de diretórios, o fluxo de dados, a modelagem de banco de dados, os contratos de API e a interface de usuário baseada no **Google Stitch Design System ("Martins3D Vault Manager")**.
 
 ---
 
 ## 1. Visão Geral da Arquitetura
 
-O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Docker Compose*), auto-hospedada (*self-hosted*), construída com Next.js (App Router), Three.js, Prisma ORM e PostgreSQL.
+O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Docker Compose*), auto-hospedada (*self-hosted*), construída com Next.js (App Router), Three.js, Prisma ORM e PostgreSQL, com containers de execução nomeados `3d-vault-web` e `3d-vault-db`.
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                            MARTINS3DVAULT v1.2.0                       │
-├──────────────────────────┬─────────────────────────────┬───────────────┤
-│       APRESENTAÇÃO       │       NEGÓCIO & PARSERS     │  PERSISTÊNCIA │
-│  - Linear/Vercel Dark UI │  - Directory Crawler & Sync │  - PostgreSQL │
-│  - Three.js Fast Engine  │  - 3MF to Binary STL Parser │  - Prisma ORM │
-│  - STLLoader Streaming   │  - Affine Transform Matrix  │  - Volumes FS │
-│  - Medições em mm        │  - Companion Image Normaliz.│  - Session JWT│
-│  - Gestão de Coleções    │  - Upload Multipart Parser  │  - Disk Cache │
-│  - Gestão de Usuários    │  - PDF Manual Manager       │               │
-└──────────────────────────┴─────────────────────────────┴───────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           MARTINS3DVAULT v1.2.0                                  │
+│             Google Stitch Design System ("Martins3D Vault Manager")              │
+├────────────────────────────┬─────────────────────────────┬───────────────────────┤
+│        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
+│  - Stitch Industrial Dark  │  - Directory Crawler & Sync │  - PostgreSQL 16      │
+│  - Persistent Sidebar & NAS│  - 3MF to Binary STL Parser │  - Prisma ORM 6.19    │
+│  - Eagle-Style Studio Bar  │  - Affine Transform Matrix  │  - Docker Volumes FS  │
+│  - Zoom Slider & View Modes│  - Companion Image Normaliz.│  - Session JWT (Jose) │
+│  - Three.js Fast Engine    │  - Upload Multipart Parser  │  - Disk Cache (STL)   │
+│  - Telemetria de Oficina   │  - PDF Manual Manager       │  - Stitch Design Sync │
+└────────────────────────────┴─────────────────────────────┴───────────────────────┘
 ```
 
 ---
@@ -29,14 +30,25 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
 ```
 /swarm/stl/
 ├── Dockerfile                     # Multi-stage Dockerfile com Prisma CLI global e Next.js Standalone
-├── docker-compose.yml             # Orquestração de serviços: App (Martins3DVault) + PostgreSQL 16 + Healthchecks
+├── docker-compose.yml             # Orquestração de serviços: 3d-vault-web + 3d-vault-db (PostgreSQL 16) na rede qg
 ├── docker-entrypoint.sh           # Script de boot: wait-for-db, prisma db push e seed de admin
 ├── .dockerignore                  # Arquivos ignorados na geração da imagem Docker
 ├── .env                           # Configurações de ambiente local
 ├── .env.example                   # Modelo documentado de variáveis de ambiente (APP_VERSION, etc.)
-├── package.json                   # Dependências do projeto (Three, Prisma, Tailwind, etc.)
+├── package.json                   # Dependências do projeto (Three, Prisma, Tailwind v4, etc.)
 ├── next.config.ts                 # Configuração do Next.js (output standalone, unoptimized images)
 ├── tsconfig.json                  # Configurações do compilador TypeScript
+│
+├── .agents/
+│   └── mcp_config.json            # Configuração do Stitch MCP Server (@_davideast/stitch-mcp proxy)
+│
+├── stitch_export/                 # Exportação bruta das 6 telas e assets do Google Stitch (Martins3D Vault Manager)
+│   ├── screen_*.html              # Telas HTML geradas pelo Stitch
+│   └── *.png                      # Assets visuais originais do Stitch
+│
+├── public/                        # Arquivos estáticos servidos diretamente pelo Next.js
+│   ├── logo.png                   # Logotipo oficial Martins3DVault (laranja industrial/3D cúbico)
+│   └── avatar.png                 # Avatar padrão de perfil do operador
 │
 ├── prisma/
 │   └── schema.prisma              # Schema do banco de dados (User, Library, Collection, Model, ModelFile, ModelAsset, Tag, ScanJob)
@@ -51,26 +63,26 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
 │
 └── src/
     ├── app/                       # Next.js App Router (Páginas e APIs)
-    │   ├── layout.tsx             # Layout global com fontes e metatags do Martins3DVault
-    │   ├── globals.css            # Tema Linear/Vercel Dark Mode e Glassmorphism
-    │   ├── page.tsx               # Galeria principal com busca instantânea e filtros (formato e coleções)
+    │   ├── layout.tsx             # Layout global: Inter, JetBrains Mono, Material Symbols, Sidebar & Navbar
+    │   ├── globals.css            # Tema Stitch Industrial Dark Mode com Tailwind CSS v4 @theme tokens
+    │   ├── page.tsx               # Explorador de Modelos 3D com breadcrumb, Eagle FilterBar e grid dinâmico
     │   │
     │   ├── collections/
-    │   │   ├── page.tsx           # Catálogo de coleções com contadores, miniaturas e criação manual
+    │   │   ├── page.tsx           # Painel de Coleções: métricas (4 cards bento), catálogo temático e botão de criação
     │   │   └── [id]/
     │   │       └── page.tsx       # Detalhes da coleção, listagem de modelos e vinculação em lote
     │   │
     │   ├── libraries/
-    │   │   └── page.tsx           # Gestor de bibliotecas de disco e controle de varreduras
+    │   │   └── page.tsx           # Mapear Pastas & Scan: HUD AdditiveCore, status RAID 5, hash monitor e logs de scan
     │   │
     │   ├── users/
-    │   │   └── page.tsx           # Gestor de usuários e permissões (ADMIN, USER, VIEWER)
+    │   │   └── page.tsx           # Gestão de Usuários & Permissões: tabela RBAC (ADMIN, OPERATOR, VIEWER)
     │   │
     │   ├── metrics/
-    │   │   └── page.tsx           # Dashboard com KPIs, espaço em disco e gráfico de formatos
+    │   │   └── page.tsx           # Terminal de Oficina & Fila de Bancada: telemetria Moonraker/Klipper e Bento KPIs
     │   │
     │   ├── login/
-    │   │   └── page.tsx           # Tela de autenticação com atalho para login admin
+    │   │   └── page.tsx           # Tela de autenticação com fundo CAD isométrico e atalho de demonstração
     │   │
     │   └── api/                   # Rotas de API Backend
     │       ├── auth/
@@ -115,14 +127,15 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
     │
     ├── components/                # Componentes React Reutilizáveis
     │   ├── layout/
-    │   │   └── Navbar.tsx         # Barra superior com logo, versão, links de navegação, busca com ⌘K e upload
+    │   │   ├── Sidebar.tsx        # Sidebar retrátil persistente: logo, menus por categoria, gauge NAS RAID 5 e perfil
+    │   │   └── Navbar.tsx         # Barra superior: busca global ⌘K, pills de formato (.STL, .3MF, G-Code), status NAS e scan
     │   ├── gallery/
-    │   │   ├── FilterBar.tsx      # Barra de filtros da galeria: busca na página, abas de impressos, formatos, coleções e ordenação
-    │   │   └── ModelCard.tsx      # Card de modelo com capa prioritária, badges, toggle de impresso (1 clique) e favoritos
+    │   │   ├── FilterBar.tsx      # Controles de estúdio Eagle: zoom slider (180-400px), modos de visualização (grade/tabela), polímeros
+    │   │   └── ModelCard.tsx      # Card de modelo Stitch: capa prioritária, badges de polímero, medidas mm e toggle de impressão
     │   ├── model/
     │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js, abas, renomeação, capa, manuais e status de impresso
     │   ├── upload/
-    │   │   └── UploadModal.tsx    # Modal de Drag & Drop para upload manual de arquivos
+    │   │   └── UploadModal.tsx    # Modal de Drag & Drop com suporte a múltiplos arquivos 3D, capas e manuais
     │   └── viewer3d/
     │       └── ModelViewer3D.tsx  # Visualizador Three.js (STLLoader, Z-Up corrigido, PLA/ABS, presets de câmera)
     │

@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Falha na autenticação");
+        throw new Error(data.error || "Falha na autenticação do cofre");
       }
 
       router.push("/");
@@ -44,81 +44,192 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#090a10]">
-      <div className="w-full max-w-md p-8 rounded-3xl glass-panel border border-white/10 shadow-2xl animate-in fade-in duration-300">
-        {/* Brand */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-[1px] shadow-xl shadow-indigo-500/20 mb-3">
-            <div className="w-full h-full bg-[#0d101d] rounded-[15px] flex items-center justify-center">
-              <Box className="w-6 h-6 text-indigo-400" />
-            </div>
+    <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-6 relative overflow-hidden">
+      {/* Subtle CAD Isometric Pattern & Ambient Glows from Stitch */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        <svg
+          className="absolute w-full h-full opacity-10 text-on-surface"
+          height="100%"
+          width="100%"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              height="83.138"
+              id="cad-grid"
+              patternUnits="userSpaceOnUse"
+              width="48"
+            >
+              <path
+                d="M48 0 L24 13.856 L0 0 M24 13.856 L24 41.569 M48 41.569 L24 55.425 L0 41.569 M24 55.425 L24 83.138 M48 83.138 L24 96.994 L0 83.138"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.75"
+              ></path>
+              <circle cx="24" cy="13.856" fill="currentColor" opacity="0.4" r="1.5"></circle>
+              <circle cx="24" cy="55.425" fill="currentColor" opacity="0.4" r="1.5"></circle>
+            </pattern>
+          </defs>
+          <rect fill="url(#cad-grid)" height="100%" width="100%"></rect>
+        </svg>
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Telemetry Watermarks */}
+      <div className="hidden lg:flex absolute top-6 left-8 items-center gap-2 font-mono text-xs text-on-surface-variant/40 select-none">
+        <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+        <span>PIPELINE_STATUS: STANDBY</span>
+        <span className="text-outline-variant">•</span>
+        <span>MESH_CHECKSUM_OK</span>
+      </div>
+      <div className="hidden lg:flex absolute top-6 right-8 items-center gap-2 font-mono text-xs text-on-surface-variant/40 select-none">
+        <span>BUILD_VOL: 300x300x400mm</span>
+        <span className="text-outline-variant">•</span>
+        <span>OCTO_PORT: 8080</span>
+      </div>
+
+      {/* Central Vault Card from Stitch */}
+      <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
+        {/* Top Hardware Telemetry Badge Strip */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 bg-surface-container-highest/60 px-3 py-1 rounded-lg border border-white/5">
+            <span className="material-symbols-outlined text-secondary text-sm">lock</span>
+            <span className="text-[10px] text-secondary tracking-widest uppercase font-mono font-semibold">
+              ENCRYPTED REPOSITORY
+            </span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Martins3DVault</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Entre para gerenciar seus arquivos e coleções 3D
-          </p>
+          <div className="flex items-center gap-1.5 text-on-surface-variant/70 text-[11px] font-mono">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+            <span>NODE: VLT-01</span>
+          </div>
         </div>
 
+        {/* Header Section: Logo & Identity */}
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-container to-secondary rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+            <div className="relative w-16 h-16 rounded-xl bg-surface-container-lowest p-2 flex items-center justify-center shadow-md border border-white/5">
+              <Image
+                src="/logo.png"
+                alt="Martins3DVault"
+                width={56}
+                height={56}
+                className="w-full h-full object-contain"
+                priority
+              />
+            </div>
+          </div>
+
+          <div className="mt-1">
+            <h1 className="text-2xl font-bold text-on-surface tracking-tight flex items-center justify-center gap-1">
+              <span>Martins</span>
+              <span className="text-primary-container">3D</span>
+              <span>Vault</span>
+            </h1>
+            <p className="text-xs text-on-surface-variant max-w-sm mx-auto mt-1">
+              Gerenciador e Cofre Inteligente de Arquivos 3D (STL & 3MF)
+            </p>
+          </div>
+
+          {/* Format Compatibility Pills */}
+          <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px]">
+            <span className="px-2 py-0.5 rounded bg-primary-container/15 text-primary-container font-semibold border border-primary-container/20">
+              .STL
+            </span>
+            <span className="px-2 py-0.5 rounded bg-secondary/15 text-secondary font-semibold border border-secondary/20">
+              .3MF
+            </span>
+            <span className="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-white/5">
+              .STEP
+            </span>
+            <span className="px-2 py-0.5 rounded bg-tertiary/15 text-tertiary font-semibold border border-tertiary/20">
+              .GCODE
+            </span>
+          </div>
+        </div>
+
+        {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">error</span>
             <span>{error}</span>
           </div>
         )}
 
+        {/* Main Authentication Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">E-mail</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-primary">person</span>
+                <span>Usuário ou E-mail</span>
+              </label>
+              <span className="font-mono text-[10px] text-on-surface-variant/60">LOCAL / ADMIN</span>
+            </div>
+            <div className="relative flex items-center">
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                placeholder="admin@printvault.local"
+                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">Senha</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-primary">lock</span>
+                <span>Chave de Acesso / Senha</span>
+              </label>
+            </div>
+            <div className="relative flex items-center">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg pl-3.5 pr-10 py-2.5 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 text-on-surface-variant hover:text-on-surface transition-colors"
+                title={showPassword ? "Ocultar senha" : "Ver senha"}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {showPassword ? "visibility_off" : "visibility"}
+                </span>
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+            className="w-full mt-2 py-3 rounded-lg bg-primary-container text-on-primary font-bold text-xs hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.35)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            <span>{loading ? "Entrando..." : "Acessar Sistema"}</span>
-            <ArrowRight className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">key</span>
+            <span>{loading ? "Desbloqueando Cofre..." : "Acessar Martins3DVault"}</span>
           </button>
         </form>
 
-        {/* Demo Admin credentials autofill */}
-        <div className="mt-6 pt-6 border-t border-white/5 text-center">
-          <p className="text-[11px] text-slate-500 mb-2">Conta administrativa padrão:</p>
+        {/* Quick Demo Fill Button */}
+        <div className="pt-2 border-t border-white/5 flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={fillAdminCredentials}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-[11px] font-mono text-indigo-300 transition-all"
+            className="text-[11px] font-mono text-secondary hover:text-primary transition-colors flex items-center gap-1"
           >
-            admin@printvault.local / admin123
+            <span className="material-symbols-outlined text-[14px]">auto_fix_high</span>
+            <span>Preencher Credenciais Demo de Administrador</span>
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

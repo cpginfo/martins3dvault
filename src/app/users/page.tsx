@@ -1,23 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import {
-  Users,
-  Plus,
-  Shield,
-  UserCheck,
-  Eye,
-  Key,
-  Trash2,
-  X,
-  Check,
-  AlertCircle,
-  Clock,
-  Mail,
-  User as UserIcon,
-  Loader2,
-} from "lucide-react";
 
 interface UserItem {
   id: string;
@@ -28,6 +13,7 @@ interface UserItem {
 }
 
 export default function UsersPage() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +33,8 @@ export default function UsersPage() {
   const [editPassword, setEditPassword] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // Exclusão
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Search filter
+  const [searchFilter, setSearchFilter] = useState("");
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -59,7 +45,9 @@ export default function UsersPage() {
         const data = await res.json();
         setUsers(data);
       } else if (res.status === 403) {
-        setError("Apenas administradores podem acessar o gerenciamento de usuários. Faça login com uma conta de administrador.");
+        setError(
+          "Apenas administradores podem acessar a gestão de usuários. Faça login com uma conta de administrador."
+        );
       } else {
         setError("Não foi possível carregar a lista de usuários.");
       }
@@ -101,320 +89,354 @@ export default function UsersPage() {
         }),
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setShowCreateModal(false);
-        setName("");
-        setEmail("");
-        setPassword("");
-        setRole("USER");
-        fetchUsers();
-      } else {
-        setFormError(data.error || "Erro ao criar usuário.");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Falha ao criar usuário");
       }
-    } catch {
-      setFormError("Erro de comunicação com o servidor.");
+
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("USER");
+      setShowCreateModal(false);
+      await fetchUsers();
+    } catch (err: any) {
+      setFormError(err.message || "Erro desconhecido");
     } finally {
       setCreating(false);
     }
   };
 
-  const handleSaveEdit = async () => {
+  const handleOpenEdit = (u: UserItem) => {
+    setEditingUser(u);
+    setEditRole(u.role);
+    setEditPassword("");
+    setFormError(null);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!editingUser) return;
     setSavingEdit(true);
+    setFormError(null);
 
     try {
-      const payload: any = { id: editingUser.id, role: editRole };
+      const payload: any = { role: editRole };
       if (editPassword.trim()) {
+        if (editPassword.length < 6) {
+          throw new Error("A nova senha deve possuir no mínimo 6 caracteres.");
+        }
         payload.password = editPassword;
       }
 
-      const res = await fetch("/api/users", {
+      const res = await fetch(`/api/users/${editingUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        setEditingUser(null);
-        setEditPassword("");
-        fetchUsers();
-      } else {
-        const d = await res.json();
-        alert(d.error || "Erro ao atualizar usuário.");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Falha ao atualizar usuário");
       }
-    } catch {
-      alert("Erro ao conectar ao servidor.");
+
+      setEditingUser(null);
+      await fetchUsers();
+    } catch (err: any) {
+      setFormError(err.message || "Erro ao salvar alterações");
     } finally {
       setSavingEdit(false);
     }
   };
 
   const handleDeleteUser = async (id: string, userName: string) => {
-    if (!confirm(`Deseja realmente excluir o usuário "${userName}"?`)) return;
+    if (!confirm(`Deseja realmente remover o usuário "${userName}"?`)) return;
 
-    setDeletingId(id);
     try {
-      const res = await fetch(`/api/users?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u.id !== id));
+        await fetchUsers();
       } else {
-        const d = await res.json();
-        alert(d.error || "Erro ao excluir usuário.");
+        const errData = await res.json();
+        alert(errData.error || "Falha ao remover usuário");
       }
     } catch {
-      alert("Erro ao excluir usuário.");
-    } finally {
-      setDeletingId(null);
+      alert("Erro de conexão ao remover usuário");
     }
   };
 
-  const getRoleBadge = (userRole: string) => {
-    switch (userRole) {
-      case "ADMIN":
-        return (
-          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <Shield className="w-3 h-3" /> Administrador
-          </span>
-        );
-      case "USER":
-        return (
-          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            <UserCheck className="w-3 h-3" /> Usuário
-          </span>
-        );
-      case "VIEWER":
-      default:
-        return (
-          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
-            <Eye className="w-3 h-3" /> Visualizador
-          </span>
-        );
-    }
-  };
+  const filteredUsers = searchFilter
+    ? users.filter(
+        (u) =>
+          u.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchFilter.toLowerCase())
+      )
+    : users;
+
+  const adminCount = users.filter((u) => u.role === "ADMIN").length;
+  const operatorCount = users.filter((u) => u.role === "USER").length;
+  const viewerCount = users.filter((u) => u.role === "VIEWER").length;
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col selection:bg-indigo-500/30">
-      <Navbar />
+    <div className="min-h-screen bg-surface flex flex-col">
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+      />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="w-6 h-6 text-indigo-400" />
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                Usuários e Acessos
-              </h1>
-            </div>
-            <p className="text-sm text-slate-400">
-              Gerencie quem pode acessar, visualizar e fazer uploads no Martins3DVault.
-            </p>
-          </div>
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          isSidebarCollapsed ? "pl-20" : "pl-72"
+        }`}
+      >
+        <Navbar isSidebarCollapsed={isSidebarCollapsed} />
 
-          <button
-            onClick={() => {
-              setFormError(null);
-              setShowCreateModal(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Novo Usuário</span>
-          </button>
-        </div>
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+          <div className="flex flex-col w-full gap-6 pt-6">
+            {/* Top Header Strip from Stitch */}
+            <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low shadow-sm border border-white/5">
+              <div className="flex items-start gap-4">
+                <div className="p-3.5 rounded-xl bg-surface-container-highest text-primary-container flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[32px]">admin_panel_settings</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-xl font-bold text-on-surface tracking-tight">
+                    Gestão de Usuários & Permissões
+                  </h1>
+                  <p className="text-xs text-on-surface-variant max-w-xl">
+                    Controle de Acesso Baseado em Papéis (RBAC) para operadores de oficina,
+                    makers e visualizadores convidados.
+                  </p>
+                </div>
+              </div>
 
-        {/* Access denied or error message */}
-        {error && (
-          <div className="my-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3 text-rose-300 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Acesso Restrito</p>
-              <p className="text-rose-400/90 text-xs mt-1">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Content list */}
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center">
-            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mb-3" />
-            <span className="text-xs text-slate-400">Carregando usuários...</span>
-          </div>
-        ) : users.length === 0 ? (
-          <div className="py-20 text-center">
-            <UserIcon className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-white">Nenhum usuário encontrado</h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Clique em &quot;Novo Usuário&quot; acima para cadastrar a primeira conta.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map((u) => (
-              <div
-                key={u.id}
-                className="p-5 rounded-2xl bg-[#0f121d] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between shadow-lg"
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)] self-start lg:self-auto"
               >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-sm font-bold text-white shadow-md">
-                        {u.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white leading-snug">{u.name}</h3>
-                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Mail className="w-3 h-3 text-slate-500" />
-                          <span>{u.email}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                <span>Novo Usuário</span>
+              </button>
+            </section>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    {getRoleBadge(u.role)}
-                    <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(u.createdAt).toLocaleDateString("pt-BR")}
-                    </span>
-                  </div>
-                </div>
+            {/* Metric Strip */}
+            <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-1">
+                <span className="text-[10px] font-mono text-outline uppercase tracking-wider">
+                  Total de Contas
+                </span>
+                <span className="text-2xl font-bold text-on-surface font-mono">{users.length}</span>
+                <span className="text-[11px] text-tertiary font-mono">Controle Local</span>
+              </div>
+              <div className="p-4 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-1">
+                <span className="text-[10px] font-mono text-outline uppercase tracking-wider">
+                  Administradores
+                </span>
+                <span className="text-2xl font-bold text-primary font-mono">{adminCount}</span>
+                <span className="text-[11px] text-primary-container font-mono">Acesso Total</span>
+              </div>
+              <div className="p-4 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-1">
+                <span className="text-[10px] font-mono text-outline uppercase tracking-wider">
+                  Operadores
+                </span>
+                <span className="text-2xl font-bold text-secondary font-mono">{operatorCount}</span>
+                <span className="text-[11px] text-secondary font-mono">Bancada & Impressão</span>
+              </div>
+              <div className="p-4 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-1">
+                <span className="text-[10px] font-mono text-outline uppercase tracking-wider">
+                  Visualizadores
+                </span>
+                <span className="text-2xl font-bold text-outline font-mono">{viewerCount}</span>
+                <span className="text-[11px] text-on-surface-variant font-mono">Somente Leitura</span>
+              </div>
+            </section>
 
-                {/* Actions */}
-                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingUser(u);
-                      setEditRole(u.role);
-                      setEditPassword("");
-                    }}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition-all"
-                  >
-                    <Key className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Editar / Senha</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteUser(u.id, u.name)}
-                    disabled={deletingId === u.id}
-                    className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-all disabled:opacity-50"
-                    title="Excluir Usuário"
-                  >
-                    {deletingId === u.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
+            {/* Filter and Table Section */}
+            <section className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="relative w-full sm:w-72">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    placeholder="Filtrar por nome ou e-mail..."
+                    className="w-full bg-surface-container-low border border-white/10 rounded-lg pl-9 pr-4 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  />
                 </div>
               </div>
-            ))}
+
+              {error ? (
+                <div className="p-6 rounded-xl bg-error-container/20 border border-error/30 text-error text-xs">
+                  {error}
+                </div>
+              ) : loading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[36px] animate-spin text-primary-container">
+                    sync
+                  </span>
+                  <span className="text-xs font-mono">Carregando usuários...</span>
+                </div>
+              ) : (
+                <div className="w-full overflow-x-auto rounded-xl bg-surface-container-low border border-white/5 shadow-sm">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[11px] font-mono uppercase tracking-wider text-outline bg-surface-container-lowest">
+                        <th className="py-3 px-4">Usuário</th>
+                        <th className="py-3 px-4">E-mail</th>
+                        <th className="py-3 px-4">Papel (Role)</th>
+                        <th className="py-3 px-4">Data de Cadastro</th>
+                        <th className="py-3 px-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((u) => (
+                        <tr
+                          key={u.id}
+                          className="border-b border-white/5 hover:bg-surface-container-high transition-colors"
+                        >
+                          <td className="py-3 px-4 font-semibold text-on-surface">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary-container font-mono text-xs font-bold border border-white/5">
+                                {u.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <span>{u.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-on-surface-variant">{u.email}</td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                                u.role === "ADMIN"
+                                  ? "bg-primary-container/20 text-primary border border-primary-container/30"
+                                  : u.role === "USER"
+                                  ? "bg-secondary/20 text-secondary border border-secondary/30"
+                                  : "bg-surface-container-highest text-on-surface-variant border border-white/5"
+                              }`}
+                            >
+                              {u.role === "ADMIN"
+                                ? "ADMIN"
+                                : u.role === "USER"
+                                ? "OPERADOR"
+                                : "VISITANTE"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-outline text-[11px]">
+                            {new Date(u.createdAt).toLocaleDateString("pt-BR")}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => handleOpenEdit(u)}
+                                className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
+                                title="Editar papel ou redefinir senha"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(u.id, u.name)}
+                                className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-surface-container-highest"
+                                title="Excluir usuário"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
           </div>
-        )}
-      </main>
+        </main>
+      </div>
 
-      {/* Modal de Criação de Usuário */}
+      {/* Modal Criar Usuário */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-[#0f121d] border border-white/15 shadow-2xl relative">
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-white">Criar Novo Usuário</h2>
-                <p className="text-xs text-slate-400">Defina o acesso e as credenciais de login</p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-on-surface">Novo Usuário</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-on-surface-variant hover:text-on-surface p-1"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
             </div>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{formError}</span>
+              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs">
+                {formError}
               </div>
             )}
 
-            <form onSubmit={handleCreateUser} className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nome Completo
-                </label>
+            <form onSubmit={handleCreateUser} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Nome Completo</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: Carlos Silva"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
-                  className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  E-mail de Acesso
-                </label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="carlos@exemplo.com"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
                   required
-                  className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Senha
-                </label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Senha Temporária</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
-                  className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nível de Permissão (Papel)
-                </label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Papel / Nível</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#141828] border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
-                  <option value="USER">Usuário (Visualizar, Baixar e Fazer Upload)</option>
-                  <option value="ADMIN">Administrador (Controle Total, Scan e Usuários)</option>
-                  <option value="VIEWER">Visualizador (Apenas Visualizar e Baixar)</option>
+                  <option value="USER">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
+                  <option value="ADMIN">Administrador (Acesso Total & Gerência de Usuários)</option>
+                  <option value="VIEWER">Visualizador (Somente Consulta 3D)</option>
                 </select>
               </div>
 
-              <div className="mt-4 flex items-center justify-end gap-2.5">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-all"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50"
                 >
-                  {creating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Salvar Usuário</span>
+                  {creating ? "Criando..." : "Criar Usuário"}
                 </button>
               </div>
             </form>
@@ -422,75 +444,72 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Modal de Edição de Usuário */}
+      {/* Modal Editar Usuário */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-[#0f121d] border border-white/15 shadow-2xl relative">
-            <button
-              onClick={() => setEditingUser(null)}
-              className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400">
-                <Key className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-white">Editar Usuário</h2>
-                <p className="text-xs text-slate-400">{editingUser.name} ({editingUser.email})</p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-on-surface">
+                Editar Usuário: {editingUser.name}
+              </h2>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="text-on-surface-variant hover:text-on-surface p-1"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
             </div>
 
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nível de Permissão
-                </label>
+            {formError && (
+              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs">
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEdit} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Papel / Nível</label>
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value as any)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#141828] border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
-                  <option value="USER">Usuário (Visualizar, Baixar e Fazer Upload)</option>
-                  <option value="ADMIN">Administrador (Controle Total, Scan e Usuários)</option>
-                  <option value="VIEWER">Visualizador (Apenas Visualizar e Baixar)</option>
+                  <option value="USER">Operador (Bancada & Modelos)</option>
+                  <option value="ADMIN">Administrador (Total)</option>
+                  <option value="VIEWER">Visualizador (Leitura)</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Redefinir Nova Senha
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">
+                  Redefinir Senha (deixe em branco para manter)
                 </label>
                 <input
                   type="password"
                   value={editPassword}
                   onChange={(e) => setEditPassword(e.target.value)}
-                  placeholder="Deixe em branco para manter a atual"
-                  className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
+                  placeholder="Nova senha (opcional)"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
 
-              <div className="mt-2 flex items-center justify-end gap-2.5">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-all"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="button"
-                  onClick={handleSaveEdit}
+                  type="submit"
                   disabled={savingEdit}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50"
                 >
-                  {savingEdit && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Salvar Alterações</span>
+                  {savingEdit ? "Salvando..." : "Salvar Alterações"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,69 +1,110 @@
 @import "tailwindcss";
 
+@theme {
+  --color-surface: #0f141b;
+  --color-surface-dim: #0f141b;
+  --color-surface-bright: #343941;
+  --color-surface-container-lowest: #090f15;
+  --color-surface-container-low: #171c23;
+  --color-surface-container: #1b2027;
+  --color-surface-container-high: #252a32;
+  --color-surface-container-highest: #30353d;
+  --color-surface-variant: #30353d;
+
+  --color-on-surface: #dee2ec;
+  --color-on-surface-variant: #e0c0b1;
+  --color-outline: #a78b7d;
+  --color-outline-variant: #584237;
+
+  --color-primary: #ffb690;
+  --color-primary-container: #f97316;
+  --color-on-primary: #552100;
+  --color-on-primary-container: #582200;
+
+  --color-secondary: #4cd7f6;
+  --color-secondary-container: #03b5d3;
+  --color-on-secondary: #003640;
+  --color-on-secondary-container: #00424e;
+
+  --color-tertiary: #4edea3;
+  --color-tertiary-container: #00b07a;
+  --color-on-tertiary: #003824;
+  --color-on-tertiary-container: #003b26;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-space-2xl: 2.5rem;
+
+  --font-sans: var(--font-sans), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+}
+
 :root {
-  --background: #090a10;
-  --foreground: #f1f5f9;
-  --card: #0f121d;
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-hover: #151928;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --accent: #06b6d4;
-  --muted: #94a3b8;
-  --muted-dark: #64748b;
+  --background: #0f141b;
+  --foreground: #dee2ec;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  background-color: #0f141b;
+  color: #dee2ec;
+  font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%);
-  background-attachment: fixed;
 }
 
-/* Custom scrollbars */
+/* Material Symbols sizing helper */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* Custom subtle scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090a10;
+  background: #090f15;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2438;
+  background: #252a32;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2d3652;
+  background: #30353d;
 }
 
-/* Glassmorphism utilities */
+/* Glassmorphism panels */
 .glass-panel {
-  background: rgba(15, 18, 29, 0.75);
+  background: rgba(23, 28, 35, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card {
-  background: rgba(17, 21, 34, 0.6);
+  background: rgba(27, 32, 39, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  background: rgba(22, 27, 44, 0.85);
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(99, 102, 241, 0.15);
+  background: rgba(37, 42, 50, 0.9);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(249, 115, 22, 0.2);
   transform: translateY(-2px);
 }
 
-/* Pulse animation for scanner */
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }

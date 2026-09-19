@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, Star, FileText, Layers, Check, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 export interface ModelCardData {
   id: string;
@@ -36,6 +36,7 @@ interface ModelCardProps {
   onClick: () => void;
   onFavoriteToggle?: (modelId: string, newState: boolean) => void;
   onPrintedToggle?: (modelId: string, newState: boolean) => void;
+  viewMode?: "large" | "compact" | "table";
 }
 
 export default function ModelCard({
@@ -43,6 +44,7 @@ export default function ModelCard({
   onClick,
   onFavoriteToggle,
   onPrintedToggle,
+  viewMode = "large",
 }: ModelCardProps) {
   const [favorite, setFavorite] = useState(model.isFavorite);
   const [isPrinted, setIsPrinted] = useState(Boolean(model.isPrinted));
@@ -55,10 +57,8 @@ export default function ModelCard({
     setFavorite(Boolean(model.isFavorite));
   }, [model.isFavorite]);
 
-  // Formatos presentes no modelo
-  const formats = Array.from(new Set(model.files.map((f) => f.format)));
+  const formats = Array.from(new Set(model.files.map((f) => f.format.toUpperCase())));
 
-  // Dimensões do arquivo primário ou primeiro arquivo com dimensões
   const primaryFile = model.files.find((f) => f.dimensionsX && f.dimensionsY && f.dimensionsZ);
   const dimsText = primaryFile
     ? `${Math.round(primaryFile.dimensionsX!)}×${Math.round(primaryFile.dimensionsY!)}×${Math.round(
@@ -102,127 +102,210 @@ export default function ModelCard({
         body: JSON.stringify({ isPrinted: nextState }),
       });
     } catch (err) {
-      console.error("Erro ao atualizar status de impresso:", err);
+      console.error("Erro ao atualizar status de impressão:", err);
     }
   };
 
+  // Render Table View Row
+  if (viewMode === "table") {
+    return (
+      <tr
+        onClick={onClick}
+        className="group hover:bg-surface-container-high transition-colors cursor-pointer border-b border-white/5 text-xs text-on-surface"
+      >
+        <td className="py-2.5 px-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-surface-container-lowest overflow-hidden flex-shrink-0 relative border border-white/5">
+              {model.coverImage ? (
+                <img
+                  src={model.coverImage}
+                  alt={model.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40">
+                  <span className="material-symbols-outlined text-[18px]">view_in_ar</span>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
+                {model.name}
+              </span>
+              <span className="text-[11px] text-on-surface-variant font-mono truncate">
+                {model.library?.name}
+              </span>
+            </div>
+          </div>
+        </td>
+        <td className="py-2.5 px-3">
+          <div className="flex items-center gap-1 flex-wrap">
+            {formats.map((fmt) => (
+              <span
+                key={fmt}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ${
+                  fmt === "3MF"
+                    ? "bg-secondary/20 text-secondary"
+                    : fmt === "STL"
+                    ? "bg-primary-container/20 text-primary"
+                    : "bg-surface-container-highest text-on-surface-variant"
+                }`}
+              >
+                .{fmt}
+              </span>
+            ))}
+          </div>
+        </td>
+        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant">
+          {dimsText || "—"}
+        </td>
+        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant">
+          {model._count?.files || model.files.length} arquivos
+        </td>
+        <td className="py-2.5 px-3">
+          <button
+            type="button"
+            onClick={handlePrintedClick}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+              isPrinted
+                ? "bg-tertiary/15 text-tertiary border border-tertiary/30"
+                : "bg-surface-container-highest text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[14px]">
+              {isPrinted ? "check_circle" : "schedule"}
+            </span>
+            <span>{isPrinted ? "Impresso" : "Nunca Impresso"}</span>
+          </button>
+        </td>
+        <td className="py-2.5 px-3 text-right">
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            className={`p-1 rounded-lg transition-colors ${
+              favorite
+                ? "text-amber-400"
+                : "text-on-surface-variant/40 hover:text-amber-400"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[18px]"
+              style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              star
+            </span>
+          </button>
+        </td>
+      </tr>
+    );
+  }
+
+  // Render Grid Card (Large or Compact)
   return (
     <div
       onClick={onClick}
-      className="group relative flex flex-col rounded-2xl overflow-hidden glass-card cursor-pointer"
+      className={`group relative flex flex-col rounded-xl bg-surface-container-low border border-white/5 hover:border-primary-container/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden ${
+        viewMode === "compact" ? "gap-2 p-2" : "gap-3 p-3"
+      }`}
     >
-      {/* Cover Image & 3D Thumbnail Area */}
-      <div className="relative aspect-[4/3] w-full bg-[#0d101d] overflow-hidden flex items-center justify-center border-b border-white/5">
+      {/* Thumbnail Area */}
+      <div
+        className={`relative w-full rounded-lg bg-surface-container-lowest overflow-hidden flex items-center justify-center border border-white/5 ${
+          viewMode === "compact" ? "aspect-square" : "aspect-[4/3]"
+        }`}
+      >
         {model.coverImage ? (
           <img
             src={model.coverImage}
             alt={model.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center p-6 text-slate-600 group-hover:text-indigo-400 transition-colors">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-inner">
-              <Box className="w-8 h-8 opacity-60" />
-            </div>
-            <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider">
-              Preview 3D Disponível
-            </span>
+          <div className="flex flex-col items-center justify-center gap-2 text-on-surface-variant/30 group-hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-[44px]">view_in_ar</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider">3D Mesh</span>
           </div>
         )}
 
-        {/* Formats Badges (.STL, .3MF) */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-          {formats.map((fmt) => (
+        {/* Top Badges Overlay: Formats & Favorite */}
+        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+          <div className="flex items-center gap-1 flex-wrap">
+            {formats.map((fmt) => (
+              <span
+                key={fmt}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold shadow-md ${
+                  fmt === "3MF"
+                    ? "bg-secondary-container/90 text-on-secondary"
+                    : fmt === "STL"
+                    ? "bg-primary-container/90 text-on-primary"
+                    : "bg-surface-container-highest/90 text-on-surface"
+                }`}
+              >
+                .{fmt}
+              </span>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            className={`p-1.5 rounded-lg backdrop-blur-md transition-colors pointer-events-auto shadow-md ${
+              favorite
+                ? "bg-surface-container-lowest/80 text-amber-400"
+                : "bg-surface-container-lowest/60 text-white/60 hover:text-amber-400 hover:bg-surface-container-lowest"
+            }`}
+            title={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          >
             <span
-              key={fmt}
-              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
-                fmt === "3MF"
-                  ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                  : fmt === "STL"
-                  ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
-                  : "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
-              }`}
+              className="material-symbols-outlined text-[18px]"
+              style={{ fontVariationSettings: favorite ? "'FILL' 1" : "'FILL' 0" }}
             >
-              .{fmt}
+              star
             </span>
-          ))}
-          {model._count.files > 1 && (
-            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-black/60 backdrop-blur-md text-slate-300 border border-white/10 flex items-center gap-1">
-              <Layers className="w-3 h-3 text-slate-400" />
-              {model._count.files} peças
+          </button>
+        </div>
+
+        {/* Bottom Badges Overlay: Dimensions & Files count */}
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none text-[10px] font-mono">
+          {dimsText && (
+            <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface border border-white/5">
+              {dimsText}
             </span>
           )}
+          <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface-variant border border-white/5 ml-auto">
+            {model._count?.files || model.files.length} arqs
+          </span>
         </div>
-
-        {/* Top Right Controls: Print Status Check + Favorite Button */}
-        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-          {/* Print Check Toggle Button */}
-          <button
-            onClick={handlePrintedClick}
-            title={isPrinted ? "Marcado como impresso (clique para desmarcar)" : "Marcar como já impresso"}
-            className={`px-2 py-1 rounded-xl backdrop-blur-md border text-[10px] font-semibold flex items-center gap-1.5 transition-all shadow-md ${
-              isPrinted
-                ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/35 shadow-emerald-500/20"
-                : "bg-black/50 border-white/15 text-slate-400 hover:text-white hover:bg-black/70 hover:border-white/30"
-            }`}
-          >
-            <CheckCircle2
-              className={`w-3.5 h-3.5 transition-colors ${
-                isPrinted ? "text-emerald-400 fill-emerald-400/20" : "text-slate-500"
-              }`}
-            />
-            <span>{isPrinted ? "Impresso" : "Não impresso"}</span>
-          </button>
-
-          {/* Favorite Button */}
-          <button
-            onClick={handleFavoriteClick}
-            title={favorite ? "Remover dos favoritos" : "Favoritar"}
-            className="p-1.5 rounded-xl bg-black/50 backdrop-blur-md border border-white/15 hover:bg-black/70 hover:border-white/30 transition-all text-slate-400 hover:text-white shadow-md"
-          >
-            <Star
-              className={`w-3.5 h-3.5 transition-colors ${
-                favorite ? "fill-amber-400 text-amber-400" : "text-slate-400 hover:text-white"
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Bottom Dimensions Pill */}
-        {dimsText && (
-          <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md text-[10px] font-mono bg-black/60 backdrop-blur-md text-slate-300 border border-white/10">
-            {dimsText}
-          </div>
-        )}
       </div>
 
-      {/* Model Information Area */}
-      <div className="p-4 flex flex-col justify-between flex-1">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-medium text-indigo-400 truncate max-w-[180px]">
-              {model.library.name}
-            </span>
-            {model.filamentType && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 text-slate-400 border border-white/5">
-                {model.filamentType}
-              </span>
-            )}
-          </div>
-          <h3 className="font-semibold text-slate-100 text-sm tracking-tight leading-snug line-clamp-1 group-hover:text-indigo-300 transition-colors">
-            {model.name}
-          </h3>
-        </div>
+      {/* Info Body */}
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <h3 className="font-semibold text-sm text-on-surface group-hover:text-primary transition-colors truncate" title={model.name}>
+          {model.name}
+        </h3>
 
-        {/* Metadata Footer */}
-        <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-          <span className="text-[11px] text-slate-500 truncate max-w-[180px]">
-            /{model.folderPath}
+        <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-mono">
+          <span className="truncate max-w-[65%]" title={model.library?.name}>
+            {model.library?.name}
           </span>
-          <span className="text-[11px] text-indigo-400 font-medium group-hover:underline">
-            Abrir 3D →
-          </span>
+
+          {/* Print Status Pill button */}
+          <button
+            type="button"
+            onClick={handlePrintedClick}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+              isPrinted
+                ? "bg-tertiary/15 text-tertiary border border-tertiary/30"
+                : "bg-surface-container-highest text-on-surface-variant hover:text-on-surface"
+            }`}
+            title="Clique para alternar o status de impressão"
+          >
+            <span className="material-symbols-outlined text-[13px]">
+              {isPrinted ? "check_circle" : "schedule"}
+            </span>
+            <span>{isPrinted ? "Impresso" : "Não impresso"}</span>
+          </button>
         </div>
       </div>
     </div>

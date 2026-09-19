@@ -9,7 +9,13 @@
 
 O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-hospedada (*self-hosted*), conteinerizada via Docker, focada na catalogação, visualização 3D em tempo real de alta performance e gerenciamento de projetos de impressão 3D (`.stl`, `.3mf`, `.obj`, `.step`).
 
-- **Inspiração de Design**: Interfaces modernas, fluidas e escuras estilo **Linear** e **Vercel** (Dark mode nativo, glassmorphism com Tailwind CSS, micro-animações, tag de versão e navegação limpa).
+- **Design System Google Stitch ("Martins3D Vault Manager")**:
+  - Toda a interface foi reconstruída com base no projeto exportado via Stitch MCP (`projects/1712109623850818548`).
+  - Paleta industrial moderna com tema escuro nativo (`surface: #0f141b`, `primary-container: #f97316`, `secondary: #4cd7f6`, `tertiary: #4edea3`).
+  - Tipografia técnica com **Inter**, **JetBrains Mono** e ícones **Material Symbols Outlined**.
+  - **Sidebar Retrátil Persistente** (`Sidebar.tsx`): Menus por categoria, gauge de armazenamento RAID 5 e perfil do operador logado.
+  - **Barra Superior Integrada** (`Navbar.tsx`): Busca global com atalho `⌘K`, filtros rápidos por extensão (`.STL`, `.3MF`, `G-Code`), status do NAS e acionamento de scan.
+  - **Controles de Estúdio Estilo Eagle App** (`FilterBar.tsx`): Slider de zoom de miniaturas (180px a 400px), alternador de visualização (Grade Grande, Grade Compacta e Tabela), e badges de polímeros (PLA, PETG, ABS/ASA, TPU).
 - **Engine 3D de Alta Velocidade (Three.js + Streaming Binário)**:
   - Conversor de servidor para arquivos `.3mf` complexos (Bambu Studio, OrcaSlicer, Prusa), convertendo em tempo real e cacheando em formato STL Binário consolidado (`threemf-converter.ts` e `/api/assets/mesh`).
   - Trata o problema clássico de travamento em "100%" causado pelo `DOMParser` do Three.js em arquivos 3MF de mais de 200MB de XML.
@@ -26,22 +32,22 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Renomear título inline com persistência imediata (`PUT /api/models/[id]`).
   - Trocar imagem de capa por upload ou por seleção de imagens existentes na pasta (`POST /api/models/[id]/cover`).
   - Enviar e remover manuais de montagem em PDF (`POST` e `DELETE /api/models/[id]/manual`).
-- **Gestão de Usuários & Controle de Acesso**:
-  - Interface dedicada em `/users` para criar, listar, alterar senhas e excluir usuários com níveis `ADMIN`, `USER` e `VIEWER`.
-- **Sistema de Coleções (Collections)**:
-  - Criação automática a partir das pastas da biblioteca (`Canecas`, `Cats`, `Desenhos`, `Santos`).
-  - Telas `/collections` e `/collections/[id]` para gerenciamento e vinculação de modelos.
+- **Terminal de Oficina & Telemetria (`/metrics`)**:
+  - Dashboard de bancada preparado para integração Moonraker / Klipper.
+  - 4 Cards Bento: Impressões Hoje, Taxa de Sucesso, Consumo de Filamento (kg) e Tempo Ativo.
+  - Fila de bancada com status das impressoras e monitoramento de temperatura.
+- **Mapear Pastas & Central AdditiveCore (`/libraries`)**:
+  - Monitoramento de volume RAID 5, hash monitor e logs em tempo real do crawler.
+- **Gestão de Usuários & Controle de Acesso (`/users`)**:
+  - Interface dedicada para criar, listar, alterar senhas e excluir usuários com níveis `ADMIN`, `OPERATOR` e `VIEWER`.
+- **Sistema de Coleções (`/collections` e `/collections/[id]`)**:
+  - Strip de métricas com 4 cards (Coleções, Projetos, Impressos, Volume Total), catálogo temático e vinculação em lote.
 - **Upload Manual de Arquivos**:
   - Interface Drag & Drop integrada (`UploadModal.tsx`) e endpoint `POST /api/upload`.
 - **Controle de Impressões (Check de Impressos & Filtro de Nunca Impressos)**:
   - Campos `isPrinted` e `printedAt` tanto em `Model` quanto em `ModelFile`.
   - Botão de toggle rápido com 1 clique diretamente no card da galeria (`[ ○ Não impresso ]` ⟷ `[ ✓ Impresso ]`).
   - Abas de filtragem na galeria: **Todos**, **Nunca Impressos** e **Já Impressos**.
-  - No modal de detalhes 3D: controle por projeto completo, check individual por peça na aba "Arquivos", e banner com data/hora na aba "Notas de Impressão".
-- **Sistema de Pesquisa Inteligente & Ampla**:
-  - Campo de pesquisa dedicado diretamente na página (`FilterBar.tsx`) e na barra superior (`Navbar.tsx`), sincronizados entre si e com a URL `?q=...`.
-  - Atalho global `⌘K` / `Ctrl+K` para focar imediatamente na busca.
-  - Suporte a busca por termos múltiplos separados por espaço (ex: `"santa sentada"`), nomes de arquivos na pasta (`.stl`, `.3mf`), coleções e bibliotecas.
 - **Health Check & Monitoramento**:
   - Rota `/api/health` conectada ao PostgreSQL e monitorada nativamente pelo Docker Compose.
 
@@ -51,12 +57,13 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 - **Versão do Aplicativo**: `v1.2.0` (configurada nas variáveis `APP_VERSION` e `NEXT_PUBLIC_APP_VERSION`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
-- **UI Library**: React 19.2.8, Tailwind CSS v4, Lucide React icons.
+- **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
 - **Banco de Dados & ORM**: PostgreSQL 16 com Prisma ORM v6.19 (LTS).
 - **Autenticação**: JWT sem estado baseado em cookies seguros via `jose` e `bcryptjs`.
 - **Parsing de Arquivos**: `adm-zip` para inspeção e descompactação de 3MF, parser customizado para STL binário/ASCII e montagem de transformações afins.
-- **Containerização**: Docker multi-stage com Next.js Standalone, `docker-compose.yml` e rede externa `qg`.
+- **Containerização**: Docker multi-stage com Next.js Standalone, `docker-compose.yml` (`3d-vault-web` e `3d-vault-db`) e rede externa `qg`.
+- **Integração Google Stitch**: MCP Server (`@_davideast/stitch-mcp proxy`) configurado em `.agents/mcp_config.json`.
 
 ---
 
@@ -95,10 +102,17 @@ O modo `output: "standalone"` remove utilitários de CLI. No Prisma 6, a CLI exi
 2. Copiar o pacote `bcryptjs` completo de `deps`: `COPY --from=deps /app/node_modules/bcryptjs ./node_modules/bcryptjs`.
 3. Executar o sync via `prisma db push --skip-generate` no entrypoint.
 
-### G. Status de Impressão e Filtro de Nunca Impressos
-- O status `isPrinted` (boolean) e `printedAt` (DateTime) estão modelados em `Model`. No `ModelFile`, `isPrinted` permite rastreamento individual de peças.
-- A rota `/api/models` filtra `where.isPrinted = false` quando `?printed=false`, e `where.isPrinted = true` quando `?printed=true`.
-- A busca `q` decompõe termos separados por espaço e pesquisa em `name`, `folderPath`, `description`, `collection.name`, `library.name`, `files.some.fileName` e `tags`.
+### G. Conflito de Portas no Docker ao Renomear Containers
+Ao alterar `container_name` no `docker-compose.yml` (por exemplo, de `printvault-web` para `3d-vault-web`), os containers antigos não são automaticamente removidos por um simples `docker compose up`.
+**Regra**: Sempre pare os containers antigos com `docker rm -f <nome-antigo>` antes de subir novos containers com bind na mesma porta `3000`.
+
+### H. Tokens do Google Stitch com Tailwind CSS v4
+No Tailwind v4, os tokens personalizados do Stitch estão definidos via `@theme` em `src/app/globals.css`:
+- `bg-surface`, `bg-surface-container-low`, `bg-surface-container-high`
+- `text-primary-container` (`#f97316`)
+- `text-secondary` (`#4cd7f6`)
+- `text-tertiary` (`#4edea3`)
+- `border-outline-variant` (`#414752`)
 
 ---
 
@@ -111,7 +125,7 @@ docker compose up -d --build
 
 # 2. Verificar status de saúde
 docker compose ps
-# printvault-db e printvault-web devem estar (healthy)
+# 3d-vault-db e 3d-vault-web devem estar (healthy)
 
 # 3. Acessar no navegador
 # http://localhost:3000
@@ -120,14 +134,14 @@ docker compose ps
 
 ---
 
-## 5. Backlog de Próximas Funcionalidades (Para a próxima IA / Amanhã)
+## 5. Backlog de Próximas Funcionalidades (Para a próxima IA / Futuro)
 
 1. **Integração com Fatiadores e Impressoras 3D**:
-   - Conector com **OctoPrint** e **Moonraker (Klipper)** via REST API para envio direto de G-Code com 1 clique.
+   - Conectar os endpoints REST do **Moonraker (Klipper)** e **OctoPrint** aos componentes de telemetria já criados em `/metrics`.
    - Conector **Bambu Lab MQTT** para envio de `.3mf` para impressoras X1C, P1S, A1.
 2. **Download em Lote (ZIP)**:
    - Rota `/api/models/[id]/download-zip` para empacotar modelos multi-peças.
 3. **Filtro Avançado de Medidas**:
    - Filtro na galeria por volume máximo de impressão (ex: até 256x256x256mm).
 4. **Histórico de Impressões & Consumo de Filamento**:
-   - Registrar datas em que o modelo foi impresso, filamento gasto em gramas e custo estimado.
+   - Registrar datas em que o modelo foi impresso, filamento gasto em gramas e custo estimado integrado à fila de bancada.

@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import FilterBar from "@/components/gallery/FilterBar";
+import FilterBar, { ViewMode } from "@/components/gallery/FilterBar";
 import ModelCard, { ModelCardData } from "@/components/gallery/ModelCard";
 import ModelDetailModal, { ModelDetailData } from "@/components/model/ModelDetailModal";
-import { Box, Sparkles, FolderTree, Layers, RefreshCw } from "lucide-react";
+import UploadModal from "@/components/upload/UploadModal";
 import Link from "next/link";
 
 export default function HomePage() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [models, setModels] = useState<ModelCardData[]>([]);
   const [collections, setCollections] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedCollection, setSelectedCollection] = useState("");
@@ -16,11 +18,15 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [printedFilter, setPrintedFilter] = useState<"all" | "unprinted" | "printed">("all");
   const [selectedFormat, setSelectedFormat] = useState("");
+  const [selectedPolymer, setSelectedPolymer] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sort, setSort] = useState("date_desc");
   const [totalCount, setTotalCount] = useState(0);
   const [selectedModel, setSelectedModel] = useState<ModelDetailData | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [zoomSize, setZoomSize] = useState(280);
+  const [viewMode, setViewMode] = useState<ViewMode>("large");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   // Sync initial query parameter ?q=... if present
   useEffect(() => {
@@ -78,7 +84,7 @@ export default function HomePage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchModels();
-    }, 250);
+    }, 200);
     return () => clearTimeout(timer);
   }, [fetchModels]);
 
@@ -97,179 +103,234 @@ export default function HomePage() {
     }
   };
 
-  const handleScanFinished = () => {
-    fetchModels();
-    fetchCollections();
-  };
-
-  const handlePrintedToggled = (id: string, newState: boolean) => {
-    setModels((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, isPrinted: newState, printedAt: newState ? new Date().toISOString() : null } : m
+  // Filter models by polymer client-side if selected
+  const filteredModels = selectedPolymer
+    ? models.filter((m) =>
+        m.files.some(
+          (f) =>
+            f.fileName.toLowerCase().includes(selectedPolymer.toLowerCase()) ||
+            (m.filamentType &&
+              m.filamentType.toLowerCase().includes(selectedPolymer.toLowerCase()))
+        )
       )
-    );
-    // Se estiver filtrando especificamente por nunca impressos ou impressos, recarrega para atualizar a contagem
-    if (printedFilter !== "all") {
-      setTimeout(() => fetchModels(), 300);
-    }
-  };
-
-  const handleFavoriteToggled = (id: string, newState: boolean) => {
-    setModels((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isFavorite: newState } : m))
-    );
-    if (favoritesOnly) {
-      setTimeout(() => fetchModels(), 300);
-    }
-  };
+    : models;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090a10]">
-      <Navbar
-        searchQuery={searchQuery}
-        onSearchChange={(q) => setSearchQuery(q)}
-        onScanTriggered={handleScanFinished}
+    <div className="min-h-screen bg-surface flex flex-col">
+      {/* Persistent Sidebar */}
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        {/* Header Hero */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-              <span>Modelos e Projetos 3D</span>
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Organize, inspecione malhas poligonais e visualize arquivos STL, 3MF e OBJ em tempo real.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="/collections"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all"
-            >
-              <Layers className="w-4 h-4 text-indigo-400" />
-              <span>Coleções</span>
-            </Link>
-
-            <Link
-              href="/libraries"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all"
-            >
-              <FolderTree className="w-4 h-4 text-indigo-400" />
-              <span>Bibliotecas</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Filter Controls (Search + Printed Status + Formats + Collections) */}
-        <FilterBar
+      {/* Main Container offset by sidebar width */}
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          isSidebarCollapsed ? "pl-20" : "pl-72"
+        }`}
+      >
+        {/* Top Navbar */}
+        <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          printedFilter={printedFilter}
-          onPrintedFilterChange={setPrintedFilter}
+          onScanTriggered={fetchModels}
           selectedFormat={selectedFormat}
-          onFormatSelect={setSelectedFormat}
-          favoritesOnly={favoritesOnly}
-          onToggleFavorites={() => setFavoritesOnly(!favoritesOnly)}
-          sort={sort}
-          onSortChange={setSort}
-          totalCount={totalCount}
-          collections={collections}
-          selectedCollection={selectedCollection}
-          onCollectionSelect={setSelectedCollection}
+          onFormatChange={setSelectedFormat}
+          isSidebarCollapsed={isSidebarCollapsed}
         />
 
-        {/* Gallery Grid */}
-        <div className="mt-6">
-          {loading ? (
-            /* Skeleton Loading Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl bg-white/5 border border-white/5 overflow-hidden animate-pulse h-72"
-                />
-              ))}
-            </div>
-          ) : models.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {models.map((model) => (
-                <ModelCard
-                  key={model.id}
-                  model={model}
-                  onClick={() => handleOpenModel(model.id)}
-                  onFavoriteToggle={handleFavoriteToggled}
-                  onPrintedToggle={handlePrintedToggled}
-                />
-              ))}
-            </div>
-          ) : (
-            /* Empty State */
-            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-white/5 bg-white/[0.02]">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4">
-                <Box className="w-8 h-8 text-indigo-400" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-1">Nenhum modelo encontrado</h3>
-              <p className="text-sm text-slate-400 max-w-md mb-6">
-                {printedFilter === "unprinted"
-                  ? "Todos os seus modelos já foram impressos!"
-                  : printedFilter === "printed"
-                  ? "Você ainda não marcou nenhum modelo como impresso."
-                  : "Não há modelos que correspondam aos filtros atuais ou à busca digitada."}
-              </p>
-              <div className="flex items-center gap-3">
-                {searchQuery || printedFilter !== "all" || selectedFormat || selectedCollection || favoritesOnly ? (
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setPrintedFilter("all");
-                      setSelectedFormat("");
-                      setSelectedCollection("");
-                      setFavoritesOnly(false);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
-                  >
-                    <span>Limpar Filtros</span>
-                  </button>
-                ) : (
-                  <Link
-                    href="/libraries"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
-                  >
-                    <FolderTree className="w-4 h-4" />
-                    <span>Configurar e Escanear Bibliotecas</span>
+        {/* Main Content Area */}
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+          <div className="flex flex-col w-full gap-5">
+            {/* Sub-Header & Breadcrumb Bar from Stitch */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 text-on-surface-variant text-xs font-medium">
+                  <span className="material-symbols-outlined text-[16px]">folder_open</span>
+                  <Link href="/collections" className="hover:text-primary transition-colors">
+                    Coleções
                   </Link>
-                )}
+                  <span className="text-outline">/</span>
+                  <span className="hover:text-primary transition-colors">Hardware & Impressoras</span>
+                  <span className="text-outline">/</span>
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-surface-container-high border border-white/5">
+                  <span className="material-symbols-outlined text-[18px] text-primary-container">
+                    layers
+                  </span>
+                  <span className="text-xs text-on-surface font-semibold">
+                    {selectedCollection
+                      ? collections.find((c) => c.id === selectedCollection)?.name || "Coleção"
+                      : "Todos os Arquivos 3D"}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-surface-container-highest text-secondary text-[11px] font-mono">
+                  {filteredModels.length} Ativos
+                </span>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2.5">
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-container-low text-on-surface-variant text-xs border border-white/5">
+                  <span className="material-symbols-outlined text-[16px] text-tertiary">
+                    check_circle
+                  </span>
+                  <span>Sincronizado via Moonraker API</span>
+                </div>
+                <Link
+                  href="/collections"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors text-xs font-medium border border-white/5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">drive_file_move</span>
+                  <span>Organizar Coleções</span>
+                </Link>
+                <button
+                  onClick={() => setIsUploadOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                >
+                  <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+                  <span>Adicionar Modelo</span>
+                </button>
               </div>
             </div>
-          )}
-        </div>
-      </main>
 
-      {/* Model Detail Modal */}
+            {/* Eagle-style Studio Control & Filter Bar */}
+            <FilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              printedFilter={printedFilter}
+              onPrintedFilterChange={setPrintedFilter}
+              selectedFormat={selectedFormat}
+              onFormatSelect={setSelectedFormat}
+              favoritesOnly={favoritesOnly}
+              onToggleFavorites={() => setFavoritesOnly((prev) => !prev)}
+              sort={sort}
+              onSortChange={setSort}
+              totalCount={totalCount}
+              collections={collections}
+              selectedCollection={selectedCollection}
+              onCollectionSelect={setSelectedCollection}
+              zoomSize={zoomSize}
+              onZoomChange={setZoomSize}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              selectedPolymer={selectedPolymer}
+              onPolymerSelect={setSelectedPolymer}
+            />
+
+            {/* Gallery View (Grid or Table) */}
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-on-surface-variant">
+                <span className="material-symbols-outlined text-[36px] animate-spin text-primary-container">
+                  sync
+                </span>
+                <span className="text-xs font-mono">Indexando arquivos 3D no cofre...</span>
+              </div>
+            ) : filteredModels.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 rounded-2xl bg-surface-container-low border border-white/5 text-center gap-3">
+                <div className="p-4 rounded-full bg-surface-container-highest text-primary-container">
+                  <span className="material-symbols-outlined text-[40px]">view_in_ar</span>
+                </div>
+                <h3 className="font-semibold text-base text-on-surface">Nenhum modelo encontrado</h3>
+                <p className="text-xs text-on-surface-variant max-w-sm">
+                  {searchQuery || selectedFormat || printedFilter !== "all"
+                    ? "Tente ajustar os filtros ou pesquisar por outro termo."
+                    : "Mapeie um diretório local ou faça o upload de arquivos STL / 3MF para começar."}
+                </p>
+                <button
+                  onClick={() => setIsUploadOpen(true)}
+                  className="mt-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                  <span>Fazer Upload Agora</span>
+                </button>
+              </div>
+            ) : viewMode === "table" ? (
+              <div className="w-full overflow-x-auto rounded-xl bg-surface-container-low border border-white/5 shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[11px] font-mono uppercase tracking-wider text-outline bg-surface-container-lowest">
+                      <th className="py-3 px-3">Modelo / Biblioteca</th>
+                      <th className="py-3 px-3">Extensão</th>
+                      <th className="py-3 px-3">Dimensões (XYZ)</th>
+                      <th className="py-3 px-3">Arquivos</th>
+                      <th className="py-3 px-3">Status de Impressão</th>
+                      <th className="py-3 px-3 text-right">Favorito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredModels.map((model) => (
+                      <ModelCard
+                        key={model.id}
+                        model={model}
+                        onClick={() => handleOpenModel(model.id)}
+                        viewMode="table"
+                        onFavoriteToggle={(id, state) => {
+                          setModels((prev) =>
+                            prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
+                          );
+                        }}
+                        onPrintedToggle={(id, state) => {
+                          setModels((prev) =>
+                            prev.map((m) => (m.id === id ? { ...m, isPrinted: state } : m))
+                          );
+                        }}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div
+                className="grid gap-4"
+                style={{
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${
+                    viewMode === "compact" ? Math.max(180, zoomSize * 0.75) : zoomSize
+                  }px, 1fr))`,
+                }}
+              >
+                {filteredModels.map((model) => (
+                  <ModelCard
+                    key={model.id}
+                    model={model}
+                    onClick={() => handleOpenModel(model.id)}
+                    viewMode={viewMode}
+                    onFavoriteToggle={(id, state) => {
+                      setModels((prev) =>
+                        prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
+                      );
+                    }}
+                    onPrintedToggle={(id, state) => {
+                      setModels((prev) =>
+                        prev.map((m) => (m.id === id ? { ...m, isPrinted: state } : m))
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Model Detail Modal with 3D Viewer */}
       {selectedModel && (
         <ModelDetailModal
           model={selectedModel}
           onClose={() => setSelectedModel(null)}
-          onModelUpdated={(updated) => {
-            setModels((prev) =>
-              prev.map((m) =>
-                m.id === updated.id
-                  ? {
-                      ...m,
-                      name: updated.name,
-                      coverImage: updated.coverImage,
-                      isPrinted: updated.isPrinted,
-                      printedAt: updated.printedAt,
-                      filamentType: updated.filamentType,
-                    }
-                  : m
-              )
-            );
+          onUpdate={() => {
+            fetchModels();
+            handleOpenModel(selectedModel.id);
           }}
         />
       )}
+
+      {/* Upload Modal */}
+      <UploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadSuccess={fetchModels}
+      />
     </div>
   );
 }

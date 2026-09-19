@@ -54,12 +54,14 @@ interface ModelDetailModalProps {
   model: ModelDetailData;
   onClose: () => void;
   onModelUpdated?: (updated: ModelDetailData) => void;
+  onUpdate?: () => void;
 }
 
 export default function ModelDetailModal({
   model: initialModel,
   onClose,
   onModelUpdated,
+  onUpdate,
 }: ModelDetailModalProps) {
   const [model, setModel] = useState<ModelDetailData>(initialModel);
   const [activeTab, setActiveTab] = useState<"files" | "notes" | "manuals">("files");
@@ -347,7 +349,7 @@ export default function ModelDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-[#0c0e17] border border-white/10 shadow-2xl overflow-hidden relative">
+      <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-surface-container-low border border-white/10 shadow-2xl overflow-hidden relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -368,11 +370,11 @@ export default function ModelDetailModal({
         </div>
 
         {/* Right: Sidebar Tabs & Details */}
-        <div className="w-full md:w-[40%] h-[55vh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-[#0d101a]">
+        <div className="w-full md:w-[40%] h-[55vh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest">
           {/* Header */}
           <div className="p-5 border-b border-white/10">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs font-semibold text-indigo-400">
+              <span className="text-xs font-semibold text-primary">
                 {model.library.name}
               </span>
               <span className="text-slate-600">•</span>

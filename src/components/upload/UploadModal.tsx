@@ -166,7 +166,7 @@ export default function UploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-xl rounded-2xl bg-[#0e111d] border border-white/10 shadow-2xl p-6 relative max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-xl rounded-2xl bg-surface-container-low border border-white/10 shadow-2xl p-6 relative max-h-[90vh] flex flex-col">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -176,19 +176,19 @@ export default function UploadModal({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+          <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/30 text-primary">
             <Upload className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Upload Manual de Modelos 3D</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-lg font-bold text-on-surface">Upload Manual de Modelos 3D</h2>
+            <p className="text-xs text-on-surface-variant">
               Adicione arquivos STL, 3MF, OBJ, imagens de capa e manuais PDF diretamente.
             </p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-error-container/40 border border-error/30 text-xs text-error flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -197,17 +197,17 @@ export default function UploadModal({
         {successModel ? (
           /* Success Screen */
           <div className="py-8 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-3">
+            <div className="w-14 h-14 rounded-full bg-tertiary/20 border border-tertiary/30 text-tertiary flex items-center justify-center mb-3">
               <Check className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Upload Realizado com Sucesso!</h3>
-            <p className="text-xs text-slate-400 max-w-sm mb-6">
+            <h3 className="text-base font-bold text-on-surface mb-1">Upload Realizado com Sucesso!</h3>
+            <p className="text-xs text-on-surface-variant max-w-sm mb-6">
               O modelo &quot;{successModel.name}&quot; foi processado, indexado e já está disponível para visualização 3D.
             </p>
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+                className="px-5 py-2 rounded-xl bg-primary-container hover:bg-primary text-on-primary text-xs font-semibold shadow-lg shadow-primary-container/30 transition-all"
               >
                 Concluir
               </button>
@@ -221,7 +221,7 @@ export default function UploadModal({
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-white/15 hover:border-indigo-500/50 rounded-2xl p-6 text-center cursor-pointer bg-white/[0.02] hover:bg-indigo-500/[0.03] transition-all"
+              className="border-2 border-dashed border-white/15 hover:border-primary-container/50 rounded-2xl p-6 text-center cursor-pointer bg-white/[0.02] hover:bg-primary-container/[0.03] transition-all"
             >
               <input
                 ref={fileInputRef}
@@ -231,13 +231,13 @@ export default function UploadModal({
                 onChange={(e) => handleFileSelect(e.target.files)}
                 className="hidden"
               />
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-xl bg-primary-container/15 border border-primary-container/30 text-primary flex items-center justify-center mx-auto mb-2">
                 <Upload className="w-6 h-6" />
               </div>
-              <p className="text-xs font-medium text-white">
-                Arraste os arquivos aqui ou <span className="text-indigo-400 underline">clique para selecionar</span>
+              <p className="text-xs font-medium text-on-surface">
+                Arraste os arquivos aqui ou <span className="text-primary underline">clique para selecionar</span>
               </p>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-outline mt-1">
                 Suporta STL, 3MF, OBJ, STEP, fotos de capa (JPG, PNG) e manuais (PDF)
               </p>
             </div>

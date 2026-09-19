@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Filter, Star, ArrowUpDown, Layers, Search, X, CheckCircle2, Clock, Printer } from "lucide-react";
+
+export type ViewMode = "large" | "compact" | "table";
 
 interface FilterBarProps {
   searchQuery: string;
@@ -18,6 +19,12 @@ interface FilterBarProps {
   collections?: Array<{ id: string; name: string }>;
   selectedCollection?: string;
   onCollectionSelect?: (colId: string) => void;
+  zoomSize?: number;
+  onZoomChange?: (size: number) => void;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
+  selectedPolymer?: string;
+  onPolymerSelect?: (polymer: string) => void;
 }
 
 export default function FilterBar({
@@ -35,155 +42,229 @@ export default function FilterBar({
   collections = [],
   selectedCollection = "",
   onCollectionSelect,
+  zoomSize = 280,
+  onZoomChange,
+  viewMode = "large",
+  onViewModeChange,
+  selectedPolymer = "",
+  onPolymerSelect,
 }: FilterBarProps) {
   const formats = [
-    { label: "Todos", value: "" },
-    { label: "STL", value: "STL" },
-    { label: "3MF", value: "3MF" },
-    { label: "OBJ", value: "OBJ" },
+    { label: "TODOS", value: "" },
+    { label: ".3MF", value: "3MF", color: "text-secondary" },
+    { label: ".STL", value: "STL", color: "text-primary" },
+    { label: ".STEP", value: "STEP", color: "text-on-surface-variant" },
+    { label: ".OBJ", value: "OBJ", color: "text-on-surface-variant" },
+    { label: ".GCODE", value: "GCODE", color: "text-tertiary" },
+  ];
+
+  const polymers = [
+    { label: "ABS / ASA", value: "ABS", color: "bg-primary-container" },
+    { label: "PETG", value: "PETG", color: "bg-secondary" },
+    { label: "TPU Flex", value: "TPU", color: "bg-tertiary" },
+    { label: "PLA / Silk", value: "PLA", color: "bg-amber-400" },
+    { label: "Nylon / PC", value: "PC", color: "bg-indigo-400" },
   ];
 
   return (
-    <div className="flex flex-col gap-3 py-4 border-b border-white/10 text-sm">
-      {/* Top Row: Search Input & Print Status Filter */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Dedicated In-Page Search Bar */}
-        <div className="relative flex-1 max-w-lg">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Pesquisar modelos por nome, arquivo, coleção..."
-            className="w-full pl-10 pr-9 py-2 rounded-xl bg-white/5 border border-white/10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/70 focus:ring-1 focus:ring-indigo-500/70 transition-all shadow-inner"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-              title="Limpar pesquisa"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* Print Status Segmented Tabs ("Nunca Impressos", "Já Impressos", "Todos") */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 self-start sm:self-auto overflow-x-auto">
+    <div className="flex flex-col gap-3 p-4 bg-surface-container-low rounded-xl shadow-md border border-white/5">
+      {/* Row 1: Layout Modifiers, Zoom, Search Metrics & Sorter */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Layout Modes Switcher (Grid Grande, Grid Compacto, Tabela) */}
+        <div className="flex items-center gap-1 bg-surface-container-lowest p-1 rounded-lg border border-white/5">
           <button
-            onClick={() => onPrintedFilterChange("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-              printedFilter === "all"
-                ? "bg-white/15 text-white shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+            type="button"
+            onClick={() => onViewModeChange && onViewModeChange("large")}
+            className={`p-1.5 rounded flex items-center justify-center transition-colors ${
+              viewMode === "large"
+                ? "bg-surface-container-high text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
             }`}
+            title="Grid Grande"
           >
-            Todos
+            <span className="material-symbols-outlined text-[18px]">grid_view</span>
           </button>
           <button
-            onClick={() => onPrintedFilterChange("unprinted")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-              printedFilter === "unprinted"
-                ? "bg-amber-500/25 text-amber-300 border border-amber-500/30 shadow-md shadow-amber-500/10"
-                : "text-slate-400 hover:text-amber-200 hover:bg-white/5"
+            type="button"
+            onClick={() => onViewModeChange && onViewModeChange("compact")}
+            className={`p-1.5 rounded flex items-center justify-center transition-colors ${
+              viewMode === "compact"
+                ? "bg-surface-container-high text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
             }`}
-            title="Exibir apenas modelos que nunca foram impressos"
+            title="Grid Compacto"
           >
-            <Clock className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[18px]">view_module</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange && onViewModeChange("table")}
+            className={`p-1.5 rounded flex items-center justify-center transition-colors ${
+              viewMode === "table"
+                ? "bg-surface-container-high text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+            }`}
+            title="Tabela Detalhada"
+          >
+            <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+          </button>
+        </div>
+
+        {/* Thumbnail Zoom Slider (Eagle Style) */}
+        {viewMode !== "table" && onZoomChange && (
+          <div className="hidden sm:flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-white/5">
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+              photo_size_select_small
+            </span>
+            <input
+              type="range"
+              min="180"
+              max="400"
+              step="10"
+              value={zoomSize}
+              onChange={(e) => onZoomChange(Number(e.target.value))}
+              className="w-24 h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary-container"
+              title={`Zoom: ${zoomSize}px`}
+            />
+            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+              photo_size_select_large
+            </span>
+            <span className="text-[11px] text-outline font-mono ml-1">{zoomSize}px</span>
+          </div>
+        )}
+
+        {/* Print Status Segmented Tabs */}
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-container-lowest border border-white/5 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => onPrintedFilterChange("all")}
+            className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+              printedFilter === "all"
+                ? "bg-surface-container-high text-on-surface font-semibold shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            Todos ({totalCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => onPrintedFilterChange("unprinted")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all ${
+              printedFilter === "unprinted"
+                ? "bg-primary-container/20 text-primary font-semibold border border-primary-container/30 shadow-sm"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
+            title="Modelos nunca impressos"
+          >
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
             <span>Nunca Impressos</span>
           </button>
           <button
+            type="button"
             onClick={() => onPrintedFilterChange("printed")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all ${
               printedFilter === "printed"
-                ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/10"
-                : "text-slate-400 hover:text-emerald-200 hover:bg-white/5"
+                ? "bg-tertiary/20 text-tertiary font-semibold border border-tertiary/30 shadow-sm"
+                : "text-on-surface-variant hover:text-tertiary"
             }`}
-            title="Exibir apenas modelos já impressos"
+            title="Modelos já impressos com sucesso"
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[14px]">check_circle</span>
             <span>Já Impressos</span>
           </button>
         </div>
+
+        {/* Favorites Filter */}
+        <button
+          type="button"
+          onClick={onToggleFavorites}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+            favoritesOnly
+              ? "bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-sm"
+              : "bg-surface-container-lowest text-on-surface-variant border-white/5 hover:text-on-surface hover:bg-surface-container-high"
+          }`}
+          title="Exibir apenas favoritos"
+        >
+          <span
+            className="material-symbols-outlined text-[16px]"
+            style={{ fontVariationSettings: favoritesOnly ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            star
+          </span>
+          <span>Favoritos</span>
+        </button>
+
+        {/* Sorter Dropdown */}
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-[11px] font-mono text-outline uppercase tracking-wider hidden md:inline">
+            Ordem:
+          </span>
+          <select
+            value={sort}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="bg-surface-container-lowest text-on-surface text-xs font-medium px-3 py-1.5 rounded-lg border border-white/5 focus:outline-none focus:border-primary-container cursor-pointer"
+          >
+            <option value="date_desc">Mais recentes primeiro</option>
+            <option value="date_asc">Mais antigos primeiro</option>
+            <option value="name_asc">Nome (A - Z)</option>
+            <option value="name_desc">Nome (Z - A)</option>
+            <option value="files_desc">Mais arquivos</option>
+          </select>
+        </div>
       </div>
 
-      {/* Bottom Row: Format Tabs, Collections, Favorites & Sort */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pt-1">
-        {/* Left: Format Tabs + Collection Selector */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Format Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-            {formats.map((f) => (
+      {/* Row 2: Deep Tag Filters (Formats & Filaments) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/5">
+        {/* Format Tags */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-mono text-outline uppercase tracking-wider mr-1">
+            Extensões:
+          </span>
+          {formats.map((fmt) => {
+            const isSelected = selectedFormat === fmt.value;
+            return (
               <button
-                key={f.value}
-                onClick={() => onFormatSelect(f.value)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  selectedFormat === f.value
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                key={fmt.label}
+                type="button"
+                onClick={() => onFormatSelect(fmt.value)}
+                className={`px-2.5 py-0.5 rounded text-xs font-mono transition-all flex items-center gap-1 ${
+                  isSelected
+                    ? "bg-primary-container/25 text-primary border border-primary-container/40 font-semibold"
+                    : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface border border-white/5"
                 }`}
               >
-                {f.label}
+                <span>{fmt.label}</span>
               </button>
-            ))}
-          </div>
-
-          {/* Collection Dropdown Filter */}
-          {collections.length > 0 && onCollectionSelect && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs text-slate-300">
-              <Layers className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <select
-                value={selectedCollection}
-                onChange={(e) => onCollectionSelect(e.target.value)}
-                className="bg-transparent border-none text-xs text-slate-200 focus:outline-none cursor-pointer pr-1"
-              >
-                <option value="" className="bg-[#0f121d] text-white">
-                  Todas as Coleções ({collections.length})
-                </option>
-                {collections.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-[#0f121d] text-white">
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+            );
+          })}
         </div>
 
-        {/* Right Controls: Favorites + Sort + Counter */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-          {/* Favorites Filter */}
-          <button
-            onClick={onToggleFavorites}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
-              favoritesOnly
-                ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Star className={`w-3.5 h-3.5 ${favoritesOnly ? "fill-amber-400" : ""}`} />
-            <span>Favoritos</span>
-          </button>
-
-          {/* Sort Selector */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs text-slate-300">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={sort}
-              onChange={(e) => onSortChange(e.target.value)}
-              className="bg-transparent border-none text-xs text-slate-200 focus:outline-none cursor-pointer"
-            >
-              <option value="date_desc" className="bg-[#0f121d] text-white">Mais Recentes</option>
-              <option value="name_asc" className="bg-[#0f121d] text-white">Nome (A - Z)</option>
-              <option value="name_desc" className="bg-[#0f121d] text-white">Nome (Z - A)</option>
-            </select>
+        {/* Polymer Filament Badges */}
+        {onPolymerSelect && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-wider mr-1">
+              Polímero:
+            </span>
+            {polymers.map((poly) => {
+              const isSelected = selectedPolymer === poly.value;
+              return (
+                <button
+                  key={poly.value}
+                  type="button"
+                  onClick={() => onPolymerSelect(isSelected ? "" : poly.value)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                    isSelected
+                      ? "bg-surface-container-highest text-on-surface border-primary-container/50 shadow-sm"
+                      : "bg-surface-container-lowest text-on-surface-variant border-white/5 hover:bg-surface-container-highest hover:text-on-surface"
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${poly.color}`}></span>
+                  <span>{poly.label}</span>
+                </button>
+              );
+            })}
           </div>
-
-          {/* Total Count Badge */}
-          <span className="text-xs text-slate-400 font-mono hidden md:inline">
-            {totalCount} {totalCount === 1 ? "modelo" : "modelos"}
-          </span>
-        </div>
+        )}
       </div>
     </div>
   );
