@@ -77,7 +77,12 @@ export default function ModelViewer3D({
   const controlsRef = useRef<OrbitControls | null>(null);
   const objectsGroupRef = useRef<THREE.Group | null>(null);
   const boundingBoxHelperRef = useRef<THREE.Box3Helper | null>(null);
+  const gridHelperRef = useRef<THREE.GridHelper | null>(null);
+  const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
+  const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
 
+  const [viewportTheme, setViewportTheme] = useState<"studio_light" | "dark_canvas">("dark_canvas");
   const [loading, setLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -90,6 +95,20 @@ export default function ModelViewer3D({
   const [dimensions, setDimensions] = useState<{ x: number; y: number; z: number } | null>(null);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
+
+  // Sincroniza tema inicial com o estado do documento
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const isLight = document.documentElement.classList.contains("light");
+      setViewportTheme(isLight ? "studio_light" : "dark_canvas");
+    }
+    const handleThemeChange = (e: any) => {
+      const nextTheme = e.detail?.theme;
+      setViewportTheme(nextTheme === "light" ? "studio_light" : "dark_canvas");
+    };
+    window.addEventListener("pv_theme_change", handleThemeChange);
+    return () => window.removeEventListener("pv_theme_change", handleThemeChange);
+  }, []);
 
   // Inicializa a visibilidade de todos os arquivos como ativa
   useEffect(() => {
@@ -178,14 +197,17 @@ export default function ModelViewer3D({
     // Iluminação Profissional para Impressão 3D
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
+    ambientLightRef.current = ambientLight;
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
     keyLight.position.set(150, 250, 200);
     scene.add(keyLight);
+    keyLightRef.current = keyLight;
 
     const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.7);
     fillLight.position.set(-150, 100, -150);
     scene.add(fillLight);
+    fillLightRef.current = fillLight;
 
     const rimLight = new THREE.DirectionalLight(0xc084fc, 0.8);
     rimLight.position.set(0, -100, -200);
@@ -195,6 +217,7 @@ export default function ModelViewer3D({
     const gridHelper = new THREE.GridHelper(256, 32, 0x6366f1, 0x1e293b);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
+    gridHelperRef.current = gridHelper;
 
     // Grupo de Objetos 3D carregados
     const objectsGroup = new THREE.Group();
@@ -237,6 +260,50 @@ export default function ModelViewer3D({
       }
     };
   }, []);
+
+  // Atualiza cores do Viewport 3D (Estúdio Claro vs Dark Canvas)
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const scene = sceneRef.current;
+
+    if (viewportTheme === "studio_light") {
+      // Estúdio Claro: Fundo em cinza-claro (#f8fafc), grid milimétrico em #cbd5e1 com eixo central em #0284c7
+      scene.background = new THREE.Color("#f8fafc");
+      if (gridHelperRef.current) {
+        scene.remove(gridHelperRef.current);
+        gridHelperRef.current.geometry.dispose();
+      }
+      const newGrid = new THREE.GridHelper(256, 32, 0x0284c7, 0xcbd5e1);
+      newGrid.position.y = 0;
+      scene.add(newGrid);
+      gridHelperRef.current = newGrid;
+
+      if (boundingBoxHelperRef.current) {
+        (boundingBoxHelperRef.current.material as THREE.LineBasicMaterial).color.setHex(0x0284c7);
+      }
+      if (ambientLightRef.current) ambientLightRef.current.intensity = 1.1;
+      if (keyLightRef.current) keyLightRef.current.intensity = 1.6;
+      if (fillLightRef.current) fillLightRef.current.color.setHex(0x93c5fd);
+    } else {
+      // Dark Canvas Híbrido: Fundo escuro (#0b0e17), grid em 0x6366f1 / 0x1e293b
+      scene.background = new THREE.Color("#0b0e17");
+      if (gridHelperRef.current) {
+        scene.remove(gridHelperRef.current);
+        gridHelperRef.current.geometry.dispose();
+      }
+      const newGrid = new THREE.GridHelper(256, 32, 0x6366f1, 0x1e293b);
+      newGrid.position.y = 0;
+      scene.add(newGrid);
+      gridHelperRef.current = newGrid;
+
+      if (boundingBoxHelperRef.current) {
+        (boundingBoxHelperRef.current.material as THREE.LineBasicMaterial).color.setHex(0x06b6d4);
+      }
+      if (ambientLightRef.current) ambientLightRef.current.intensity = 0.75;
+      if (keyLightRef.current) keyLightRef.current.intensity = 1.5;
+      if (fillLightRef.current) fillLightRef.current.color.setHex(0x60a5fa);
+    }
+  }, [viewportTheme]);
 
   // Carrega os arquivos 3D na cena
   useEffect(() => {
@@ -497,7 +564,13 @@ export default function ModelViewer3D({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[420px] rounded-xl overflow-hidden bg-[#090b12] border border-white/10 select-none">
+    <div
+      className={`relative w-full h-full min-h-[420px] rounded-xl overflow-hidden select-none border transition-colors ${
+        viewportTheme === "studio_light"
+          ? "bg-[#f8fafc] border-slate-200"
+          : "bg-[#090b12] border-white/10"
+      }`}
+    >
       {/* 3D Viewport Mount */}
       <div ref={mountRef} className="w-full h-full min-h-[420px] cursor-grab active:cursor-grabbing" />
 
@@ -605,6 +678,20 @@ export default function ModelViewer3D({
             title="Resetar Câmera"
           >
             <RotateCcw className="w-4 h-4" />
+          </button>
+          <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+          <button
+            onClick={() => setViewportTheme((prev) => (prev === "studio_light" ? "dark_canvas" : "studio_light"))}
+            className={`p-1.5 rounded-lg transition ${
+              viewportTheme === "studio_light"
+                ? "text-amber-400 bg-amber-950/40 border border-amber-700/50"
+                : "text-slate-300 hover:bg-[#182330] hover:text-amber-400"
+            }`}
+            title={viewportTheme === "studio_light" ? "Alternar para Dark Canvas Híbrido" : "Alternar para Estúdio Claro (Bambu/Fusion)"}
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {viewportTheme === "studio_light" ? "light_mode" : "dark_mode"}
+            </span>
           </button>
         </div>
 

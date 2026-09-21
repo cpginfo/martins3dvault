@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.5.4)
+# Mapa do Projeto - Martins3DVault (v1.5.5)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,16 +8,17 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.5.4                                  │
+│                           MARTINS3DVAULT v1.5.5                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
 │  - Stitch Industrial Dark  │  - Directory Crawler & Sync │  - PostgreSQL 16      │
-│  - Persistent Sidebar & NAS│  - 3MF to Binary STL Parser │  - Prisma ORM 6.19    │
-│  - Eagle-Style Studio Bar  │  - Affine Transform Matrix  │  - Docker Volumes FS  │
-│  - Zoom Slider & View Modes│  - Companion Image Normaliz.│  - Session JWT (Jose) │
-│  - Three.js Fast Engine    │  - Upload Multipart Parser  │  - Disk Cache (STL)   │
-│  - Telemetria de Oficina   │  - PDF Manual Manager       │  - Stitch Design Sync │
+│  - Light Mode Calibrado    │  - 3MF to Binary STL Parser │  - Prisma ORM 6.19    │
+│  - Persistent Sidebar & NAS│  - Affine Transform Matrix  │  - Docker Volumes FS  │
+│  - Eagle-Style Studio Bar  │  - Companion Image Normaliz.│  - Session JWT (Jose) │
+│  - Zoom Slider & View Modes│  - Upload Multipart Parser  │  - Disk Cache (STL)   │
+│  - Three.js Fast Engine    │  - PDF Manual Manager       │  - Stitch Design Sync │
+│  - Estúdio CAD / Dark 3D   │  - Theme State & Anti-FOUC  │  - LocalStorage Pref  │
 └────────────────────────────┴─────────────────────────────┴───────────────────────┘
 ```
 
@@ -142,7 +143,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     ├── components/                # Componentes React Reutilizáveis
     │   ├── layout/
     │   │   ├── Sidebar.tsx        # Sidebar retrátil persistente: logo, menus por categoria, gauge NAS RAID 5 e perfil
-    │   │   └── Navbar.tsx         # Barra superior: busca global ⌘K, pills de formato (.STL, .3MF, G-Code), status NAS e scan
+    │   │   └── Navbar.tsx         # Barra superior: busca global ⌘K, pills de formato (.STL, .3MF, G-Code), status NAS, ThemeToggle e scan
+    │   ├── theme/
+    │   │   └── ThemeToggle.tsx    # Botão de alternância animado Dark/Light Mode
     │   ├── gallery/
     │   │   ├── FilterBar.tsx      # Controles de estúdio Eagle: zoom slider (180-400px), modos de visualização (grade/tabela), polímeros
     │   │   └── ModelCard.tsx      # Card de modelo Stitch: capa prioritária, badges de polímero, medidas mm e toggle de impressão
@@ -151,11 +154,13 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   ├── upload/
     │   │   └── UploadModal.tsx    # Modal de Upload local e Download por Link (URL) com tabs e suporte a ZIP
     │   └── viewer3d/
-    │       └── ModelViewer3D.tsx  # Visualizador Three.js (STLLoader, Z-Up corrigido, PLA/ABS, presets de câmera)
+    │       └── ModelViewer3D.tsx  # Visualizador Three.js (STLLoader, Z-Up corrigido, PLA/ABS, presets de câmera, Estúdio Claro / Dark Canvas)
     │
     ├── proxy.ts                   # Next.js 16 Proxy layer: proteção de rotas públicas e autenticação de API com ADMIN
     │
     └── lib/                       # Módulos de Lógica de Negócio e Serviços
+        ├── theme/
+        │   └── ThemeContext.tsx   # Contexto global de tema, sincronização localStorage e anti-FOUC
         ├── auth/
         │   └── session.ts         # Autenticação JWT, Cookie pv_session, Bearer Token, Basic Auth e requireAdmin
         ├── users/

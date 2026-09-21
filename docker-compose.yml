@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       tags:
         - "martins3dvault:latest"
-        - "martins3dvault:1.5.4"
-    image: martins3dvault:1.5.4
+        - "martins3dvault:1.5.5"
+    image: martins3dvault:1.5.5
     container_name: 3d-vault-web
     restart: unless-stopped
     ports:

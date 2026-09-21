@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { APP_VERSION } from "@/lib/version";
+import { useTheme } from "@/lib/theme/ThemeContext";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -38,6 +39,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string; avatar?: string | null } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -417,6 +419,21 @@ export default function Sidebar({
                 <span>Configurações</span>
               </Link>
               <button
+                type="button"
+                onClick={() => {
+                  toggleTheme();
+                }}
+                className="flex items-center justify-between w-full px-2.5 py-1.5 rounded hover:bg-surface-container-highest text-on-surface transition-colors text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-amber-500">
+                    {theme === "dark" ? "light_mode" : "dark_mode"}
+                  </span>
+                  <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
+                </div>
+                <span className="text-[10px] font-mono text-outline uppercase">{theme}</span>
+              </button>
+              <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-error-container/40 text-error hover:text-white transition-colors text-left"
               >
@@ -429,7 +446,20 @@ export default function Sidebar({
 
         {!isCollapsed && (
           <div className="flex items-center justify-between px-1 pt-1 border-t border-white/5 text-[10px] font-mono text-outline">
-            <span>Versão</span>
+            <div className="flex items-center gap-1">
+              <span>Tema:</span>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="hover:text-primary transition-colors cursor-pointer capitalize font-semibold flex items-center gap-1"
+                title="Clique para alternar tema"
+              >
+                <span className="material-symbols-outlined text-[12px] text-amber-500">
+                  {theme === "dark" ? "dark_mode" : "light_mode"}
+                </span>
+                <span>{theme === "dark" ? "Escuro" : "Claro"}</span>
+              </button>
+            </div>
             <span className="text-secondary font-medium">{APP_VERSION}</span>
           </div>
         )}

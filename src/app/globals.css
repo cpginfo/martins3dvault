@@ -51,11 +51,116 @@
   --foreground: #dee2ec;
 }
 
+/* Light Theme Tokens - Especificações Estritas do Usuário */
+html.light,
+[data-theme="light"],
+.light {
+  /* 1. Superfícies & Hierarquia de Fundo (Surfaces) */
+  --color-surface: #f1f5f9;                 /* Slate 100 - Fundo estrutural e sidebar */
+  --color-surface-dim: #e2e8f0;             /* Slate 200 */
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;/* Branco puro - Cards, gavetas e formulários */
+  --color-surface-container-low: #f8fafc;   /* Slate 50 - Áreas de apoio, tabelas e headers */
+  --color-surface-container: #ffffff;       /* Branco puro para containers internos */
+  --color-surface-container-high: #f1f5f9;  /* Slate 100 para hover e botões */
+  --color-surface-container-highest: #e2e8f0;/* Slate 200 */
+  --color-surface-variant: #f1f5f9;
+
+  /* 2. Tipografia & Contraste (WCAG AAA) */
+  --color-on-surface: #0f172a;              /* Slate 900 - Títulos, métricas e valores */
+  --color-on-surface-variant: #475569;      /* Slate 600 - Labels técnicos, unidades mm/g/h */
+  --color-outline: #64748b;                 /* Slate 500 - Hashes SHA-256, paths, logs */
+  --color-outline-variant: #e2e8f0;         /* Slate 200 - Divisores e bordas técnicas */
+
+  /* 3. Cores de Destaque & Identidade de Marca (Accents) */
+  /* Laranja Primário: Base #ea580c (Orange 600), Hover #c2410c (Orange 700) */
+  --color-primary: #ea580c;
+  --color-primary-container: #ea580c;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+
+  /* Azul/Ciano Técnico: Sky 600 (#0284c7) / Teal 600 (#0d9488) */
+  --color-secondary: #0284c7;
+  --color-secondary-container: #0369a1;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #ffffff;
+
+  /* Status do Farm & Hardware */
+  --color-tertiary: #16a34a;                /* Emerald 600 - Online / Sucesso */
+  --color-tertiary-container: #15803d;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #ffffff;
+
+  --color-error: #dc2626;                   /* Red 600 - Parada de Emergência / Erro */
+  --color-error-container: #fee2e2;
+  --color-on-error: #ffffff;
+
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+}
+
 body {
-  background-color: #0f141b;
-  color: #dee2ec;
+  background-color: var(--color-surface, #0f141b);
+  color: var(--color-on-surface, #dee2ec);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Light Mode Overrides for Borders & Elevators */
+html.light body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/15,
+html.light .border-white\/20 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .hover\:border-white\/10:hover,
+html.light .hover\:border-white\/20:hover {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]),
+html.light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-white\/5 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-white\/10 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .text-white\/70,
+html.light .text-white\/60 {
+  color: #475569 !important;
+}
+
+html.light .shadow-2xl,
+html.light .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .shadow-md,
+html.light .shadow-sm {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light header {
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.05) !important;
+  background-color: rgba(241, 245, 249, 0.88) !important;
+}
+
+html.light aside {
+  box-shadow: 1px 0 6px 0 rgba(0, 0, 0, 0.04) !important;
+  border-right-color: #e2e8f0 !important;
 }
 
 /* Material Symbols sizing helper */
@@ -82,12 +187,27 @@ body {
   background: #30353d;
 }
 
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Glassmorphism panels */
 .glass-panel {
   background: rgba(23, 28, 35, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e2e8f0;
 }
 
 .glass-card {
@@ -102,6 +222,19 @@ body {
   background: rgba(37, 42, 50, 0.9);
   border-color: rgba(249, 115, 22, 0.4);
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(249, 115, 22, 0.2);
+  transform: translateY(-2px);
+}
+
+html.light .glass-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+}
+
+html.light .glass-card:hover {
+  background: #ffffff;
+  border-color: #ea580c;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 0 15px -3px rgba(234, 88, 12, 0.2);
   transform: translateY(-2px);
 }
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UploadModal from "@/components/upload/UploadModal";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import { APP_VERSION } from "@/lib/version";
 
 interface NavbarProps {
@@ -223,6 +224,8 @@ export default function Navbar({
             <span className="material-symbols-outlined text-[20px]">notifications</span>
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container"></span>
           </button>
+
+          <ThemeToggle />
 
           <Link
             href="/libraries"

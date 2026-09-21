@@ -1,9 +1,9 @@
-# Martins3DVault 🖨️✨ (v1.5.4)
+# Martins3DVault 🖨️✨ (v1.5.5)
 
 <div align="center">
 
-**Sistema Moderno, Dark-Mode & Conteinerizado para Organização, Visualização 3D Ultrarrápida e Gerenciamento de Projetos de Impressão 3D (.stl, .3mf, .obj)**
-*Interface reconstruída e alinhada ao Google Stitch Design System ("Martins3D Vault Manager") com controles estilo Eagle App.*
+**Sistema Moderno, Dark/Light Mode & Conteinerizado para Organização, Visualização 3D Ultrarrápida e Gerenciamento de Projetos de Impressão 3D (.stl, .3mf, .obj)**
+*Interface reconstruída e alinhada ao Google Stitch Design System ("Martins3D Vault Manager") com controles estilo Eagle App e alternância dinâmica de temas.*
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](#-execução-com-docker-compose)
 [![CI/CD](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml/badge.svg)](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml)
@@ -19,6 +19,17 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 🌓 **Temas Dark & Light Dinâmicos (`v1.5.5`)**:
+  - **Botão de Alternância Integrado**: Atalho rápido no topo da Navbar e no menu do operador na Sidebar para trocar instantaneamente entre os modos **Dark** e **Light**, com persistência em `localStorage` e zero cintilação (*anti-FOUC*).
+  - **Light Mode Calibrado & Conforto Visual**:
+    - Fundo Global em Slate 100 (`#f1f5f9`) e superfícies de apoio em Slate 50 (`#f8fafc`), evitando fadiga visual do branco puro uniforme.
+    - Cards de modelos e gavetas de inspeção em branco puro (`#ffffff`) com elevação suave e divisores em Slate 200 (`#e2e8f0`).
+    - Tipografia de precisão com contraste WCAG AAA: títulos em Slate 900 (`#0f172a`), labels em Slate 600 (`#475569`) e metadados em Slate 500 (`#64748b`).
+    - Identidade vibrante calibrada: Laranja de ação em Orange 600 (`#ea580c`) com contraste 4.5:1+, Azul técnico Sky 600 (`#0284c7`) e status Online em Emerald 600 (`#16a34a`).
+  - **Mesa 3D Híbrida / Estúdio CAD**:
+    - **Estúdio Claro**: Fundo em degradê sutil cinza-claro (`#f8fafc`), grid milimétrico em Slate 300 (`#cbd5e1`) com eixos de precisão.
+    - **Dark Canvas Híbrido**: Alternância com 1 clique para renderização 3D escura/cinza-ardósia (`#0b0e17`) mantendo toda a interface em Light Mode.
 
 - 🎨 **Design System Google Stitch ("Martins3D Vault Manager")**:
   - Tema escuro de alto contraste com paleta industrial (`#0f141b`), detalhes em laranja (`#f97316`), ciano (`#4cd7f6`) e esmeralda (`#4edea3`).

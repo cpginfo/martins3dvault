@@ -82,11 +82,21 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Compila e publica automaticamente a imagem Docker no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`).
   - Criação automática de GitHub Releases para tags de versão (`v*`).
 
+- **Sistema de Temas Dark & Light Dinâmico (`v1.5.5`)**:
+  - Contexto React `ThemeContext` (`src/lib/theme/ThemeContext.tsx`) com persistência em `localStorage` (`pv_theme`) e sincronização de classes `html.dark` / `html.light`.
+  - **Script Anti-FOUC no `<head>`**: Avalia `localStorage` antes do primeiro paint para impedir qualquer piscamento de tela (flash of unstyled content).
+  - **Light Mode Calibrado & Contraste WCAG AAA**:
+    - Fundo global `surface`: `#f1f5f9` (Slate 100), apoio `surface-container-low`: `#f8fafc` (Slate 50).
+    - Cards e formulários `surface-container-lowest`: `#ffffff` (Branco puro) com bordas técnicas `#e2e8f0` (Slate 200).
+    - Títulos `#0f172a` (Slate 900), labels técnicos `#475569` (Slate 600), hashes/logs `#64748b` (Slate 500).
+    - Laranja primário `#ea580c` (Orange 600, contraste 4.5:1+), Azul Sky `#0284c7`, Online Emerald `#16a34a`.
+  - **Mesa 3D Híbrida**: Alternador no Three.js entre **Estúdio Claro** (fundo `#f8fafc` e grid `#cbd5e1`) e **Dark Canvas Híbrido** (`#0b0e17`).
+
 ---
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.4` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.5.5` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
