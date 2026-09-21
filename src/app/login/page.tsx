@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { APP_VERSION } from "@/lib/version";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -195,19 +196,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Botão de Preenchimento Rápido / Demonstração */}
-        <div className="pt-2 border-t border-white/5 flex flex-col items-center">
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("admin@printvault.local");
-              setPassword("admin123");
-            }}
-            className="text-[11px] font-mono text-secondary/70 hover:text-secondary transition-colors flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded hover:bg-white/5"
-          >
-            <span className="material-symbols-outlined text-[14px]">auto_fix_high</span>
-            <span>Preencher padrão (admin@printvault.local / admin123)</span>
-          </button>
+        {/* Rodapé com a versão da aplicação */}
+        <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-on-surface-variant/60">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+            <span>Sistema Operacional</span>
+          </span>
+          <span className="text-secondary font-medium tracking-wide">
+            {APP_VERSION}
+          </span>
         </div>
 
 
