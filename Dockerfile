@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile para PrintVault (Next.js + Prisma)
+# Multi-stage Dockerfile enxuto para Martins3DVault (Next.js Standalone + Prisma)
 FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat openssl
 
@@ -7,8 +7,10 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-RUN npx prisma generate
+RUN npm ci --legacy-peer-deps && \
+    npx prisma generate && \
+    npm cache clean --force && \
+    rm -rf /root/.npm /root/.cache
 
 # Estágio de Build
 FROM base AS builder
@@ -21,7 +23,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Next.js standalone build
-RUN npm run build
+RUN npm run build && \
+    rm -rf /root/.npm /root/.cache
 
 # Estágio de Execução (Runner)
 FROM base AS runner
@@ -32,21 +35,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Instalar ferramentas necessárias
-RUN apk add --no-cache openssl netcat-openbsd
-
 # Criar usuário não-root para segurança
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Cria diretórios para dados e bibliotecas com permissões adequadas
-RUN mkdir -p /data/thumbnails /data/uploads /libraries && \
+# Cria diretórios persistentes com permissões adequadas
+RUN mkdir -p /data/thumbnails /data/uploads /data/cache /libraries && \
     chown -R nextjs:nodejs /data /libraries
 
-# Instalar Prisma CLI globalmente com todas as dependências (como effect, @prisma/config)
-RUN npm install -g prisma@6.19.3
+# Instalar Prisma CLI globalmente e limpar cache do npm imediatamente para reduzir o tamanho da imagem
+RUN npm install -g prisma@6.19.3 && \
+    npm cache clean --force && \
+    rm -rf /root/.npm /root/.cache /tmp/*
 
-# Copiar arquivos construídos do builder
+# Copiar apenas os artefatos estritamente necessários para execução standalone
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

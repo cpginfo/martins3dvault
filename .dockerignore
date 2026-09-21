@@ -2,10 +2,14 @@ node_modules
 .next
 .git
 .gitignore
-README.md
+*.md
+docker-compose*.yml
 data
 libraries
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .env
 .env.local
 .env.*.local
@@ -19,3 +23,5 @@ tmp
 temp
 *.tsbuildinfo
 stitch_export
+Dockerfile*
+LICENSE*

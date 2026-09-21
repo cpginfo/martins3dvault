@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      tags:
+        - "martins3dvault:latest"
+        - "martins3dvault:1.5.0"
+    image: martins3dvault:1.5.0
     container_name: 3d-vault-web
     restart: unless-stopped
     ports:
