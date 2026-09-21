@@ -59,15 +59,35 @@ if [ -n "$DATABASE_URL" ]; then
       } else {
         console.log('👤 Administrador já existente:', adminEmail);
       }
+
+      // Garante uma biblioteca inicial se o banco estiver vazio
+      const defaultLibPath = process.env.STORAGE_LIBRARIES_PATH || '/libraries';
+      const existingLib = await prisma.library.findFirst();
+      if (!existingLib) {
+        await prisma.library.create({
+          data: {
+            name: 'Biblioteca Principal',
+            path: defaultLibPath,
+            enabled: true,
+          }
+        });
+        console.log('📚 Biblioteca padrão criada:', defaultLibPath);
+      } else {
+        console.log('📚 Biblioteca já existente:', existingLib.name);
+      }
     }
     main().catch(console.error).finally(() => prisma.\$disconnect());
   "
 fi
 
 # Cria diretórios de dados se não existirem
-mkdir -p /data/thumbnails
-mkdir -p /data/uploads
-mkdir -p /libraries
+DATA_DIR="${STORAGE_DATA_PATH:-/data}"
+LIB_DIR="${STORAGE_LIBRARIES_PATH:-/libraries}"
+
+mkdir -p "$DATA_DIR/thumbnails"
+mkdir -p "$DATA_DIR/uploads"
+mkdir -p "$DATA_DIR/cache"
+mkdir -p "$LIB_DIR"
 
 echo "✨ Martins3DVault pronto! Iniciando servidor na porta ${PORT:-3000}..."
 exec "$@"

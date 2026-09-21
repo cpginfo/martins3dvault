@@ -17,10 +17,8 @@ services:
       - STORAGE_DATA_PATH=${STORAGE_DATA_PATH}
       - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH}
     volumes:
-      # Armazenamento de thumbnails extraídas e uploads
-      - ./data:/data
-      # Montagem dos diretórios de arquivos 3D (compartilhamentos locais, NFS ou CIFS)
-      - ./libraries:/libraries
+      - ./data:/data # Armazenamento de thumbnails extraídas e uploads
+      - ./libraries:/libraries # Montagem dos diretórios de arquivos 3D
     depends_on:
       db:
         condition: service_healthy
