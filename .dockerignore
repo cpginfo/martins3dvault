@@ -23,5 +23,6 @@ tmp
 temp
 *.tsbuildinfo
 stitch_export
+screenshots
 Dockerfile*
 LICENSE*

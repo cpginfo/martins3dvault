@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.5.6)
+# Martins3DVault 🖨️✨ (v1.5.7)
 
 <div align="center">
 
@@ -9,10 +9,39 @@
 [![CI/CD](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml/badge.svg)](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml)
 [![GHCR](https://img.shields.io/badge/GHCR-Image_Ready-2496ED?logo=docker&logoColor=white)](https://github.com/cpginfo/martins3dvault/pkgs/container/martins3dvault)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-22_LTS-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Three.js](https://img.shields.io/badge/Three.js-3D_Engine-049EF4?logo=three.js&logoColor=white)](https://threejs.org)
 [![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Google Stitch](https://img.shields.io/badge/Google_Stitch-Design_System-FF6F00?logo=google&logoColor=white)](https://stitch.withgoogle.com)
+
+</div>
+
+---
+
+## 📸 Demonstração Visual (Screenshots)
+
+<div align="center">
+
+| 📐 Visualizador 3D Studio & Fatiamento | 🦅 Galeria de Modelos & Controles Eagle |
+|:---:|:---:|
+| <a href="screenshots/arquivo.png" target="_blank"><img src="screenshots/arquivo.png" width="460" alt="Visualizador 3D Studio & Fatiamento" /></a> | <a href="screenshots/colecao.png" target="_blank"><img src="screenshots/colecao.png" width="460" alt="Galeria de Modelos & Controles Eagle" /></a> |
+| *Viewport Three.js com HUD milimétrico, presets de câmera, materiais e drawer técnico* | *Grid ajustável estilo Eagle com zoom dinâmico, badges de polímero e toggle de impressão* |
+
+| 📂 Catálogo de Coleções & Métricas Bento | 📊 Terminal de Oficina & Telemetria |
+|:---:|:---:|
+| <a href="screenshots/colecoes.png" target="_blank"><img src="screenshots/colecoes.png" width="460" alt="Catálogo de Coleções" /></a> | <a href="screenshots/metricas.png" target="_blank"><img src="screenshots/metricas.png" width="460" alt="Terminal de Oficina & Telemetria" /></a> |
+| *Métricas Bento de armazenamento RAID 5 e pastas físicas espelhadas* | *Fila de bancada, telemetria industrial e monitoramento Klipper/Bambu* |
+
+| 📁 Mapeamento de Pastas & Scan Inteligente | 👤 Gestão de Usuários & Permissões |
+|:---:|:---:|
+| <a href="screenshots/pastas.png" target="_blank"><img src="screenshots/pastas.png" width="460" alt="Mapeamento de Pastas & Scan" /></a> | <a href="screenshots/usuarios.png" target="_blank"><img src="screenshots/usuarios.png" width="460" alt="Gestão de Usuários & Permissões" /></a> |
+| *Engine AdditiveCore com status de volumes e espelhamento bidirecional no disco* | *Tabela de operadores RBAC com avatares persistentes e 5 campos de cadastro* |
+
+| 🌐 Upload de Arquivos & Download por Link |
+|:---:|
+| <a href="screenshots/upload.png" target="_blank"><img src="screenshots/upload.png" width="520" alt="Upload de Arquivos & Download por Link" /></a> |
+| *Upload multipart de arquivos 3D e download de pacotes ZIP direto para o cofre* |
 
 </div>
 

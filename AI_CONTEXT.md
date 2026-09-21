@@ -76,8 +76,9 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Sincronização Automática de Tabelas**: O container `web` aguarda o banco estar saudável (`pg_isready`) e executa `prisma db push --skip-generate` apontando dinamicamente para a `DATABASE_URL` construída pelas variáveis do Compose.
   - **Seed Automático de Administrador**: O script `docker-entrypoint.sh` verifica e cria o usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) caso ainda não exista no banco.
   - **Resiliência de Variáveis**: Sintaxe `${VAR:-default}` no `docker-compose.yml` garante que a aplicação suba sem falhas mesmo na ausência de arquivo `.env`.
-- **CI/CD & Publicação Automática (GitHub Actions - `v1.5.6`)**:
+- **CI/CD & Publicação Automática (GitHub Actions - `v1.5.7`)**:
   - Workflow em `.github/workflows/publish.yml` ativado em pushes para `main` e tags `v*`.
+  - Baseado em **Node.js 22 LTS** tanto no runner do GitHub Actions quanto na imagem base do `Dockerfile` (`node:22-alpine`), prevenindo alertas de depreciação do Node 20.
   - Autenticação configurada via Secret **`GHCR_TOKEN`** para login no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`) e criação de releases via `softprops/action-gh-release`.
   - Executa validação prévia de TypeScript e compilação do Next.js antes de qualquer publicação.
   - Compila e publica automaticamente a imagem Docker com suporte a cache GitHub Actions (`mode=max`).
@@ -97,14 +98,15 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.6` (configurada centralmente no `package.json`).
-- **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
+- **Versão do Aplicativo**: `v1.5.7` (configurada centralmente no `package.json`).
+- **Framework & Runtime**: Next.js 16.3.5 (App Router, Node.js 22 LTS).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
 - **Banco de Dados & ORM**: PostgreSQL 16 com Prisma ORM v6.19 (LTS).
 - **Autenticação**: JWT sem estado baseado em cookies seguros via `jose` e `bcryptjs`.
 - **Parsing de Arquivos**: `adm-zip` para inspeção e descompactação de 3MF, parser customizado para STL binário/ASCII e montagem de transformações afins.
-- **Containerização**: Docker multi-stage com Next.js Standalone, `docker-compose.yml` (`3d-vault-web` e `3d-vault-db`) e rede externa `qg`.
+- **Containerização**: Docker multi-stage com `node:22-alpine` e Next.js Standalone, `docker-compose.yml` (`3d-vault-web` e `3d-vault-db`) e rede externa `qg`.
+- **Demonstração & Capturas**: Pasta `screenshots/` versionada no GitHub e incorporada como galeria responsiva com miniaturas no `README.md`.
 - **Integração Google Stitch**: MCP Server (`@_davideast/stitch-mcp proxy`) configurado em `.agents/mcp_config.json`.
 
 ---
