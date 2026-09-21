@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 
@@ -49,19 +50,78 @@ export async function verifySessionToken(token: string): Promise<UserSession | n
   }
 }
 
-export async function getCurrentUser(): Promise<UserSession | null> {
+export async function getCurrentUser(req?: Request): Promise<UserSession | null> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
-    if (!token) return null;
-    return await verifySessionToken(token);
+    let token: string | undefined;
+
+    // 1. Check Cookie
+    if (req) {
+      const cookieHeader = req.headers.get("cookie");
+      if (cookieHeader) {
+        const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
+        if (match) token = decodeURIComponent(match[1]);
+      }
+    }
+    if (!token) {
+      try {
+        const cookieStore = await cookies();
+        token = cookieStore.get(COOKIE_NAME)?.value;
+      } catch {}
+    }
+
+    // 2. Check Authorization Header (Bearer or Basic)
+    let authHeader = req?.headers.get("authorization");
+    if (!authHeader) {
+      try {
+        const h = await headers();
+        authHeader = h.get("authorization");
+      } catch {}
+    }
+
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.substring(7).trim();
+    }
+
+    if (token) {
+      const session = await verifySessionToken(token);
+      if (session) return session;
+    }
+
+    // 3. Check Basic Auth (email:password)
+    if (authHeader?.startsWith("Basic ")) {
+      const base64Credentials = authHeader.substring(6).trim();
+      const decoded = Buffer.from(base64Credentials, "base64").toString("utf-8");
+      const colonIndex = decoded.indexOf(":");
+      if (colonIndex !== -1) {
+        const email = decoded.substring(0, colonIndex).toLowerCase().trim();
+        const password = decoded.substring(colonIndex + 1);
+        if (email && password) {
+          const user = await prisma.user.findUnique({
+            where: { email },
+          });
+          if (user && (await verifyPassword(password, user.passwordHash))) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role as "ADMIN" | "EDITOR" | "VIEWER",
+            };
+          }
+        }
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
 }
 
-export async function requireAuth(allowedRoles?: Array<"ADMIN" | "EDITOR" | "VIEWER">): Promise<UserSession> {
-  const user = await getCurrentUser();
+export async function requireAuth(
+  allowedRoles?: Array<"ADMIN" | "EDITOR" | "VIEWER">,
+  req?: Request
+): Promise<UserSession> {
+  const user = await getCurrentUser(req);
   if (!user) {
     throw new Error("UNAUTHORIZED");
   }
@@ -69,4 +129,24 @@ export async function requireAuth(allowedRoles?: Array<"ADMIN" | "EDITOR" | "VIE
     throw new Error("FORBIDDEN");
   }
   return user;
+}
+
+export async function requireAdmin(req?: Request): Promise<UserSession> {
+  return requireAuth(["ADMIN"], req);
+}
+
+export function handleAuthError(err: any): NextResponse | null {
+  if (err?.message === "UNAUTHORIZED") {
+    return NextResponse.json(
+      { error: "Autenticação obrigatória. Forneça login e senha válidos." },
+      { status: 401 }
+    );
+  }
+  if (err?.message === "FORBIDDEN") {
+    return NextResponse.json(
+      { error: "Acesso restrito. Perfil de Administrador obrigatório." },
+      { status: 403 }
+    );
+  }
+  return null;
 }

@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser, hashPassword } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError, hashPassword } from "@/lib/auth/session";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem listar usuários" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const users = await prisma.user.findMany({
       select: {
@@ -23,16 +20,15 @@ export async function GET() {
 
     return NextResponse.json(users);
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const currentUser = await getCurrentUser();
-    if (currentUser && currentUser.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem criar usuários" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { name, email, password, role } = await request.json();
 
@@ -60,8 +56,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(user, { status: 201 });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     if (err.code === "P2002") {
-      return NextResponse.json({ error: "Já existe um usuário com este e-mail" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -69,10 +67,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const currentUser = await getCurrentUser();
-    if (currentUser && currentUser.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem alterar usuários" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id, role, name, password } = await request.json();
     if (!id) {
@@ -97,16 +92,15 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updated);
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const currentUser = await getCurrentUser();
-    if (currentUser && currentUser.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem excluir usuários" }, { status: 403 });
-    }
+    const currentUser = await requireAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -114,14 +108,15 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID do usuário é obrigatório" }, { status: 400 });
     }
 
-    if (currentUser && currentUser.id === id) {
+    if (currentUser.id === id) {
       return NextResponse.json({ error: "Você não pode excluir seu próprio usuário" }, { status: 400 });
     }
 
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-

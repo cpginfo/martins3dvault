@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(request);
     const { id } = await props.params;
 
     const collection = await prisma.collection.findFirst({
@@ -56,6 +57,8 @@ export async function GET(
       models: sanitizedModels,
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -65,10 +68,7 @@ export async function PUT(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role === "VIEWER") {
-      return NextResponse.json({ error: "Permissão insuficiente para editar coleções" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id } = await props.params;
     const body = await request.json();
@@ -95,6 +95,8 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -104,10 +106,7 @@ export async function DELETE(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem excluir coleções" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id } = await props.params;
 
@@ -118,6 +117,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

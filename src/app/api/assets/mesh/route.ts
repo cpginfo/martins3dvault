@@ -4,9 +4,11 @@ import fs from "fs";
 import { Readable } from "stream";
 import prisma from "@/lib/prisma";
 import { convert3mfToBinaryStl } from "@/lib/scanner/extractors/threemf-converter";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   try {
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const libraryId = searchParams.get("libraryId");
     const relPath = searchParams.get("relPath");
@@ -99,6 +101,8 @@ export async function GET(request: Request) {
 
     return new NextResponse("Formato não suportado para streaming de malha 3D", { status: 400 });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     console.error("Erro no endpoint /api/assets/mesh:", err);
     return new NextResponse("Erro interno ao processar malha", { status: 500 });
   }

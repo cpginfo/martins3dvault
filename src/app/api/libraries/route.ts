@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    await requireAdmin(request);
+
     const libraries = await prisma.library.findMany({
       include: {
         _count: {
@@ -34,16 +36,15 @@ export async function GET() {
 
     return NextResponse.json(enriched);
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Apenas administradores podem adicionar bibliotecas" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { name, path: dirPath } = await request.json();
 
@@ -68,6 +69,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(library, { status: 201 });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     if (err.code === "P2002") {
       return NextResponse.json({ error: "Já existe uma biblioteca cadastrada com este caminho" }, { status: 409 });
     }

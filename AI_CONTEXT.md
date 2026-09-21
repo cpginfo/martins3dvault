@@ -65,7 +65,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.2.0` (configurada nas variáveis `APP_VERSION` e `NEXT_PUBLIC_APP_VERSION`).
+- **Versão do Aplicativo**: `v1.3.0` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).

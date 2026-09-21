@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    await requireAdmin(request);
+
     const [
       totalModels,
       totalLibraries,
@@ -42,6 +45,8 @@ export async function GET() {
       recentScans,
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(
   request: Request,
   props: { params: Promise<{ path: string[] }> }
 ) {
   try {
+    await requireAdmin(request);
     const params = await props.params;
     const pathSegments = params.path;
 
@@ -56,6 +58,8 @@ export async function GET(
 
     return new NextResponse(readable, { status: 200, headers });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return new NextResponse("Erro ao carregar thumbnail", { status: 500 });
   }
 }

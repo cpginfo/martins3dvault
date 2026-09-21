@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.2.0)
+# Mapa do Projeto - Martins3DVault (v1.3.0)
 
 Este documento serve como o **mapa técnico completo e exaustivo** da arquitetura do Martins3DVault. Ele foi projetado para que qualquer engenheiro de software ou modelo de inteligência artificial compreenda instantaneamente a estrutura de diretórios, o fluxo de dados, a modelagem de banco de dados, os contratos de API e a interface de usuário baseada no **Google Stitch Design System ("Martins3D Vault Manager")**.
 
@@ -10,7 +10,7 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.2.0                                  │
+│                           MARTINS3DVAULT v1.3.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │

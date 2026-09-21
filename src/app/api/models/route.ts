@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   try {
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q") || "";
     const format = searchParams.get("format"); // STL, 3MF, OBJ
@@ -129,6 +131,8 @@ export async function GET(request: Request) {
       },
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

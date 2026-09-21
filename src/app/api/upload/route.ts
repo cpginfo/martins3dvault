@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 import { parseStlFile } from "@/lib/scanner/extractors/stl-parser";
 import { extractThreeMfMetadata } from "@/lib/scanner/extractors/threemf";
 
@@ -21,13 +21,7 @@ function slugify(text: string): string {
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role === "VIEWER") {
-      return NextResponse.json(
-        { error: "Permissão insuficiente para fazer upload de arquivos" },
-        { status: 403 }
-      );
-    }
+    await requireAdmin(request);
 
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
@@ -260,6 +254,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(sanitized, { status: 201 });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     console.error("Erro no upload de arquivo:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 const ALLOWED_IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
 
@@ -11,10 +11,7 @@ export async function POST(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role === "VIEWER") {
-      return NextResponse.json({ error: "Permissão insuficiente" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id } = await props.params;
 
@@ -94,6 +91,8 @@ export async function POST(
 
     return NextResponse.json({ success: true, coverImage: updated.coverImage });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     console.error("Erro ao atualizar capa:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

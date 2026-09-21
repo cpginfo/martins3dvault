@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { Readable } from "stream";
 import prisma from "@/lib/prisma";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 const MIME_TYPES: Record<string, string> = {
   ".stl": "model/stl",
@@ -18,6 +19,7 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(request: Request) {
   try {
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const libraryId = searchParams.get("libraryId");
     const relPath = searchParams.get("relPath");
@@ -77,6 +79,8 @@ export async function GET(request: Request) {
       headers,
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     console.error("Erro ao servir asset:", err);
     return new NextResponse("Erro interno ao servir arquivo", { status: 500 });
   }

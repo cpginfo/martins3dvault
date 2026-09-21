@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.2.0)
+# Martins3DVault 🖨️✨ (v1.3.0)
 
 <div align="center">
 
@@ -100,8 +100,6 @@ Abra o navegador em: **[http://localhost:3000](http://localhost:3000)**
 
 | Variável | Valor Padrão | Descrição |
 | :--- | :--- | :--- |
-| `APP_VERSION` | `v1.2.0` | Versão exibida na interface e no healthcheck |
-| `NEXT_PUBLIC_APP_VERSION`| `v1.2.0` | Versão pública no cliente Next.js |
 | `PORT` | `3000` | Porta interna do servidor HTTP |
 | `DATABASE_URL` | `postgresql://...` | String de conexão com o PostgreSQL |
 | `JWT_SECRET` | `change_me_...` | Chave de assinatura dos tokens JWT |

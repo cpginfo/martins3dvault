@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function PUT(
   request: Request,
   props: { params: Promise<{ id: string; fileId: string }> }
 ) {
   try {
+    await requireAdmin(request);
+
     const { id, fileId } = await props.params;
     const body = await request.json();
     const { isPrinted } = body;
@@ -24,6 +27,8 @@ export async function PUT(
       fileSize: Number(updatedFile.fileSize),
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

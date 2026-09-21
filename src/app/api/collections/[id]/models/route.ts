@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function POST(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role === "VIEWER") {
-      return NextResponse.json({ error: "Permissão insuficiente para alterar modelos da coleção" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id } = await props.params;
     const body = await request.json();
@@ -52,6 +49,8 @@ export async function POST(
 
     return NextResponse.json({ success: true, count: modelIds.length });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

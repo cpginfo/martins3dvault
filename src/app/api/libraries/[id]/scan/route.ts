@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { scanLibrary } from "@/lib/scanner/crawler";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdmin, handleAuthError } from "@/lib/auth/session";
 
 export async function POST(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (user && user.role === "VIEWER") {
-      return NextResponse.json({ error: "Permissão insuficiente para iniciar varreduras" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     const { id } = await props.params;
 
@@ -35,6 +32,8 @@ export async function POST(
       stats,
     });
   } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
