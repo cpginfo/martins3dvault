@@ -48,9 +48,11 @@ if [ -n "$DATABASE_URL" ]; then
     const prisma = new PrismaClient();
     
     async function main() {
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@printvault.local';
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@printvault.local').toLowerCase().trim();
       const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
-      const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+      const existing = await prisma.user.findFirst({
+        where: { email: { equals: adminEmail, mode: 'insensitive' } }
+      });
       if (!existing) {
         const hash = await bcrypt.hash(adminPass, 10);
         await prisma.user.create({
@@ -63,7 +65,17 @@ if [ -n "$DATABASE_URL" ]; then
         });
         console.log('👑 Usuário administrador criado com sucesso:', adminEmail);
       } else {
-        console.log('👤 Usuário administrador verificado no banco:', adminEmail);
+        const isMatch = await bcrypt.compare(adminPass, existing.passwordHash);
+        if (!isMatch) {
+          const newHash = await bcrypt.hash(adminPass, 10);
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { passwordHash: newHash, role: 'ADMIN' }
+          });
+          console.log('🔄 Senha do administrador sincronizada com o Compose:', adminEmail);
+        } else {
+          console.log('👤 Usuário administrador verificado no banco:', adminEmail);
+        }
       }
 
       // Garante uma biblioteca inicial se o banco estiver vazio

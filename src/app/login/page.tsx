@@ -140,7 +140,10 @@ export default function LoginPage() {
             </div>
             <div className="relative flex items-center">
               <input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -152,14 +155,17 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+              <label htmlFor="password" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[16px] text-primary">lock</span>
                 <span>Chave de Acesso / Senha</span>
               </label>
             </div>
             <div className="relative flex items-center">
               <input
+                id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -169,7 +175,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 text-on-surface-variant hover:text-on-surface transition-colors"
+                className="absolute right-3 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
                 title={showPassword ? "Ocultar senha" : "Ver senha"}
               >
                 <span className="material-symbols-outlined text-[18px]">
@@ -182,12 +188,27 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 rounded-lg bg-primary-container text-on-primary font-bold text-xs hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.35)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full mt-2 py-3 rounded-lg bg-primary-container text-on-primary font-bold text-xs hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.35)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">key</span>
             <span>{loading ? "Desbloqueando Cofre..." : "Acessar Martins3DVault"}</span>
           </button>
         </form>
+
+        {/* Botão de Preenchimento Rápido / Demonstração */}
+        <div className="pt-2 border-t border-white/5 flex flex-col items-center">
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("admin@printvault.local");
+              setPassword("admin123");
+            }}
+            className="text-[11px] font-mono text-secondary/70 hover:text-secondary transition-colors flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded hover:bg-white/5"
+          >
+            <span className="material-symbols-outlined text-[14px]">auto_fix_high</span>
+            <span>Preencher padrão (admin@printvault.local / admin123)</span>
+          </button>
+        </div>
 
 
       </div>
