@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { renameModelFiles, moveModelToCollection } from "@/lib/storage/file-ops";
 
 export async function GET(
   request: Request,
@@ -76,8 +77,25 @@ export async function PUT(
       tags, // array de strings
     } = body;
 
+    const currentModel = await prisma.model.findUnique({
+      where: { id },
+    });
+    if (!currentModel) {
+      return NextResponse.json({ error: "Modelo não encontrado" }, { status: 404 });
+    }
+
+    // Se o nome foi alterado, renomeia fisicamente o modelo e seus arquivos no disco
+    if (name !== undefined && name.trim() && name.trim() !== currentModel.name) {
+      await renameModelFiles(id, name.trim());
+    }
+
+    // Se a coleção foi alterada, move fisicamente os arquivos no disco
+    const targetColId = collectionId !== undefined ? (collectionId || null) : currentModel.collectionId;
+    if (collectionId !== undefined && targetColId !== currentModel.collectionId) {
+      await moveModelToCollection(id, targetColId);
+    }
+
     const data: any = {};
-    if (name !== undefined) data.name = name;
     if (description !== undefined) data.description = description;
     if (filamentType !== undefined) data.filamentType = filamentType;
     if (nozzleSize !== undefined) data.nozzleSize = nozzleSize ? parseFloat(nozzleSize) : null;
@@ -98,7 +116,6 @@ export async function PUT(
       data.printedAt = printedAt ? new Date(printedAt) : null;
     }
     if (coverImage !== undefined) data.coverImage = coverImage;
-    if (collectionId !== undefined) data.collectionId = collectionId || null;
 
     // Atualiza tags se fornecido
     if (Array.isArray(tags)) {
@@ -114,7 +131,7 @@ export async function PUT(
       };
     }
 
-    const updated = await prisma.model.update({
+    let updated = await prisma.model.update({
       where: { id },
       data,
       include: {

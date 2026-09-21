@@ -12,6 +12,10 @@ import {
   Plus,
   Layers,
   FolderTree,
+  Link as LinkIcon,
+  Globe,
+  Loader2,
+  DownloadCloud,
 } from "lucide-react";
 
 interface UploadModalProps {
@@ -25,7 +29,9 @@ export default function UploadModal({
   onClose,
   onUploadSuccess,
 }: UploadModalProps) {
+  const [activeTab, setActiveTab] = useState<"file" | "url">("file");
   const [files, setFiles] = useState<File[]>([]);
+  const [urlInput, setUrlInput] = useState("");
   const [modelName, setModelName] = useState("");
   const [description, setDescription] = useState("");
   const [filamentType, setFilamentType] = useState("PLA");
@@ -46,7 +52,9 @@ export default function UploadModal({
   useEffect(() => {
     if (isOpen) {
       // Reset form
+      setActiveTab("file");
       setFiles([]);
+      setUrlInput("");
       setModelName("");
       setDescription("");
       setErrorMsg("");
@@ -78,7 +86,6 @@ export default function UploadModal({
     const newFileList = Array.from(selectedFiles);
     setFiles((prev) => [...prev, ...newFileList]);
 
-    // Se ainda não temos um nome, sugere o nome do primeiro arquivo 3D
     if (!modelName) {
       const first3D = newFileList.find((f) => {
         const ext = f.name.toLowerCase();
@@ -100,7 +107,7 @@ export default function UploadModal({
     handleFileSelect(e.dataTransfer.files);
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUploadFile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (files.length === 0) {
       setErrorMsg("Selecione pelo menos um arquivo 3D.");
@@ -158,6 +165,53 @@ export default function UploadModal({
     }
   };
 
+  const handleDownloadFromUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) {
+      setErrorMsg("Informe a URL do arquivo 3D.");
+      return;
+    }
+
+    if (!urlInput.trim().startsWith("http://") && !urlInput.trim().startsWith("https://")) {
+      setErrorMsg("A URL deve começar com http:// ou https://");
+      return;
+    }
+
+    setUploading(true);
+    setErrorMsg("");
+    setProgress(25);
+
+    try {
+      setProgress(40);
+      const res = await fetch("/api/upload/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: urlInput.trim(),
+          name: modelName.trim() || undefined,
+          description: description.trim() || undefined,
+          filamentType,
+          libraryId: libraryId || undefined,
+        }),
+      });
+
+      setProgress(90);
+      if (res.ok) {
+        const created = await res.json();
+        setProgress(100);
+        setSuccessModel(created);
+        if (onUploadSuccess) onUploadSuccess(created);
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "Falha ao baixar arquivo da URL");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Erro durante o download da URL");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -175,17 +229,53 @@ export default function UploadModal({
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/30 text-primary">
             <Upload className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface">Upload Manual de Modelos 3D</h2>
+            <h2 className="text-lg font-bold text-on-surface">Adicionar Modelos 3D</h2>
             <p className="text-xs text-on-surface-variant">
-              Adicione arquivos STL, 3MF, OBJ, imagens de capa e manuais PDF diretamente.
+              Faça upload de arquivos locais ou baixe diretamente de um link da internet.
             </p>
           </div>
         </div>
+
+        {/* Tab Switcher */}
+        {!successModel && (
+          <div className="flex items-center p-1 rounded-xl bg-surface-container-lowest border border-white/5 mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("file");
+                setErrorMsg("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "file"
+                  ? "bg-primary-container text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              <span>Arquivo do Computador</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("url");
+                setErrorMsg("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "url"
+                  ? "bg-primary-container text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Download via Link (URL)</span>
+            </button>
+          </div>
+        )}
 
         {errorMsg && (
           <div className="mb-4 p-3 rounded-xl bg-error-container/40 border border-error/30 text-xs text-error flex items-center gap-2">
@@ -197,13 +287,21 @@ export default function UploadModal({
         {successModel ? (
           /* Success Screen */
           <div className="py-8 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-tertiary/20 border border-tertiary/30 text-tertiary flex items-center justify-center mb-3">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-3">
               <Check className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-on-surface mb-1">Upload Realizado com Sucesso!</h3>
-            <p className="text-xs text-on-surface-variant max-w-sm mb-6">
-              O modelo &quot;{successModel.name}&quot; foi processado, indexado e já está disponível para visualização 3D.
+            <h3 className="text-base font-bold text-on-surface mb-1">
+              {activeTab === "url" ? "Download Concluído com Sucesso!" : "Upload Realizado com Sucesso!"}
+            </h3>
+            <p className="text-xs text-on-surface-variant max-w-sm mb-2">
+              O modelo &quot;{successModel.name}&quot; foi processado, indexado e já está pronto para uso.
             </p>
+            {activeTab === "url" && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 text-[11px] font-mono mb-4 border border-indigo-500/30">
+                <FolderTree className="w-3.5 h-3.5" />
+                Salvo na coleção &apos;download&apos;
+              </span>
+            )}
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
@@ -213,9 +311,9 @@ export default function UploadModal({
               </button>
             </div>
           </div>
-        ) : (
-          /* Form Screen */
-          <form onSubmit={handleUpload} className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+        ) : activeTab === "file" ? (
+          /* Tab 1: Form Screen File Upload */
+          <form onSubmit={handleUploadFile} className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {/* Drag and Drop Zone */}
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -416,6 +514,144 @@ export default function UploadModal({
               >
                 <Upload className="w-4 h-4" />
                 <span>{uploading ? "Enviando e Processando..." : "Enviar Modelo"}</span>
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Tab 2: Download by URL */
+          <form onSubmit={handleDownloadFromUrl} className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+            {/* URL Input */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Link do Arquivo 3D (URL) *
+              </label>
+              <div className="relative">
+                <Globe className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder="https://exemplo.com/modelos/peca.stl ou .3mf, .zip"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                  required
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Formatos suportados: .stl, .3mf, .obj, .step ou pacotes .zip contendo arquivos 3D.
+              </p>
+            </div>
+
+            {/* Info notice about download folder */}
+            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2.5 text-xs text-indigo-200">
+              <DownloadCloud className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-white">Organização Automática:</span>
+                <p className="text-[11px] text-indigo-300/90 mt-0.5">
+                  O arquivo será baixado e salvo na pasta física e coleção <strong>download</strong> dentro da biblioteca.
+                </p>
+              </div>
+            </div>
+
+            {/* Optional Model Name */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Nome do Modelo (Opcional)
+              </label>
+              <input
+                type="text"
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                placeholder="Deixe em branco para usar o nome do arquivo original"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            {/* Library Selector */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Biblioteca de Armazenamento
+              </label>
+              <select
+                value={libraryId}
+                onChange={(e) => setLibraryId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+              >
+                {libraries.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filament Type */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Material Recomendado
+              </label>
+              <select
+                value={filamentType}
+                onChange={(e) => setFilamentType(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+              >
+                <option value="PLA">PLA</option>
+                <option value="PETG">PETG</option>
+                <option value="ABS">ABS</option>
+                <option value="TPU">TPU (Flexível)</option>
+                <option value="RESIN">Resina UV</option>
+                <option value="NYLON">Nylon / PA</option>
+              </select>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Descrição / Notas
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Observações adicionais ou notas de impressão..."
+                rows={2}
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            {/* Progress Bar */}
+            {uploading && (
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-indigo-500 h-1.5 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+
+            {/* Submit Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={!urlInput.trim() || uploading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Baixando e Processando...</span>
+                  </>
+                ) : (
+                  <>
+                    <DownloadCloud className="w-4 h-4" />
+                    <span>Baixar para a Pasta Download</span>
+                  </>
+                )}
               </button>
             </div>
           </form>

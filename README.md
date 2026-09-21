@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.3.0)
+# Martins3DVault 🖨️✨ (v1.4.0)
 
 <div align="center">
 
@@ -59,11 +59,23 @@
   - Engine AdditiveCore com monitoramento de armazenamento RAID 5 e integridade SHA-256.
   - Botão de varredura manual com terminal de logs e status em tempo real.
 
-- 👥 **Gestão Completa de Usuários & Permissões (`/users`)**:
-  - Tabela RBAC com níveis `ADMIN`, `OPERATOR` e `VIEWER`, status ativo/inativo e redefinição de credenciais.
+- 📂 **Gestão Física de Coleções & Movimentação em Lote (`/collections/[id]`)**:
+  - **Pastas Físicas no Repositório**: Toda coleção criada ganha uma pasta física correspondente na biblioteca.
+  - **Seleção Múltipla de Arquivos**: Checkboxes nos cartões com botão "Selecionar Todos" e barra flutuante de ações.
+  - **Movimentação Física Completa**: Ao mover arquivos para outra coleção (existente ou nova), o sistema move fisicamente o arquivo 3D principal, imagens de capa/renders e manuais em PDF.
+  - **Prevenção de Sobrescrita**: Resolução automática de conflito de nomes adicionando sufixo numérico incremental (ex: `Modelo (1).3mf`), preservando ambos os arquivos.
+
+- ✏️ **Renomeação Física no Disco**:
+  - Edição direta de título com persistência física: renomeia o arquivo 3D, a imagem de capa e o manual PDF diretamente na pasta do repositório.
+
+- 🌐 **Upload via Link / Download por URL**:
+  - Aba integrada no modal de upload para colar links HTTP/HTTPS de arquivos 3D (`.stl`, `.3mf`, `.obj`, `.step`) ou pacotes `.zip`.
+  - Download via stream direto para a pasta física e vinculação automática com a coleção **`download`**.
+  - Descompactação automática de pacotes ZIP com extração de metadados de impressão.
 
 - 🔒 **Login Seguro & Autenticação (`/login`)**:
   - Tela de login com fundo CAD isométrico, telemetria de hardware e botão de preenchimento rápido para demonstração.
+  - Proteção integral de todas as rotas e endpoints de API exigindo perfil `ADMIN`.
 
 ---
 

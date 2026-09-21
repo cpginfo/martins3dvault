@@ -1,16 +1,14 @@
-# Mapa do Projeto - Martins3DVault (v1.3.0)
+# Mapa do Projeto - Martins3DVault (v1.4.0)
 
-Este documento serve como o **mapa técnico completo e exaustivo** da arquitetura do Martins3DVault. Ele foi projetado para que qualquer engenheiro de software ou modelo de inteligência artificial compreenda instantaneamente a estrutura de diretórios, o fluxo de dados, a modelagem de banco de dados, os contratos de API e a interface de usuário baseada no **Google Stitch Design System ("Martins3D Vault Manager")**.
+Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
 ---
 
 ## 1. Visão Geral da Arquitetura
 
-O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Docker Compose*), auto-hospedada (*self-hosted*), construída com Next.js (App Router), Three.js, Prisma ORM e PostgreSQL, com containers de execução nomeados `3d-vault-web` e `3d-vault-db`.
-
 ```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.3.0                                  │
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                           MARTINS3DVAULT v1.4.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -112,7 +110,8 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
     │       │           └── route.ts # POST: Adiciona ou remove modelos em lote da coleção
     │       │
     │       ├── upload/
-    │       │   └── route.ts        # POST: Upload multipart de STL, 3MF, imagens e manuais PDF
+    │       │   ├── route.ts        # POST: Upload multipart de STL, 3MF, imagens e manuais PDF
+    │       │   └── url/route.ts    # POST: Download via link HTTP/HTTPS de arquivos 3D ou ZIP direto para pasta/coleção download
     │       │
     │       ├── libraries/
     │       │   ├── route.ts        # GET: Lista bibliotecas | POST: Cria nova biblioteca
@@ -127,8 +126,9 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
     │       │
     │       └── models/
     │           ├── route.ts        # GET: Busca inteligente multi-termo, pagina e filtra por formato e status de impresso (?printed=false)
+    │           ├── move/route.ts   # POST: Movimentação em lote de arquivos e acompanhantes entre coleções no disco
     │           └── [id]/
-    │               ├── route.ts    # GET: Detalhes completos | PUT: Renomeia, Notas, isPrinted, printedAt | DELETE
+    │               ├── route.ts    # GET: Detalhes completos | PUT: Renomeia no disco, Move coleção, Notas, isPrinted | DELETE
     │               ├── files/[fileId]/route.ts # PUT: Alterna status isPrinted de peça individual
     │               ├── cover/route.ts  # POST: Salva snapshot 3D ou nova imagem de capa
     │               └── manual/route.ts # POST: Upload de manual PDF | DELETE: Remove manual
@@ -143,14 +143,18 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
     │   ├── model/
     │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js, abas, renomeação, capa, manuais e status de impresso
     │   ├── upload/
-    │   │   └── UploadModal.tsx    # Modal de Drag & Drop com suporte a múltiplos arquivos 3D, capas e manuais
+    │   │   └── UploadModal.tsx    # Modal de Upload local e Download por Link (URL) com tabs e suporte a ZIP
     │   └── viewer3d/
     │       └── ModelViewer3D.tsx  # Visualizador Three.js (STLLoader, Z-Up corrigido, PLA/ABS, presets de câmera)
     │
+    ├── proxy.ts                   # Next.js 16 Proxy layer: proteção de rotas públicas e autenticação de API com ADMIN
+    │
     └── lib/                       # Módulos de Lógica de Negócio e Serviços
         ├── auth/
-        │   └── session.ts         # Geração e validação de tokens JWT (`jose`, `bcryptjs`)
+        │   └── session.ts         # Autenticação JWT, Cookie pv_session, Bearer Token, Basic Auth e requireAdmin
         ├── prisma.ts              # Instância singleton global do Prisma Client
+        ├── storage/
+        │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
         └── scanner/
             ├── crawler.ts         # Motor de varredura recursiva com sincronização bidirecional
             └── extractors/
@@ -166,14 +170,16 @@ O Martins3DVault é uma aplicação web completa, conteinerizada (*Docker & Dock
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`APP_VERSION`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.4.0`) e uptime. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
 | `POST` | `/api/users` | Cria novo usuário (`name, email, password, role`). |
 | `PUT` | `/api/users` | Altera dados, nível de permissão ou redefine senha de um usuário. |
 | `DELETE` | `/api/users?id={id}` | Remove um usuário do sistema. |
 | `GET` | `/api/assets/mesh` | Serve a malha 3D em STL Binário de alta performance (com cache em disco). |
 | `GET` | `/api/assets/file` | Download do arquivo original completo (`.3mf`, `.stl`, `.obj`). |
+| `POST` | `/api/models/move` | Move modelos e seus arquivos complementares (imagem e PDF) fisicamente entre pastas de coleção no disco. |
+| `POST` | `/api/upload/url` | Baixa arquivo 3D ou pacote ZIP de uma URL diretamente para a pasta/coleção `download`. |
 | `POST` | `/api/models/[id]/cover` | Altera a capa do modelo (upload de imagem, seleção de imagem existente ou snapshot 3D). |
 | `POST` | `/api/models/[id]/manual` | Upload de manual de instruções em PDF vinculado ao modelo. |
 | `DELETE` | `/api/models/[id]/manual?assetId={id}` | Exclui um manual PDF do modelo e do disco. |
-| `PUT` | `/api/models/[id]` | Renomeia o modelo, altera coleção vinculada ou notas de impressão. |
+| `PUT` | `/api/models/[id]` | Renomeia fisicamente o modelo e arquivos no disco, altera coleção ou notas de impressão. |

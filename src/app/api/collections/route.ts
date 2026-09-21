@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { ensureCollectionFolder } from "@/lib/storage/file-ops";
 
 export async function GET(request: Request) {
   try {
@@ -87,6 +88,13 @@ export async function POST(request: Request) {
         coverImage: coverImage?.trim() || null,
       },
     });
+
+    // Cria a pasta física no repositório de arquivos
+    try {
+      await ensureCollectionFolder(collection.name);
+    } catch (fsErr) {
+      console.warn("Aviso ao criar pasta física da coleção:", fsErr);
+    }
 
     return NextResponse.json(collection, { status: 201 });
   } catch (err: any) {

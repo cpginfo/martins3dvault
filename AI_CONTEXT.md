@@ -50,10 +50,17 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Monitoramento de volume RAID 5, hash monitor e logs em tempo real do crawler.
 - **Gestão de Usuários & Controle de Acesso (`/users`)**:
   - Interface dedicada para criar, listar, alterar senhas e excluir usuários com níveis `ADMIN`, `OPERATOR` e `VIEWER`.
-- **Sistema de Coleções (`/collections` e `/collections/[id]`)**:
-  - Strip de métricas com 4 cards (Coleções, Projetos, Impressos, Volume Total), catálogo temático e vinculação em lote.
+- **Sistema de Coleções & Gestão Física no Disco (`v1.4.0`)**:
+  - Toda coleção criada no banco possui pasta física correspondente no repositório (`ensureCollectionFolder`).
+  - **Movimentação em Lote**: Endpoint `POST /api/models/move` e tela `/collections/[id]` com seleção múltipla e barra flutuante. Move fisicamente no disco o arquivo 3D principal, imagens de capa/renders e manuais em PDF.
+  - **Renomeação Física**: Endpoint `PUT /api/models/[id]` renomeia fisicamente o arquivo 3D, a imagem de capa e o manual PDF na pasta do repositório (`renameModelFiles`).
+  - **Prevenção de Sobrescrita**: Colisões de nome no disco geram sufixo numérico incremental (ex: `Modelo (1).3mf`), preservando ambos os arquivos no disco e no Prisma (`getAvailablePath`).
+  - **Upload via Link (Download por URL)**: Endpoint `POST /api/upload/url` e aba no `UploadModal.tsx` para baixar arquivos 3D e pacotes `.zip` diretamente para a coleção e pasta física **`download`**.
+- **Segurança & Proteção de Rotas**:
+  - Proxy Next.js 16 em `src/proxy.ts` exigindo autenticação para todas as páginas e rotas de API (com exceção de `/api/health`, `/api/auth/login`, `/login`).
+  - Suporte completo a Cookie de sessão (`pv_session`), `Bearer Token` e `Basic Auth` com perfil `ADMIN`.
 - **Upload Manual de Arquivos**:
-  - Interface Drag & Drop integrada (`UploadModal.tsx`) e endpoint `POST /api/upload`.
+  - Interface Drag & Drop integrada (`UploadModal.tsx`) com abas para arquivo local ou link da internet.
 - **Controle de Impressões (Check de Impressos & Filtro de Nunca Impressos)**:
   - Campos `isPrinted` e `printedAt` tanto em `Model` quanto em `ModelFile`.
   - Botão de toggle rápido com 1 clique diretamente no card da galeria (`[ ○ Não impresso ]` ⟷ `[ ✓ Impresso ]`).
@@ -65,7 +72,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.3.0` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.4.0` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
@@ -127,6 +134,10 @@ No Tailwind v4, os tokens personalizados do Stitch estão definidos via `@theme`
 ### I. Ligaturas Quebradas no Material Symbols vs Lucide React
 O *Material Symbols* do Google depende de ligaturas de texto para renderizar ícones. Se um nome de ícone não existir exatamente no catálogo (ex: `folder_minus`), o motor de fontes do navegador substitui apenas o prefixo correspondente (`folder` -> 📁) e imprime o restante como texto literal (`_minus` -> `_MINUS`), quebrando a interface.
 **Regra**: Para botões de ação e ícones compostos, prefira sempre importar componentes SVG nativos do `lucide-react` (ex: `FolderMinus`, `Layers`, `Box`), garantindo renderização vetorial determinística e sem falha de ligatura.
+
+### J. Manipulação Segura de Arquivos em Volumes Docker (`file-ops.ts`)
+Nunca use `fs.promises.rename` direto sem tratamento para operações entre diretórios montados por volumes diferentes (como `./data` e `./libraries`), pois isso pode disparar o erro do sistema operacional `EXDEV: cross-device link not permitted`.
+**Regra**: Utilize sempre a função `safeMove` de [file-ops.ts](file:///swarm/stl/src/lib/storage/file-ops.ts), que realiza fallback automático de cópia recursiva e exclusão do original. Além disso, sempre consulte `getAvailablePath` antes de mover ou renomear para garantir a política de preservação de arquivos duplicados através de sufixos numéricos (`(1)`).
 
 ---
 

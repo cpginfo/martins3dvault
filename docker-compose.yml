@@ -9,13 +9,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=postgresql://printvault:vaultpass123@db:5432/printvault?schema=public
-      - JWT_SECRET=change_me_to_a_strong_random_secret_in_production #gere com "openssl rand -hex 64"
-      - ADMIN_EMAIL=admin@printvault.local
-      - ADMIN_PASSWORD=admin123
-      - STORAGE_DATA_PATH=/data
-      - STORAGE_LIBRARIES_PATH=/libraries
+      - PORT=${PORT}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - STORAGE_DATA_PATH=${STORAGE_DATA_PATH}
+      - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH}
     volumes:
       # Armazenamento de thumbnails extraídas e uploads
       - ./data:/data
@@ -36,13 +36,13 @@ services:
     container_name: 3d-vault-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=printvault
-      - POSTGRES_PASSWORD=vaultpass123
-      - POSTGRES_DB=printvault
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U printvault -d printvault" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
