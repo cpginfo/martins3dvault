@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.5.5)
+# Mapa do Projeto - Martins3DVault (v1.5.6)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.5.5                                  │
+│                           MARTINS3DVAULT v1.5.6                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -43,7 +43,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │
 ├── .github/
 │   └── workflows/
-│       └── publish.yml            # Pipeline CI/CD: validação Next.js, publicação no GHCR e GitHub Releases
+│       └── publish.yml            # Pipeline CI/CD: validação Next.js, login GHCR via GHCR_TOKEN, buildx e GitHub Releases
 │
 ├── stitch_export/                 # Exportação bruta das 6 telas e assets do Google Stitch (Martins3D Vault Manager)
 │   ├── screen_*.html              # Telas HTML geradas pelo Stitch
@@ -183,7 +183,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.4`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.6`) e uptime. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
 | `POST` | `/api/users` | Cria novo usuário com todos os 5 campos (`name, email, password, role, avatar`). |
 | `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |

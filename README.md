@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.5.5)
+# Martins3DVault 🖨️✨ (v1.5.6)
 
 <div align="center">
 
@@ -99,8 +99,9 @@
   - **Criação do Administrador Inicial**: O usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) e biblioteca inicial são cadastrados automaticamente.
   - **Fallbacks Seguros**: Variáveis possuem valores padrão `${VAR:-default}` para garantir execução mesmo sem arquivo `.env` pré-configurado.
 
-- 🚀 **Publicação Automática & CI/CD (GitHub Actions)**:
+- 🚀 **Publicação Automática & CI/CD (GitHub Actions - `v1.5.6`)**:
   - Pipeline automatizado em `.github/workflows/publish.yml`.
+  - Autenticação configurada via Secret dedicado **`GHCR_TOKEN`** com escopos `write:packages` e `repo` para publicação no GitHub Container Registry e criação de releases.
   - Validação estrita de TypeScript e compilação Next.js antes de qualquer publicação.
   - Build e publicação automática no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`).
   - Criação automática de GitHub Releases com notas de versão para tags `v*`.

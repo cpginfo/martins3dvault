@@ -76,10 +76,11 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Sincronização Automática de Tabelas**: O container `web` aguarda o banco estar saudável (`pg_isready`) e executa `prisma db push --skip-generate` apontando dinamicamente para a `DATABASE_URL` construída pelas variáveis do Compose.
   - **Seed Automático de Administrador**: O script `docker-entrypoint.sh` verifica e cria o usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) caso ainda não exista no banco.
   - **Resiliência de Variáveis**: Sintaxe `${VAR:-default}` no `docker-compose.yml` garante que a aplicação suba sem falhas mesmo na ausência de arquivo `.env`.
-- **CI/CD & Publicação Automática (GitHub Actions)**:
+- **CI/CD & Publicação Automática (GitHub Actions - `v1.5.6`)**:
   - Workflow em `.github/workflows/publish.yml` ativado em pushes para `main` e tags `v*`.
+  - Autenticação configurada via Secret **`GHCR_TOKEN`** para login no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`) e criação de releases via `softprops/action-gh-release`.
   - Executa validação prévia de TypeScript e compilação do Next.js antes de qualquer publicação.
-  - Compila e publica automaticamente a imagem Docker no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`).
+  - Compila e publica automaticamente a imagem Docker com suporte a cache GitHub Actions (`mode=max`).
   - Criação automática de GitHub Releases para tags de versão (`v*`).
 
 - **Sistema de Temas Dark & Light Dinâmico (`v1.5.5`)**:
@@ -96,7 +97,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.5` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.5.6` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
