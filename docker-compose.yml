@@ -13,13 +13,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=${PORT}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
-      - JWT_SECRET=${JWT_SECRET}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - STORAGE_DATA_PATH=${STORAGE_DATA_PATH}
-      - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH}
+      - PORT=${PORT:-3000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-printvault}:${POSTGRES_PASSWORD:-vaultpass123}@db:5432/${POSTGRES_DB:-printvault}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-change_me_to_a_strong_random_secret_in_production}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@printvault.local}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - STORAGE_DATA_PATH=${STORAGE_DATA_PATH:-/data}
+      - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH:-/libraries}
     volumes:
       - ./data:/data # Armazenamento de thumbnails extraídas e uploads
       - ./libraries:/libraries # Montagem dos diretórios de arquivos 3D
@@ -38,13 +38,13 @@ services:
     container_name: 3d-vault-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER:-printvault}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-vaultpass123}
+      - POSTGRES_DB=${POSTGRES_DB:-printvault}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-printvault} -d ${POSTGRES_DB:-printvault}" ]
       interval: 5s
       timeout: 5s
       retries: 5

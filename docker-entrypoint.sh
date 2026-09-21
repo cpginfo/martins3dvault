@@ -32,10 +32,16 @@ if [ -n "$DATABASE_URL" ]; then
     check();
   "
   
-  echo "📦 Sincronizando schema do banco de dados (Prisma)..."
+  node -e "
+    const url = new URL(process.env.DATABASE_URL);
+    const dbName = url.pathname.replace(/^\//, '') || 'printvault';
+    console.log('🎯 Conectando ao banco de dados: \'' + dbName + '\' com usuário: \'' + url.username + '\'');
+  "
+
+  echo "📦 Sincronizando tabelas do banco de dados (Prisma)..."
   prisma db push --skip-generate
   
-  echo "🌱 Verificando/Criando usuário administrador padrão..."
+  echo "🌱 Verificando/Criando usuário administrador configurado no Compose..."
   node -e "
     const { PrismaClient } = require('@prisma/client');
     const bcrypt = require('bcryptjs');
@@ -55,9 +61,9 @@ if [ -n "$DATABASE_URL" ]; then
             role: 'ADMIN'
           }
         });
-        console.log('👑 Administrador padrão criado:', adminEmail);
+        console.log('👑 Usuário administrador criado com sucesso:', adminEmail);
       } else {
-        console.log('👤 Administrador já existente:', adminEmail);
+        console.log('👤 Usuário administrador verificado no banco:', adminEmail);
       }
 
       // Garante uma biblioteca inicial se o banco estiver vazio
