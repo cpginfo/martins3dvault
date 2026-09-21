@@ -71,6 +71,11 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Abas de filtragem na galeria: **Todos**, **Nunca Impressos** e **Já Impressos**.
 - **Health Check & Monitoramento**:
   - Rota `/api/health` conectada ao PostgreSQL e monitorada nativamente pelo Docker Compose.
+- **Provisionamento Dinâmico no Primeiro Boot (`v1.5.1`)**:
+  - **Auto-criação no PostgreSQL**: Ao iniciar com volume vazio, o container `db` (`postgres:16-alpine`) cria o usuário (`POSTGRES_USER`), senha (`POSTGRES_PASSWORD`) e database (`POSTGRES_DB`) informados no Compose.
+  - **Sincronização Automática de Tabelas**: O container `web` aguarda o banco estar saudável (`pg_isready`) e executa `prisma db push --skip-generate` apontando dinamicamente para a `DATABASE_URL` construída pelas variáveis do Compose.
+  - **Seed Automático de Administrador**: O script `docker-entrypoint.sh` verifica e cria o usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) caso ainda não exista no banco.
+  - **Resiliência de Variáveis**: Sintaxe `${VAR:-default}` no `docker-compose.yml` garante que a aplicação suba sem falhas mesmo na ausência de arquivo `.env`.
 - **CI/CD & Publicação Automática (GitHub Actions)**:
   - Workflow em `.github/workflows/publish.yml` ativado em pushes para `main` e tags `v*`.
   - Executa validação prévia de TypeScript e compilação do Next.js antes de qualquer publicação.
@@ -81,7 +86,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.0` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.5.1` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
@@ -147,6 +152,10 @@ O *Material Symbols* do Google depende de ligaturas de texto para renderizar íc
 ### J. Manipulação Segura de Arquivos em Volumes Docker (`file-ops.ts`)
 Nunca use `fs.promises.rename` direto sem tratamento para operações entre diretórios montados por volumes diferentes (como `./data` e `./libraries`), pois isso pode disparar o erro do sistema operacional `EXDEV: cross-device link not permitted`.
 **Regra**: Utilize sempre a função `safeMove` de [file-ops.ts](file:///swarm/stl/src/lib/storage/file-ops.ts), que realiza fallback automático de cópia recursiva e exclusão do original. Além disso, sempre consulte `getAvailablePath` antes de mover ou renomear para garantir a política de preservação de arquivos duplicados através de sufixos numéricos (`(1)`).
+
+### K. Inicialização Automática de Banco e Tabelas no Docker
+O container PostgreSQL (`postgres:16-alpine`) só executa `initdb` com usuário e banco quando o volume `postgres_data` estiver vazio. Se o volume já existir com credenciais antigas, o Postgres não recria o usuário/database.
+No container `web`, a diretiva `depends_on: db: condition: service_healthy` garante que a aplicação só sobe após o `pg_isready` responder com sucesso. O script `docker-entrypoint.sh` então extrai os parâmetros dinâmicos de `DATABASE_URL` e executa `prisma db push --skip-generate` seguido da inserção do usuário `ADMIN_EMAIL` com senha `ADMIN_PASSWORD` (criptografada via bcrypt).
 
 ---
 

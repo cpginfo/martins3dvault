@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.5.0)
+# Mapa do Projeto - Martins3DVault (v1.5.1)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.5.0                                  │
+│                           MARTINS3DVAULT v1.5.1                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -27,12 +27,12 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 /swarm/stl/
-├── Dockerfile                     # Multi-stage Dockerfile com Prisma CLI global e Next.js Standalone
-├── docker-compose.yml             # Orquestração de serviços: 3d-vault-web + 3d-vault-db (PostgreSQL 16) na rede qg
-├── docker-entrypoint.sh           # Script de boot: wait-for-db, prisma db push e seed de admin
+├── Dockerfile                     # Multi-stage Dockerfile enxuto com Prisma CLI global e Next.js Standalone (199MB)
+├── docker-compose.yml             # Orquestração de serviços com fallbacks: 3d-vault-web + 3d-vault-db (PostgreSQL 16)
+├── docker-entrypoint.sh           # Script de boot dinâmico: wait-for-db, prisma db push (auto tabelas) e seed de admin/biblioteca
 ├── .dockerignore                  # Arquivos ignorados na geração da imagem Docker
 ├── .env                           # Configurações de ambiente local
-├── .env.example                   # Modelo documentado de variáveis de ambiente (APP_VERSION, etc.)
+├── .env.example                   # Modelo documentado de variáveis de ambiente (POSTGRES_*, ADMIN_*, etc.)
 ├── package.json                   # Dependências do projeto (Three, Prisma, Tailwind v4, etc.)
 ├── next.config.ts                 # Configuração do Next.js (output standalone, unoptimized images)
 ├── tsconfig.json                  # Configurações do compilador TypeScript
@@ -178,7 +178,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.1`) e uptime. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
 | `POST` | `/api/users` | Cria novo usuário com todos os 5 campos (`name, email, password, role, avatar`). |
 | `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |

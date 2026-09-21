@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.5.0)
+# Martins3DVault 🖨️✨ (v1.5.1)
 
 <div align="center">
 
@@ -81,6 +81,12 @@
   - **Segurança de Senhas & Unicidade**: Redefinição opcional de senha mantendo a existente caso deixada em branco e validação de e-mail exclusivo (409 Conflict).
   - **Integração Visual com Sessão**: O avatar do usuário é incorporado ao token JWT e exibido dinamicamente no menu lateral (`Sidebar`) e na tabela de usuários.
 
+- 🗄️ **Provisionamento Automático no Primeiro Boot (`v1.5.1`)**:
+  - **Criação do Usuário, Senha e Banco**: Ao iniciar com volume vazio, o PostgreSQL 16 cria automaticamente o usuário (`POSTGRES_USER`), senha (`POSTGRES_PASSWORD`) e database (`POSTGRES_DB`) definidos no `docker-compose.yml`.
+  - **Sincronização Automática de Tabelas**: O container web aguarda o PostgreSQL estar saudável e executa `prisma db push` dinamicamente com base na `DATABASE_URL` do Compose, gerando todas as 9 tabelas, índices e relações no banco correto.
+  - **Criação do Administrador Inicial**: O usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) e biblioteca inicial são cadastrados automaticamente.
+  - **Fallbacks Seguros**: Variáveis possuem valores padrão `${VAR:-default}` para garantir execução mesmo sem arquivo `.env` pré-configurado.
+
 - 🚀 **Publicação Automática & CI/CD (GitHub Actions)**:
   - Pipeline automatizado em `.github/workflows/publish.yml`.
   - Validação estrita de TypeScript e compilação Next.js antes de qualquer publicação.
@@ -103,8 +109,8 @@ docker compose up -d --build
 ```
 
 O compose iniciará:
-1. `3d-vault-db`: Banco de dados PostgreSQL 16 com volume persistente.
-2. `3d-vault-web`: Aplicação Next.js compilada em modo standalone na porta 3000 com monitoramento de saúde ativo.
+1. `3d-vault-db`: Banco de dados PostgreSQL 16 com volume persistente e auto-provisionamento de credenciais.
+2. `3d-vault-web`: Aplicação Next.js standalone na porta 3000 com sincronização de tabelas e monitoramento de saúde ativo.
 
 ### 2. Verificar Status de Saúde
 ```bash
@@ -127,7 +133,10 @@ Abra o navegador em: **[http://localhost:3000](http://localhost:3000)**
 | Variável | Valor Padrão | Descrição |
 | :--- | :--- | :--- |
 | `PORT` | `3000` | Porta interna do servidor HTTP |
-| `DATABASE_URL` | `postgresql://...` | String de conexão com o PostgreSQL |
+| `POSTGRES_USER` | `printvault` | Usuário do banco de dados PostgreSQL |
+| `POSTGRES_PASSWORD` | `vaultpass123` | Senha do usuário do banco de dados |
+| `POSTGRES_DB` | `printvault` | Nome da base de dados no PostgreSQL |
+| `DATABASE_URL` | `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public` | String de conexão dinâmica com o PostgreSQL |
 | `JWT_SECRET` | `change_me_...` | Chave de assinatura dos tokens JWT |
 | `ADMIN_EMAIL` | `admin@printvault.local` | E-mail do administrador padrão |
 | `ADMIN_PASSWORD` | `admin123` | Senha inicial do administrador |
