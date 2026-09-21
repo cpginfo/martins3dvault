@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { APP_VERSION } from "@/lib/version";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -171,7 +172,7 @@ export default function Sidebar({
                   Martins<span className="text-primary-container font-bold">3D</span>Vault
                 </span>
                 <span className="text-[10px] text-secondary tracking-widest uppercase font-mono mt-0.5">
-                  Additive Vault v2.4
+                  Additive Vault {APP_VERSION}
                 </span>
               </div>
             )}
@@ -419,6 +420,13 @@ export default function Sidebar({
             </div>
           )}
         </div>
+
+        {!isCollapsed && (
+          <div className="flex items-center justify-between px-1 pt-1 border-t border-white/5 text-[10px] font-mono text-outline">
+            <span>Versão</span>
+            <span className="text-secondary font-medium">{APP_VERSION}</span>
+          </div>
+        )}
       </div>
     </aside>
   );

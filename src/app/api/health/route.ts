@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { APP_VERSION } from "@/lib/version";
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     return NextResponse.json(
       {
         status: "healthy",
-        version: process.env.APP_VERSION || process.env.NEXT_PUBLIC_APP_VERSION || "v1.2.0",
+        version: APP_VERSION,
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
       },

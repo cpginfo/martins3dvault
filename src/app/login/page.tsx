@@ -38,11 +38,6 @@ export default function LoginPage() {
     }
   };
 
-  const fillAdminCredentials = () => {
-    setEmail("admin@printvault.local");
-    setPassword("admin123");
-  };
-
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-6 relative overflow-hidden">
       {/* Subtle CAD Isometric Pattern & Ambient Glows from Stitch */}
@@ -80,19 +75,7 @@ export default function LoginPage() {
 
       {/* Central Vault Card from Stitch */}
       <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
-        {/* Top Hardware Telemetry Badge Strip */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 bg-surface-container-highest/60 px-3 py-1 rounded-lg border border-white/5">
-            <span className="material-symbols-outlined text-secondary text-sm">lock</span>
-            <span className="text-[10px] text-secondary tracking-widest uppercase font-mono font-semibold">
-              ENCRYPTED REPOSITORY
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-on-surface-variant/70 text-[11px] font-mono">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-            <span>NODE: VLT-01</span>
-          </div>
-        </div>
+
 
         {/* Header Section: Logo & Identity */}
         <div className="flex flex-col items-center text-center gap-2">
@@ -117,7 +100,7 @@ export default function LoginPage() {
               <span>Vault</span>
             </h1>
             <p className="text-xs text-on-surface-variant max-w-sm mx-auto mt-1">
-              Gerenciador e Cofre Inteligente de Arquivos 3D (STL & 3MF)
+              Gerenciador Inteligente de Arquivos 3D (STL & 3MF)
             </p>
           </div>
 
@@ -154,7 +137,6 @@ export default function LoginPage() {
                 <span className="material-symbols-outlined text-[16px] text-primary">person</span>
                 <span>Usuário ou E-mail</span>
               </label>
-              <span className="font-mono text-[10px] text-on-surface-variant/60">LOCAL / ADMIN</span>
             </div>
             <div className="relative flex items-center">
               <input
@@ -207,17 +189,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Quick Demo Fill Button */}
-        <div className="pt-2 border-t border-white/5 flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={fillAdminCredentials}
-            className="text-[11px] font-mono text-secondary hover:text-primary transition-colors flex items-center gap-1"
-          >
-            <span className="material-symbols-outlined text-[14px]">auto_fix_high</span>
-            <span>Preencher Credenciais Demo de Administrador</span>
-          </button>
-        </div>
+
       </div>
     </main>
   );

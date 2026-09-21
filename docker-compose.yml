@@ -16,8 +16,6 @@ services:
       - ADMIN_PASSWORD=admin123
       - STORAGE_DATA_PATH=/data
       - STORAGE_LIBRARIES_PATH=/libraries
-      - APP_VERSION=v1.2.0
-      - NEXT_PUBLIC_APP_VERSION=v1.2.0
     volumes:
       # Armazenamento de thumbnails extraídas e uploads
       - ./data:/data

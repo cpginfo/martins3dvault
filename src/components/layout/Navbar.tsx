@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UploadModal from "@/components/upload/UploadModal";
+import { APP_VERSION } from "@/lib/version";
 
 interface NavbarProps {
   searchQuery?: string;
@@ -28,7 +29,7 @@ export default function Navbar({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [scanning, setScanning] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [appVersion, setAppVersion] = useState<string>("v1.2.0");
+  const [appVersion, setAppVersion] = useState<string>(APP_VERSION);
 
   useEffect(() => {
     if (searchQuery !== undefined) {
@@ -227,6 +228,14 @@ export default function Navbar({
           >
             <span className="material-symbols-outlined text-[20px]">settings</span>
           </Link>
+
+          <span
+            className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high border border-white/5 text-[11px] font-mono text-outline select-none"
+            title={`Martins3DVault ${appVersion}`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            <span>{appVersion}</span>
+          </span>
         </div>
       </header>
 
