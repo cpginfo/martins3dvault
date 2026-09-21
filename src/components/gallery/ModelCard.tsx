@@ -48,6 +48,11 @@ export default function ModelCard({
 }: ModelCardProps) {
   const [favorite, setFavorite] = useState(model.isFavorite);
   const [isPrinted, setIsPrinted] = useState(Boolean(model.isPrinted));
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [model.coverImage]);
 
   useEffect(() => {
     setIsPrinted(Boolean(model.isPrinted));
@@ -116,11 +121,12 @@ export default function ModelCard({
         <td className="py-2.5 px-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-surface-container-lowest overflow-hidden flex-shrink-0 relative border border-white/5">
-              {model.coverImage ? (
+              {model.coverImage && !imgError ? (
                 <img
                   src={model.coverImage}
                   alt={model.name}
                   className="w-full h-full object-cover"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40">
@@ -224,12 +230,13 @@ export default function ModelCard({
           viewMode === "compact" ? "aspect-square" : "aspect-[4/3]"
         }`}
       >
-        {model.coverImage ? (
+        {model.coverImage && !imgError ? (
           <img
             src={model.coverImage}
             alt={model.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 text-on-surface-variant/30 group-hover:text-primary transition-colors">

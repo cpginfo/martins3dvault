@@ -200,7 +200,7 @@ export default function LoginPage() {
         <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-on-surface-variant/60">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-            <span>Sistema Operacional</span>
+            <span>Version</span>
           </span>
           <span className="text-secondary font-medium tracking-wide">
             {APP_VERSION}
