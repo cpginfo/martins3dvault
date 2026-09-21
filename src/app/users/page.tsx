@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 
@@ -9,6 +9,7 @@ interface UserItem {
   name: string;
   email: string;
   role: "ADMIN" | "USER" | "VIEWER";
+  avatar: string | null;
   createdAt: string;
 }
 
@@ -24,14 +25,20 @@ export default function UsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"ADMIN" | "USER" | "VIEWER">("USER");
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const createFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Modal de edição de senha / papel
+  // Modal de edição (todos os 5 campos: Nome, Foto, Senha, E-mail, Perfil)
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
-  const [editRole, setEditRole] = useState<"ADMIN" | "USER" | "VIEWER">("USER");
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [editRole, setEditRole] = useState<"ADMIN" | "USER" | "VIEWER">("USER");
+  const [editAvatar, setEditAvatar] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Search filter
   const [searchFilter, setSearchFilter] = useState("");
@@ -62,12 +69,34 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
+  const handleAvatarFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setTargetAvatar: (val: string | null) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("A imagem selecionada excede o limite máximo de 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setTargetAvatar(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setFormError("Todos os campos são obrigatórios.");
+      setFormError("Nome, e-mail e senha são obrigatórios.");
       return;
     }
 
@@ -86,6 +115,7 @@ export default function UsersPage() {
           email: email.trim().toLowerCase(),
           password,
           role,
+          avatar,
         }),
       });
 
@@ -98,6 +128,8 @@ export default function UsersPage() {
       setEmail("");
       setPassword("");
       setRole("USER");
+      setAvatar(null);
+      if (createFileInputRef.current) createFileInputRef.current.value = "";
       setShowCreateModal(false);
       await fetchUsers();
     } catch (err: any) {
@@ -109,9 +141,13 @@ export default function UsersPage() {
 
   const handleOpenEdit = (u: UserItem) => {
     setEditingUser(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
     setEditRole(u.role);
     setEditPassword("");
+    setEditAvatar(u.avatar || null);
     setFormError(null);
+    if (editFileInputRef.current) editFileInputRef.current.value = "";
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -120,8 +156,20 @@ export default function UsersPage() {
     setSavingEdit(true);
     setFormError(null);
 
+    if (!editName.trim() || !editEmail.trim()) {
+      setFormError("Nome e e-mail não podem ficar vazios.");
+      setSavingEdit(false);
+      return;
+    }
+
     try {
-      const payload: any = { role: editRole };
+      const payload: any = {
+        name: editName.trim(),
+        email: editEmail.trim().toLowerCase(),
+        role: editRole,
+        avatar: editAvatar,
+      };
+
       if (editPassword.trim()) {
         if (editPassword.length < 6) {
           throw new Error("A nova senha deve possuir no mínimo 6 caracteres.");
@@ -193,7 +241,7 @@ export default function UsersPage() {
 
         <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
           <div className="flex flex-col w-full gap-6 pt-6">
-            {/* Top Header Strip from Stitch */}
+            {/* Top Header Strip */}
             <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low shadow-sm border border-white/5">
               <div className="flex items-start gap-4">
                 <div className="p-3.5 rounded-xl bg-surface-container-highest text-primary-container flex items-center justify-center">
@@ -211,8 +259,17 @@ export default function UsersPage() {
               </div>
 
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)] self-start lg:self-auto"
+                onClick={() => {
+                  setName("");
+                  setEmail("");
+                  setPassword("");
+                  setRole("USER");
+                  setAvatar(null);
+                  setFormError(null);
+                  if (createFileInputRef.current) createFileInputRef.current.value = "";
+                  setShowCreateModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)] self-start lg:self-auto cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">person_add</span>
                 <span>Novo Usuário</span>
@@ -299,9 +356,17 @@ export default function UsersPage() {
                         >
                           <td className="py-3 px-4 font-semibold text-on-surface">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary-container font-mono text-xs font-bold border border-white/5">
-                                {u.name.slice(0, 2).toUpperCase()}
-                              </div>
+                              {u.avatar ? (
+                                <img
+                                  src={u.avatar}
+                                  alt={u.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary-container font-mono text-xs font-bold border border-white/5 flex-shrink-0">
+                                  {u.name.slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
                               <span>{u.name}</span>
                             </div>
                           </td>
@@ -330,14 +395,14 @@ export default function UsersPage() {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => handleOpenEdit(u)}
-                                className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
-                                title="Editar papel ou redefinir senha"
+                                className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer"
+                                title="Editar usuário (nome, foto, senha, e-mail, perfil)"
                               >
                                 <span className="material-symbols-outlined text-[18px]">edit</span>
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(u.id, u.name)}
-                                className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-surface-container-highest"
+                                className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-surface-container-highest transition-colors cursor-pointer"
                                 title="Excluir usuário"
                               >
                                 <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -355,49 +420,109 @@ export default function UsersPage() {
         </main>
       </div>
 
-      {/* Modal Criar Usuário */}
+      {/* Modal Criar Usuário: Nome, Foto, Senha, E-mail, Perfil */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-on-surface">Novo Usuário</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-primary-container text-[22px]">person_add</span>
+                <h2 className="text-base font-semibold text-on-surface">Novo Usuário</h2>
+              </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-on-surface-variant hover:text-on-surface p-1"
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs">
-                {formError}
+              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] flex-shrink-0">error</span>
+                <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleCreateUser} className="flex flex-col gap-3">
+            <form onSubmit={handleCreateUser} className="flex flex-col gap-3.5">
+              {/* Foto de Perfil */}
+              <div className="flex items-center gap-3.5 p-3 rounded-xl bg-surface-container-lowest border border-white/5">
+                <div className="relative w-14 h-14 rounded-full overflow-hidden bg-surface-container-highest border border-white/10 flex items-center justify-center flex-shrink-0">
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt="Preview Foto"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-[26px] text-on-surface-variant">
+                      person
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <span className="text-xs font-semibold text-on-surface">Foto de Perfil</span>
+                  <span className="text-[10px] text-on-surface-variant">PNG, JPG ou WebP (máx. 5MB)</span>
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => createFileInputRef.current?.click()}
+                      className="px-2.5 py-1 rounded bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                      <span>{avatar ? "Trocar Foto" : "Escolher Foto"}</span>
+                    </button>
+                    {avatar && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatar(null);
+                          if (createFileInputRef.current) createFileInputRef.current.value = "";
+                        }}
+                        className="px-2 py-1 rounded bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                        <span>Remover</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={createFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleAvatarFileSelect(e, setAvatar)}
+                />
+              </div>
+
+              {/* Nome */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-on-surface">Nome Completo</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: João da Silva"
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
               </div>
 
+              {/* E-mail */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-on-surface">E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="joao@exemplo.com"
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
                   required
                 />
               </div>
 
+              {/* Senha */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-on-surface">Senha Temporária</label>
                 <input
@@ -410,31 +535,32 @@ export default function UsersPage() {
                 />
               </div>
 
+              {/* Perfil */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-on-surface">Papel / Nível</label>
+                <label className="text-xs font-semibold text-on-surface">Papel / Nível de Acesso</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as any)}
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
                   <option value="USER">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
-                  <option value="ADMIN">Administrador (Acesso Total & Gerência de Usuários)</option>
-                  <option value="VIEWER">Visualizador (Somente Consulta 3D)</option>
+                  <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
+                  <option value="VIEWER">Visualizador (Somente Leitura e Visualização 3D)</option>
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-3 border-t border-white/5 mt-1">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {creating ? "Criando..." : "Criar Usuário"}
                 </button>
@@ -444,67 +570,153 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Modal Editar Usuário */}
+      {/* Modal Editar Usuário: Nome, Foto, Senha, E-mail, Perfil */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-on-surface">
-                Editar Usuário: {editingUser.name}
-              </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-primary-container text-[22px]">manage_accounts</span>
+                <h2 className="text-base font-semibold text-on-surface">
+                  Editar Usuário
+                </h2>
+              </div>
               <button
                 onClick={() => setEditingUser(null)}
-                className="text-on-surface-variant hover:text-on-surface p-1"
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs">
-                {formError}
+              <div className="p-3 rounded-lg bg-error-container/40 border border-error/30 text-error text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] flex-shrink-0">error</span>
+                <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSaveEdit} className="flex flex-col gap-3">
+            <form onSubmit={handleSaveEdit} className="flex flex-col gap-3.5">
+              {/* Foto de Perfil */}
+              <div className="flex items-center gap-3.5 p-3 rounded-xl bg-surface-container-lowest border border-white/5">
+                <div className="relative w-14 h-14 rounded-full overflow-hidden bg-surface-container-highest border border-white/10 flex items-center justify-center flex-shrink-0">
+                  {editAvatar ? (
+                    <img
+                      src={editAvatar}
+                      alt="Preview Foto"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-primary-container font-mono text-sm font-bold">
+                      {editName ? editName.slice(0, 2).toUpperCase() : "US"}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <span className="text-xs font-semibold text-on-surface">Foto de Perfil</span>
+                  <span className="text-[10px] text-on-surface-variant">PNG, JPG ou WebP (máx. 5MB)</span>
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => editFileInputRef.current?.click()}
+                      className="px-2.5 py-1 rounded bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                      <span>{editAvatar ? "Trocar Foto" : "Escolher Foto"}</span>
+                    </button>
+                    {editAvatar && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditAvatar(null);
+                          if (editFileInputRef.current) editFileInputRef.current.value = "";
+                        }}
+                        className="px-2 py-1 rounded bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                        <span>Remover</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleAvatarFileSelect(e, setEditAvatar)}
+                />
+              </div>
+
+              {/* Nome */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-on-surface">Papel / Nível</label>
+                <label className="text-xs font-semibold text-on-surface">Nome Completo</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  required
+                />
+              </div>
+
+              {/* E-mail */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">E-mail</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+                  required
+                />
+              </div>
+
+              {/* Perfil */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Papel / Nível de Acesso</label>
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value as any)}
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
-                  <option value="USER">Operador (Bancada & Modelos)</option>
-                  <option value="ADMIN">Administrador (Total)</option>
-                  <option value="VIEWER">Visualizador (Leitura)</option>
+                  <option value="USER">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
+                  <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
+                  <option value="VIEWER">Visualizador (Somente Leitura e Visualização 3D)</option>
                 </select>
               </div>
 
+              {/* Redefinir Senha */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-on-surface">
-                  Redefinir Senha (deixe em branco para manter)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-on-surface">
+                    Redefinir Senha
+                  </label>
+                  <span className="text-[10px] text-on-surface-variant font-normal">
+                    Opcional
+                  </span>
+                </div>
                 <input
                   type="password"
                   value={editPassword}
                   onChange={(e) => setEditPassword(e.target.value)}
-                  placeholder="Nova senha (opcional)"
+                  placeholder="Deixe em branco para manter a senha atual"
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-3 border-t border-white/5 mt-1">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingEdit}
-                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {savingEdit ? "Salvando..." : "Salvar Alterações"}
                 </button>

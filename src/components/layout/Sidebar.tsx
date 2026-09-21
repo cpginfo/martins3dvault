@@ -39,7 +39,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string; avatar?: string | null } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [collections, setCollections] = useState<CollectionSimple[]>([]);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
@@ -366,10 +366,11 @@ export default function Sidebar({
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative flex-shrink-0">
                 <Image
-                  src="/avatar.png"
+                  src={currentUser?.avatar || "/avatar.png"}
                   alt="Profile"
                   width={32}
                   height={32}
+                  unoptimized
                   className="w-8 h-8 rounded-full object-cover border border-white/10"
                 />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary rounded-full ring-2 ring-surface-container-lowest"></span>

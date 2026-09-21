@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.4.0)
+# Martins3DVault 🖨️✨ (v1.5.0)
 
 <div align="center">
 
@@ -72,6 +72,12 @@
   - Aba integrada no modal de upload para colar links HTTP/HTTPS de arquivos 3D (`.stl`, `.3mf`, `.obj`, `.step`) ou pacotes `.zip`.
   - Download via stream direto para a pasta física e vinculação automática com a coleção **`download`**.
   - Descompactação automática de pacotes ZIP com extração de metadados de impressão.
+
+- 👤 **Gestão Completa de Usuários (`/users`)**:
+  - **Edição e Criação com 5 Campos**: Controle total sobre **Nome**, **Foto de Perfil (Avatar)**, **Senha**, **E-mail** e **Perfil / Nível de Acesso** (`ADMIN`, `OPERATOR`, `VIEWER`).
+  - **Upload e Persistência de Foto**: Envio de fotos locais (PNG, JPG, WebP) com preview imediato, processamento em Base64 e persistência em `/data/thumbnails/`.
+  - **Segurança de Senhas & Unicidade**: Redefinição opcional de senha mantendo a existente caso deixada em branco e validação de e-mail exclusivo (409 Conflict).
+  - **Integração Visual com Sessão**: O avatar do usuário é incorporado ao token JWT e exibido dinamicamente no menu lateral (`Sidebar`) e na tabela de usuários.
 
 - 🔒 **Login Seguro & Autenticação (`/login`)**:
   - Tela de login com fundo CAD isométrico, telemetria de hardware e botão de preenchimento rápido para demonstração.

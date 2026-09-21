@@ -13,6 +13,7 @@ export interface UserSession {
   email: string;
   name: string;
   role: "ADMIN" | "EDITOR" | "VIEWER";
+  avatar?: string | null;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -29,6 +30,7 @@ export async function createSessionToken(user: UserSession): Promise<string> {
     email: user.email,
     name: user.name,
     role: user.role,
+    avatar: user.avatar || null,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -44,6 +46,7 @@ export async function verifySessionToken(token: string): Promise<UserSession | n
       email: payload.email as string,
       name: payload.name as string,
       role: payload.role as "ADMIN" | "EDITOR" | "VIEWER",
+      avatar: (payload.avatar as string) || null,
     };
   } catch {
     return null;
@@ -105,6 +108,7 @@ export async function getCurrentUser(req?: Request): Promise<UserSession | null>
               email: user.email,
               name: user.name,
               role: user.role as "ADMIN" | "EDITOR" | "VIEWER",
+              avatar: user.avatar,
             };
           }
         }

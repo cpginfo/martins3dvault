@@ -48,8 +48,12 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Fila de bancada com status das impressoras e monitoramento de temperatura.
 - **Mapear Pastas & Central AdditiveCore (`/libraries`)**:
   - Monitoramento de volume RAID 5, hash monitor e logs em tempo real do crawler.
-- **Gestão de Usuários & Controle de Acesso (`/users`)**:
-  - Interface dedicada para criar, listar, alterar senhas e excluir usuários com níveis `ADMIN`, `OPERATOR` e `VIEWER`.
+- **Gestão Completa de Usuários & Controle de Acesso (`/users` - `v1.5.0`)**:
+  - Criação e edição dos 5 campos de usuário: **Nome Completo**, **Foto de Perfil (Avatar)**, **Senha**, **E-mail** e **Perfil / Nível de Acesso** (`ADMIN`, `USER / Operador` e `VIEWER / Visualizador`).
+  - Helper `processAvatar` (`src/lib/users/avatar.ts`): converte uploads Base64 (PNG, JPG, WebP) em imagens físicas salvas no disco em `/data/thumbnails/avatar_{id}_{timestamp}.{ext}` e servidas via `/api/assets/thumbnails/`.
+  - Rota dinâmica dedicada `src/app/api/users/[id]/route.ts` com suporte a `GET`, `PUT` e `DELETE`, além de `POST` e compatibilidade em `src/app/api/users/route.ts`.
+  - Validação estrita de unicidade de e-mail (409 Conflict) e preservação de senha atual quando o campo for deixado em branco na edição.
+  - O avatar é integrado ao token JWT (`UserSession`) e renderizado dinamicamente no menu lateral (`Sidebar.tsx`) e na tabela de usuários.
 - **Sistema de Coleções & Gestão Física no Disco (`v1.4.0`)**:
   - Toda coleção criada no banco possui pasta física correspondente no repositório (`ensureCollectionFolder`).
   - **Movimentação em Lote**: Endpoint `POST /api/models/move` e tela `/collections/[id]` com seleção múltipla e barra flutuante. Move fisicamente no disco o arquivo 3D principal, imagens de capa/renders e manuais em PDF.
@@ -72,7 +76,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.4.0` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.5.0` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).

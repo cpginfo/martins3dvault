@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.4.0)
+# Mapa do Projeto - Martins3DVault (v1.5.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.4.0                                  │
+│                           MARTINS3DVAULT v1.5.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -100,7 +100,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │   └── route.ts        # GET: Healthcheck do container e banco com versão e uptime
     │       │
     │       ├── users/
-    │       │   └── route.ts        # GET: Lista | POST: Cria | PUT: Edita/Senha | DELETE: Exclui
+    │       │   ├── route.ts        # GET: Lista | POST: Cria usuário (Nome, Foto, Senha, Email, Role)
+    │       │   └── [id]/
+    │       │       └── route.ts    # GET: Detalhes | PUT: Edita os 5 campos (Nome, Foto, Senha, Email, Role) | DELETE: Exclui
     │       │
     │       ├── collections/
     │       │   ├── route.ts        # GET: Lista coleções | POST: Cria nova coleção manual
@@ -152,6 +154,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     └── lib/                       # Módulos de Lógica de Negócio e Serviços
         ├── auth/
         │   └── session.ts         # Autenticação JWT, Cookie pv_session, Bearer Token, Basic Auth e requireAdmin
+        ├── users/
+        │   └── avatar.ts          # Processador e persistência de fotos de avatar em /data/thumbnails/
         ├── prisma.ts              # Instância singleton global do Prisma Client
         ├── storage/
         │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
@@ -170,11 +174,12 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.4.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.0`) e uptime. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
-| `POST` | `/api/users` | Cria novo usuário (`name, email, password, role`). |
-| `PUT` | `/api/users` | Altera dados, nível de permissão ou redefine senha de um usuário. |
-| `DELETE` | `/api/users?id={id}` | Remove um usuário do sistema. |
+| `POST` | `/api/users` | Cria novo usuário com todos os 5 campos (`name, email, password, role, avatar`). |
+| `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |
+| `PUT` | `/api/users/[id]` | Edita os 5 campos do usuário (`name, email, password, role, avatar`) com validação de e-mail e senha. |
+| `DELETE` | `/api/users/[id]` | Remove um usuário do sistema (com proteção contra auto-exclusão). |
 | `GET` | `/api/assets/mesh` | Serve a malha 3D em STL Binário de alta performance (com cache em disco). |
 | `GET` | `/api/assets/file` | Download do arquivo original completo (`.3mf`, `.stl`, `.obj`). |
 | `POST` | `/api/models/move` | Move modelos e seus arquivos complementares (imagem e PDF) fisicamente entre pastas de coleção no disco. |
