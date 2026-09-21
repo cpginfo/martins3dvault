@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.5.3)
+# Martins3DVault 🖨️✨ (v1.5.4)
 
 <div align="center">
 
@@ -57,8 +57,9 @@
   - 4 Cards Bento de métricas: Impressões Hoje, Taxa de Sucesso, Consumo de Filamento (kg) e Tempo Ativo.
   - Fila de impressão em bancada com progresso em tempo real e status de bicos/mesa.
 
-- 📁 **Mapear Pastas & Scan Inteligente (`/libraries`)**:
+- 📁 **Mapear Pastas & Scan Inteligente com Espelhamento Total (`/libraries`)**:
   - Engine AdditiveCore com monitoramento de armazenamento RAID 5 e integridade SHA-256.
+  - **Espelhamento Físico & Limpeza Automática (`v1.5.4`)**: Ao deletar pastas físicas do diretório `libraries`, o escaneamento remove automaticamente os modelos órfãos e deleta as coleções correspondentes do banco de dados e da barra lateral/interface.
   - Botão de varredura manual com terminal de logs e status em tempo real.
 
 - 📂 **Gestão Física de Coleções & Movimentação em Lote (`/collections/[id]`)**:

@@ -32,10 +32,10 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Materiais de impressão: **PLA**, **ABS**, **PETG (Translúcido)** e **Fosco (Matte)**.
   - Paleta com 12 cores populares de filamento 3D.
   - Medições tridimensionais (Bounding Box em mm) e captura de thumbnail com 1 clique.
-- **Scanner Inteligente & Regras de Pastas / Coleções**:
+- **Scanner Inteligente & Espelhamento Físico de Pastas / Coleções (`v1.5.4`)**:
   - Varre recursivamente pastas locais ou montagens de rede (NFS/CIFS/SMB).
   - **Coleções**: A pasta de primeiro nível (`dirParts[0]`) define a Coleção no banco. Subpastas pertencem à mesma coleção pai (o modelo de coleções é plano, não cria sub-coleções).
-  - **Modelos**: A pasta onde os arquivos 3D estão alocados define o Modelo (`folderPath`).
+  - **Espelhamento Físico & Remoção de Coleções**: Se uma pasta de coleção for deletada fisicamente do disco em `libraries`, o escaneamento remove todos os modelos órfãos e deleta a coleção correspondente do banco e da interface (`stats.deletedCollections`).
   - **Sincronização Bidirecional**: Itens removidos do disco são deletados do banco. Renomeações são detectadas por hash/tamanho.
   - **Prioridade Absoluta para Capas Acompanhantes**: Arquivos de imagem (`.jpg`, `.png`, `.webp`) com o mesmo nome base normalizado são automaticamente priorizados como a thumbnail oficial.
 - **Opções de Edição do Modelo no Modal e no Studio**:
@@ -86,7 +86,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.3` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.5.4` (configurada centralmente no `package.json`).
 - **Framework**: Next.js 16.3.5 (App Router, Node.js 20+ runtime).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).

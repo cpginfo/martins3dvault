@@ -133,7 +133,10 @@ export default function HomePage() {
         <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onScanTriggered={fetchModels}
+          onScanTriggered={() => {
+            fetchCollections();
+            fetchModels();
+          }}
           selectedFormat={selectedFormat}
           onFormatChange={setSelectedFormat}
           isSidebarCollapsed={isSidebarCollapsed}

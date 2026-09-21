@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.5.3)
+# Mapa do Projeto - Martins3DVault (v1.5.4)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.5.3                                  │
+│                           MARTINS3DVAULT v1.5.4                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -164,7 +164,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         ├── storage/
         │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
         └── scanner/
-            ├── crawler.ts         # Motor de varredura recursiva com sincronização bidirecional
+            ├── crawler.ts         # Motor de varredura recursiva com espelhamento total (remoção de coleções/modelos deletados no disco)
             └── extractors/
                 ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos
                 ├── stl-parser.ts  # Leitor e validador de geometria STL binário/ASCII
@@ -178,7 +178,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.3`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.4`) e uptime. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
 | `POST` | `/api/users` | Cria novo usuário com todos os 5 campos (`name, email, password, role, avatar`). |
 | `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |

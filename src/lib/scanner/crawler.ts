@@ -23,6 +23,7 @@ export interface ScanStats {
   addedModels: number;
   updatedModels: number;
   deletedModels: number;
+  deletedCollections: number;
   errors: string[];
 }
 
@@ -73,6 +74,7 @@ export async function scanLibrary(libraryId: string): Promise<ScanStats> {
     addedModels: 0,
     updatedModels: 0,
     deletedModels: 0,
+    deletedCollections: 0,
     errors: [],
   };
 
@@ -519,6 +521,76 @@ export async function scanLibrary(libraryId: string): Promise<ScanStats> {
       }
     }
 
+    // 3. Remoção e espelhamento de coleções (deletadas do diretório libraries)
+    const allLibraries = await prisma.library.findMany({ where: { enabled: true } });
+    const allDbCollections = await prisma.collection.findMany();
+
+    for (const col of allDbCollections) {
+      let folderExistsOnDisk = false;
+
+      for (const lib of allLibraries) {
+        const libRoot = path.resolve(lib.path);
+        if (!fs.existsSync(libRoot)) continue;
+
+        try {
+          // 1. Verifica caminho direto com o nome da coleção
+          const directDir = path.join(libRoot, col.name);
+          if (fs.existsSync(directDir) && fs.statSync(directDir).isDirectory()) {
+            folderExistsOnDisk = true;
+            break;
+          }
+
+          // 2. Verifica se alguma pasta de primeiro nível bate com o slug ou nome normalizado
+          const dirEntries = await fs.promises.readdir(libRoot, { withFileTypes: true });
+          const matched = dirEntries.some(
+            (e) =>
+              e.isDirectory() &&
+              !IGNORED_DIRS.has(e.name.toLowerCase()) &&
+              !e.name.startsWith(".") &&
+              (slugify(e.name) === col.slug ||
+                e.name.toLowerCase().trim() === col.name.toLowerCase().trim() ||
+                slugify(e.name) === slugify(col.name))
+          );
+
+          if (matched) {
+            folderExistsOnDisk = true;
+            break;
+          }
+        } catch {
+          // Ignora falha de leitura em diretório específico
+        }
+      }
+
+      // Se a pasta física foi deletada do diretório de todas as bibliotecas ativas
+      if (!folderExistsOnDisk) {
+        try {
+          // Desassocia ou limpa modelos residuais
+          const lingeringModels = await prisma.model.findMany({
+            where: { collectionId: col.id },
+            select: { id: true, folderPath: true },
+          });
+
+          for (const m of lingeringModels) {
+            if (!discoveredFolderPaths.has(m.folderPath)) {
+              await prisma.model.delete({ where: { id: m.id } }).catch(() => {});
+            } else {
+              await prisma.model.update({
+                where: { id: m.id },
+                data: { collectionId: null },
+              }).catch(() => {});
+            }
+          }
+
+          await prisma.collection.delete({
+            where: { id: col.id },
+          });
+          stats.deletedCollections++;
+        } catch (err: any) {
+          stats.errors.push(`Erro ao remover coleção órfã ${col.name}: ${err.message}`);
+        }
+      }
+    }
+
     // Finaliza o ScanJob com sucesso
     await prisma.scanJob.update({
       where: { id: scanJob.id },
@@ -528,7 +600,10 @@ export async function scanLibrary(libraryId: string): Promise<ScanStats> {
         addedCount: stats.addedModels,
         updatedCount: stats.updatedModels,
         deletedCount: stats.deletedModels,
-        log: stats.errors.length > 0 ? stats.errors.join("\n") : "Scan concluído com sucesso e sincronizado.",
+        log:
+          stats.errors.length > 0
+            ? stats.errors.join("\n")
+            : `Scan concluído: ${stats.scannedFolders} pastas escaneadas, ${stats.addedModels} adicionados, ${stats.updatedModels} atualizados, ${stats.deletedModels} modelos removidos, ${stats.deletedCollections} coleções removidas.`,
         completedAt: new Date(),
       },
     });

@@ -83,6 +83,11 @@ export default function Sidebar({
 
   useEffect(() => {
     fetchCollections();
+    const handleRefresh = () => {
+      fetchCollections();
+    };
+    window.addEventListener("refreshCollections", handleRefresh);
+    return () => window.removeEventListener("refreshCollections", handleRefresh);
   }, []);
 
   useEffect(() => {

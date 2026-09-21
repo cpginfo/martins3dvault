@@ -83,11 +83,14 @@ export default function Navbar({
       const libRes = await fetch("/api/libraries");
       if (libRes.ok) {
         const libs = await libRes.json();
-        if (libs.length > 0) {
-          await fetch(`/api/libraries/${libs[0].id}/scan`, { method: "POST" });
+        for (const lib of libs) {
+          await fetch(`/api/libraries/${lib.id}/scan`, { method: "POST" });
         }
       }
       if (onScanTriggered) onScanTriggered();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refreshCollections"));
+      }
     } catch (err) {
       console.error("Erro ao disparar varredura:", err);
     } finally {
