@@ -71,6 +71,11 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Abas de filtragem na galeria: **Todos**, **Nunca Impressos** e **Já Impressos**.
 - **Health Check & Monitoramento**:
   - Rota `/api/health` conectada ao PostgreSQL e monitorada nativamente pelo Docker Compose.
+- **CI/CD & Publicação Automática (GitHub Actions)**:
+  - Workflow em `.github/workflows/publish.yml` ativado em pushes para `main` e tags `v*`.
+  - Executa validação prévia de TypeScript e compilação do Next.js antes de qualquer publicação.
+  - Compila e publica automaticamente a imagem Docker no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`).
+  - Criação automática de GitHub Releases para tags de versão (`v*`).
 
 ---
 

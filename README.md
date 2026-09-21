@@ -6,6 +6,8 @@
 *Interface reconstruída e alinhada ao Google Stitch Design System ("Martins3D Vault Manager") com controles estilo Eagle App.*
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](#-execução-com-docker-compose)
+[![CI/CD](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml/badge.svg)](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml)
+[![GHCR](https://img.shields.io/badge/GHCR-Image_Ready-2496ED?logo=docker&logoColor=white)](https://github.com/cpginfo/martins3dvault/pkgs/container/martins3dvault)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js&logoColor=white)](https://nextjs.org)
 [![Three.js](https://img.shields.io/badge/Three.js-3D_Engine-049EF4?logo=three.js&logoColor=white)](https://threejs.org)
 [![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
@@ -78,6 +80,12 @@
   - **Upload e Persistência de Foto**: Envio de fotos locais (PNG, JPG, WebP) com preview imediato, processamento em Base64 e persistência em `/data/thumbnails/`.
   - **Segurança de Senhas & Unicidade**: Redefinição opcional de senha mantendo a existente caso deixada em branco e validação de e-mail exclusivo (409 Conflict).
   - **Integração Visual com Sessão**: O avatar do usuário é incorporado ao token JWT e exibido dinamicamente no menu lateral (`Sidebar`) e na tabela de usuários.
+
+- 🚀 **Publicação Automática & CI/CD (GitHub Actions)**:
+  - Pipeline automatizado em `.github/workflows/publish.yml`.
+  - Validação estrita de TypeScript e compilação Next.js antes de qualquer publicação.
+  - Build e publicação automática no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`).
+  - Criação automática de GitHub Releases com notas de versão para tags `v*`.
 
 - 🔒 **Login Seguro & Autenticação (`/login`)**:
   - Tela de login com fundo CAD isométrico, telemetria de hardware e botão de preenchimento rápido para demonstração.

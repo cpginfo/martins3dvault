@@ -40,6 +40,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 ├── .agents/
 │   └── mcp_config.json            # Configuração do Stitch MCP Server (@_davideast/stitch-mcp proxy)
 │
+├── .github/
+│   └── workflows/
+│       └── publish.yml            # Pipeline CI/CD: validação Next.js, publicação no GHCR e GitHub Releases
+│
 ├── stitch_export/                 # Exportação bruta das 6 telas e assets do Google Stitch (Martins3D Vault Manager)
 │   ├── screen_*.html              # Telas HTML geradas pelo Stitch
 │   └── *.png                      # Assets visuais originais do Stitch
