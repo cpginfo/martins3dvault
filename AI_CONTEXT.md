@@ -79,6 +79,12 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Emblema neon isométrico em [public/logo.png](file:///swarm/stl/public/logo.png) com transparência alfa de alta definição (32-bit RGBA) sem fundo falso.
   - Arquivo nativo multi-resolução `favicon.ico` (16x16, 32x32, 48x48, 64x64 px) em [public/favicon.ico](file:///swarm/stl/public/favicon.ico) e [src/app/favicon.ico](file:///swarm/stl/src/app/favicon.ico), integrado aos metadados do Next.js App Router em [layout.tsx](file:///swarm/stl/src/app/layout.tsx).
   - Remoção de poluidores visuais: subtítulo sob a logo e badge numérico da Navbar superior.
+- **Navegação & Carregamento 3D sob Demanda (`v1.7.0`)**:
+  - **Reordenação da Barra Lateral (`Sidebar.tsx`)**: O item **"Modelos 3D"** foi reposicionado no topo da seção *Repositórios Locais*, antes de **"Coleções"**, garantindo acesso direto ao catálogo completo de arquivos do repositório enquanto preserva o dropdown de coleções.
+  - **Visualização sob Demanda da Malha 3D (`ModelViewer3D.tsx`)**: Ao abrir qualquer arquivo ou modelo (no modal de detalhes ou estúdio 3D), o Three.js não inicia o download nem a extração automática de malhas pesadas (.stl, .3mf, .obj).
+  - **Miniatura Inicial com Metadados**: Exibição da thumbnail nítida do projeto com badges de formato (`.STL`, `.3MF`, etc.) e cálculo do peso total em KB/MB.
+  - **Botão "Carregar Malha 3D"**: Inicialização do WebGL e renderização interativa sob demanda pelo usuário, com barra de progresso em tempo real.
+  - **Alternância Flexível "Ver Miniatura"**: Botão na barra superior para descarregar o WebGL e retornar à miniatura 2D a qualquer momento, poupando memória e GPU.
 - **Mapear Pastas & Central AdditiveCore (`/libraries`)**:
   - Monitoramento de volume RAID 5, hash monitor e logs em tempo real do crawler.
 - **Gestão Completa de Usuários & Controle de Acesso (`/users` - `v1.5.0`)**:
@@ -131,7 +137,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.6.0` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.7.0` (configurada centralmente no `package.json`).
 - **Framework & Runtime**: Next.js 16.3.5 (App Router, Node.js 22 LTS).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).
@@ -202,6 +208,10 @@ Nunca use `fs.promises.rename` direto sem tratamento para operações entre dire
 ### K. Inicialização Automática de Banco e Tabelas no Docker
 O container PostgreSQL (`postgres:16-alpine`) só executa `initdb` com usuário e banco quando o volume `postgres_data` estiver vazio. Se o volume já existir com credenciais antigas, o Postgres não recria o usuário/database.
 No container `web`, a diretiva `depends_on: db: condition: service_healthy` garante que a aplicação só sobe após o `pg_isready` responder com sucesso. O script `docker-entrypoint.sh` então extrai os parâmetros dinâmicos de `DATABASE_URL` e executa `prisma db push --skip-generate` seguido da inserção do usuário `ADMIN_EMAIL` com senha `ADMIN_PASSWORD` (criptografada via bcrypt).
+
+### L. Carregamento sob Demanda no Three.js & Gestão de Memória GPU
+Em versões anteriores, a malha 3D começava o download imediatamente ao abrir qualquer modelo, consumindo banda e GPU mesmo quando o usuário só desejava checar notas ou alterar metadados.
+**Regra**: O componente `ModelViewer3D` deve sempre iniciar com `meshLoaded: false`, exibindo a thumbnail oficial com badges de extensão e tamanho. Apenas quando o usuário clicar explicitamente em **"Carregar Malha 3D"** o canvas WebGL e os loaders (`STLLoader`, `ThreeMFLoader`, `OBJLoader`) são acionados. Ao alternar para miniatura ou trocar de modelo (`modelId`), os recursos (`renderer.dispose()`, remoção de geometrias e cancelamento de `animationFrame`) devem ser liberados imediatamente para evitar vazamento de memória e exaustão de contextos WebGL do navegador.
 
 ---
 

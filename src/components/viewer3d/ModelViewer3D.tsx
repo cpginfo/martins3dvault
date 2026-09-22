@@ -18,6 +18,7 @@ import {
   Play,
   Pause,
   Compass,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export interface ModelFileItem {
@@ -42,6 +43,7 @@ interface ModelViewer3DProps {
   onSnapshotSaved?: (coverUrl: string) => void;
   onDimensionsCalculated?: (dims: { x: number; y: number; z: number }) => void;
   onTriangleCountCalculated?: (tris: number) => void;
+  autoLoad?: boolean;
 }
 
 type MaterialType = "pla" | "abs" | "translucent" | "matte";
@@ -69,6 +71,7 @@ export default function ModelViewer3D({
   onSnapshotSaved,
   onDimensionsCalculated,
   onTriangleCountCalculated,
+  autoLoad = false,
 }: ModelViewer3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -82,8 +85,11 @@ export default function ModelViewer3D({
   const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
 
+  const [meshLoaded, setMeshLoaded] = useState(autoLoad);
+  const [canvasReady, setCanvasReady] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [viewportTheme, setViewportTheme] = useState<"studio_light" | "dark_canvas">("dark_canvas");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState(true);
@@ -95,6 +101,29 @@ export default function ModelViewer3D({
   const [dimensions, setDimensions] = useState<{ x: number; y: number; z: number } | null>(null);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
+
+  // Formatos únicos e tamanho total em bytes para o badge e resumo na visualização inicial
+  const formats = Array.from(new Set(files.map((f) => f.format.toUpperCase())));
+  const totalSize = files.reduce((acc, f) => acc + (f.fileSize || 0), 0);
+
+  const formatBytes = (bytes: number) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  };
+
+  // Reseta para miniatura toda vez que um modelo diferente for aberto
+  useEffect(() => {
+    setMeshLoaded(autoLoad);
+    setCanvasReady(false);
+    setLoading(false);
+    setLoadProgress(null);
+    setLoadError(null);
+    setImgError(false);
+    setDimensions(null);
+  }, [modelId, autoLoad]);
 
   // Sincroniza tema inicial com o estado do documento
   useEffect(() => {
@@ -157,17 +186,22 @@ export default function ModelViewer3D({
     }
   };
 
-  // Inicializa o Canvas Three.js
+  // Inicializa o Canvas Three.js quando a malha 3D for solicitada
   useEffect(() => {
+    if (!meshLoaded) {
+      setCanvasReady(false);
+      return;
+    }
+
     const container = mountRef.current;
     if (!container) return;
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 420;
 
     // Cena
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0b0e17");
+    scene.background = new THREE.Color(viewportTheme === "studio_light" ? "#f8fafc" : "#0b0e17");
     sceneRef.current = scene;
 
     // Câmera
@@ -195,16 +229,25 @@ export default function ModelViewer3D({
     controlsRef.current = controls;
 
     // Iluminação Profissional para Impressão 3D
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    const ambientLight = new THREE.AmbientLight(
+      0xffffff,
+      viewportTheme === "studio_light" ? 1.1 : 0.75
+    );
     scene.add(ambientLight);
     ambientLightRef.current = ambientLight;
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    const keyLight = new THREE.DirectionalLight(
+      0xffffff,
+      viewportTheme === "studio_light" ? 1.6 : 1.5
+    );
     keyLight.position.set(150, 250, 200);
     scene.add(keyLight);
     keyLightRef.current = keyLight;
 
-    const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.7);
+    const fillLight = new THREE.DirectionalLight(
+      viewportTheme === "studio_light" ? 0x93c5fd : 0x60a5fa,
+      0.7
+    );
     fillLight.position.set(-150, 100, -150);
     scene.add(fillLight);
     fillLightRef.current = fillLight;
@@ -214,7 +257,10 @@ export default function ModelViewer3D({
     scene.add(rimLight);
 
     // Grid de Impressão (Build Plate 256x256mm estilo Bambu Lab / Prusa)
-    const gridHelper = new THREE.GridHelper(256, 32, 0x6366f1, 0x1e293b);
+    const gridHelper =
+      viewportTheme === "studio_light"
+        ? new THREE.GridHelper(256, 32, 0x0284c7, 0xcbd5e1)
+        : new THREE.GridHelper(256, 32, 0x6366f1, 0x1e293b);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
     gridHelperRef.current = gridHelper;
@@ -226,7 +272,10 @@ export default function ModelViewer3D({
 
     // Bounding Box Helper
     const bbox = new THREE.Box3();
-    const bboxHelper = new THREE.Box3Helper(bbox, new THREE.Color(0x06b6d4));
+    const bboxHelper = new THREE.Box3Helper(
+      bbox,
+      new THREE.Color(viewportTheme === "studio_light" ? 0x0284c7 : 0x06b6d4)
+    );
     bboxHelper.visible = showBoundingBox;
     scene.add(bboxHelper);
     boundingBoxHelperRef.current = bboxHelper;
@@ -251,6 +300,8 @@ export default function ModelViewer3D({
     };
     window.addEventListener("resize", handleResize);
 
+    setCanvasReady(true);
+
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
@@ -258,12 +309,23 @@ export default function ModelViewer3D({
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      setCanvasReady(false);
+      sceneRef.current = null;
+      rendererRef.current = null;
+      cameraRef.current = null;
+      controlsRef.current = null;
+      objectsGroupRef.current = null;
+      boundingBoxHelperRef.current = null;
+      gridHelperRef.current = null;
+      ambientLightRef.current = null;
+      keyLightRef.current = null;
+      fillLightRef.current = null;
     };
-  }, []);
+  }, [meshLoaded]);
 
   // Atualiza cores do Viewport 3D (Estúdio Claro vs Dark Canvas)
   useEffect(() => {
-    if (!sceneRef.current) return;
+    if (!meshLoaded || !sceneRef.current) return;
     const scene = sceneRef.current;
 
     if (viewportTheme === "studio_light") {
@@ -303,10 +365,11 @@ export default function ModelViewer3D({
       if (keyLightRef.current) keyLightRef.current.intensity = 1.5;
       if (fillLightRef.current) fillLightRef.current.color.setHex(0x60a5fa);
     }
-  }, [viewportTheme]);
+  }, [viewportTheme, meshLoaded]);
 
-  // Carrega os arquivos 3D na cena
+  // Carrega os arquivos 3D na cena quando solicitado e com o canvas pronto
   useEffect(() => {
+    if (!meshLoaded || !canvasReady) return;
     const group = objectsGroupRef.current;
     const scene = sceneRef.current;
     if (!group || !scene || files.length === 0) return;
@@ -469,7 +532,7 @@ export default function ModelViewer3D({
         threeMfLoader.load(fileUrl, onModelLoaded, onProgress, onError);
       }
     });
-  }, [files, libraryId]);
+  }, [files, libraryId, meshLoaded, canvasReady]);
 
   // Atualiza materiais quando o usuário troca cor ou tipo
   useEffect(() => {
@@ -571,251 +634,365 @@ export default function ModelViewer3D({
           : "bg-[#090b12] border-white/10"
       }`}
     >
-      {/* 3D Viewport Mount */}
-      <div ref={mountRef} className="w-full h-full min-h-[420px] cursor-grab active:cursor-grabbing" />
+      {!meshLoaded ? (
+        /* Visualização de Miniatura 2D inicial quando a malha 3D não foi requisitada */
+        <div className="relative w-full h-full min-h-[420px] flex flex-col items-center justify-center p-4">
+          {/* Fundo gradiente sutil e grid de mesa de impressão */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-950/25 via-[#080b12] to-[#04060a] pointer-events-none z-0" />
+          <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      {/* Loading Indicator with instant cover preview */}
-      {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090b12]/85 backdrop-blur-md z-20 overflow-hidden">
-          {coverImageUrl && (
-            <img
-              src={coverImageUrl}
-              alt="Pré-visualização 2D"
-              className="absolute inset-0 w-full h-full object-contain opacity-25 filter blur-xs pointer-events-none scale-105 transition-transform duration-1000"
-            />
-          )}
-          <div className="relative z-10 flex flex-col items-center p-5 rounded-2xl bg-[#111422]/95 border border-white/15 shadow-2xl">
-            <div className="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs font-semibold text-white tracking-wide">
-              {loadProgress === 100 ? "Renderizando malha 3D..." : "Carregando malha 3D..."}
-            </p>
-            {loadProgress !== null && (
-              <div className="mt-2.5 flex flex-col items-center w-40">
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-200"
-                    style={{ width: `${loadProgress}%` }}
-                  />
+          {/* Barra superior de badges informativos */}
+          <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+            <div className="flex items-center gap-2 pointer-events-auto">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-highest/90 backdrop-blur-md border border-white/10 text-[11px] font-medium text-slate-300 shadow-lg">
+                <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Miniatura do Arquivo</span>
+              </span>
+              {formats.map((fmt) => (
+                <span
+                  key={fmt}
+                  className="px-2 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-mono text-[10px] font-bold uppercase tracking-wider"
+                >
+                  .{fmt}
+                </span>
+              ))}
+            </div>
+
+            {totalSize > 0 && (
+              <span className="pointer-events-auto px-2.5 py-1 rounded-lg bg-[#0b1017]/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-slate-400 shadow-lg">
+                {formatBytes(totalSize)}
+              </span>
+            )}
+          </div>
+
+          {/* Área Central: Imagem de Capa (Thumb) ou Placeholder */}
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center py-6 px-4">
+            {coverImageUrl && !imgError ? (
+              <div className="relative w-full max-w-md max-h-[260px] sm:max-h-[300px] flex items-center justify-center">
+                {/* Glow desfocado da capa ao fundo */}
+                <img
+                  src={coverImageUrl}
+                  alt="Pré-visualização 2D"
+                  className="absolute inset-0 w-full h-full object-contain opacity-25 filter blur-xl scale-110 pointer-events-none transition-opacity duration-700"
+                />
+                {/* Capa com nitidez máxima */}
+                <img
+                  src={coverImageUrl}
+                  alt="Miniatura do Modelo"
+                  onError={() => setImgError(true)}
+                  className="relative max-h-[240px] sm:max-h-[280px] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-500"
+                />
+              </div>
+            ) : (
+              <div className="relative flex flex-col items-center justify-center p-8 rounded-3xl bg-surface-container-lowest/60 border border-white/5 backdrop-blur-sm">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center mb-3 shadow-inner shadow-indigo-500/20">
+                  <span className="material-symbols-outlined text-[44px] text-cyan-400 animate-pulse">
+                    view_in_ar
+                  </span>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-1 font-mono">
-                  {loadProgress === 100 ? "Processando geometria..." : `${loadProgress}%`}
+                <span className="text-xs font-semibold text-slate-300">
+                  Visualização 3D Disponível
+                </span>
+                <span className="text-[11px] text-slate-500 mt-0.5 font-mono">
+                  {files.length} {files.length === 1 ? "peça 3D cadastrada" : "peças 3D cadastradas"}
                 </span>
               </div>
             )}
+
+            {/* Botão de Ação: Carregar Malha 3D */}
+            <div className="relative z-20 mt-5 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMeshLoaded(true)}
+                className="group/btn relative flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-cyan-500/40 border border-white/20 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
+              >
+                <div className="p-1.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover/btn:scale-110 transition-transform">
+                  <Box className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="leading-tight font-bold tracking-wide">
+                    Carregar Malha 3D
+                  </span>
+                  <span className="text-[10px] text-cyan-100/90 font-normal">
+                    {files.length > 1
+                      ? `Renderizar ${files.length} peças interativas`
+                      : "Interagir no visualizador 3D"}
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-[20px] text-cyan-200 group-hover/btn:translate-x-1 transition-transform ml-1">
+                  play_arrow
+                </span>
+              </button>
+
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-ping" />
+                <span>Malha sob demanda • Economia de tráfego e GPU</span>
+              </span>
+            </div>
           </div>
         </div>
-      )}
+      ) : (
+        <>
+          {/* 3D Viewport Mount */}
+          <div ref={mountRef} className="w-full h-full min-h-[420px] cursor-grab active:cursor-grabbing" />
 
-      {/* Top Viewport Control Overlay */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none gap-2">
-        {/* Technical Dimension Badge Widget */}
-        {dimensions ? (
-          <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-lg p-2 px-3 shadow-2xl flex items-center gap-2.5">
-            <div className="flex items-center gap-1.5 text-cyan-400 font-medium text-xs">
-              <Box className="w-4 h-4" />
-              <span>Dimensões <span className="text-slate-500 font-mono text-[10px]">(mm)</span></span>
+          {/* Loading Indicator with instant cover preview */}
+          {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090b12]/85 backdrop-blur-md z-20 overflow-hidden">
+              {coverImageUrl && (
+                <img
+                  src={coverImageUrl}
+                  alt="Pré-visualização 2D"
+                  className="absolute inset-0 w-full h-full object-contain opacity-25 filter blur-xs pointer-events-none scale-105 transition-transform duration-1000"
+                />
+              )}
+              <div className="relative z-10 flex flex-col items-center p-5 rounded-2xl bg-[#111422]/95 border border-white/15 shadow-2xl">
+                <div className="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-xs font-semibold text-white tracking-wide">
+                  {loadProgress === 100 ? "Renderizando malha 3D..." : "Carregando malha 3D..."}
+                </p>
+                {loadProgress !== null && (
+                  <div className="mt-2.5 flex flex-col items-center w-40">
+                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-200"
+                        style={{ width: `${loadProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-1 font-mono">
+                      {loadProgress === 100 ? "Processando geometria..." : `${loadProgress}%`}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="h-4 w-[1px] bg-slate-800"></div>
-            <div className="font-mono text-xs flex items-center gap-2 tracking-tight">
-              <span className="text-slate-400">X: <strong className="text-rose-400 font-semibold">{dimensions.x}</strong></span>
-              <span className="text-slate-400">Y: <strong className="text-emerald-400 font-semibold">{dimensions.y}</strong></span>
-              <span className="text-slate-400">Z: <strong className="text-cyan-400 font-semibold">{dimensions.z}</strong></span>
+          )}
+
+          {/* Top Viewport Control Overlay */}
+          <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none gap-2">
+            {/* Technical Dimension Badge Widget */}
+            {dimensions ? (
+              <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-lg p-2 px-3 shadow-2xl flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5 text-cyan-400 font-medium text-xs">
+                  <Box className="w-4 h-4" />
+                  <span>Dimensões <span className="text-slate-500 font-mono text-[10px]">(mm)</span></span>
+                </div>
+                <div className="h-4 w-[1px] bg-slate-800"></div>
+                <div className="font-mono text-xs flex items-center gap-2 tracking-tight">
+                  <span className="text-slate-400">X: <strong className="text-rose-400 font-semibold">{dimensions.x}</strong></span>
+                  <span className="text-slate-400">Y: <strong className="text-emerald-400 font-semibold">{dimensions.y}</strong></span>
+                  <span className="text-slate-400">Z: <strong className="text-cyan-400 font-semibold">{dimensions.z}</strong></span>
+                </div>
+              </div>
+            ) : <div />}
+
+            {/* Center Camera Controls Pill */}
+            <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-xl p-1 shadow-2xl flex items-center gap-1">
+              <button
+                onClick={() => setCameraView("iso")}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-200 bg-[#16212e] border border-cyan-500/30 hover:text-white transition"
+              >
+                Iso
+              </button>
+              <button
+                onClick={() => setCameraView("front")}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
+              >
+                Frente
+              </button>
+              <button
+                onClick={() => setCameraView("top")}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
+              >
+                Topo
+              </button>
+              <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+              <button
+                onClick={() => setAutoRotate(!autoRotate)}
+                className={`p-1.5 rounded-lg transition ${
+                  autoRotate ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+                }`}
+                title={autoRotate ? "Pausar Rotação" : "Iniciar Rotação"}
+              >
+                {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => setWireframe(!wireframe)}
+                className={`p-1.5 rounded-lg transition ${
+                  wireframe ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+                }`}
+                title="Alternar Modo Wireframe / Sólido"
+              >
+                <Layers className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setShowBoundingBox(!showBoundingBox)}
+                className={`p-1.5 rounded-lg transition ${
+                  showBoundingBox ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
+                }`}
+                title="Alternar Caixa Delimitadora"
+              >
+                <Box className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setCameraView("reset")}
+                className="p-1.5 rounded-lg text-slate-300 hover:bg-[#182330] hover:text-cyan-400 transition"
+                title="Resetar Câmera"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+              <button
+                onClick={() => setViewportTheme((prev) => (prev === "studio_light" ? "dark_canvas" : "studio_light"))}
+                className={`p-1.5 rounded-lg transition ${
+                  viewportTheme === "studio_light"
+                    ? "text-amber-400 bg-amber-950/40 border border-amber-700/50"
+                    : "text-slate-300 hover:bg-[#182330] hover:text-amber-400"
+                }`}
+                title={viewportTheme === "studio_light" ? "Alternar para Dark Canvas Híbrido" : "Alternar para Estúdio Claro (Bambu/Fusion)"}
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {viewportTheme === "studio_light" ? "light_mode" : "dark_mode"}
+                </span>
+              </button>
+            </div>
+
+            {/* Action Buttons: Voltar para Miniatura & Snapshot / 3D Cover */}
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMeshLoaded(false);
+                  setLoading(false);
+                }}
+                className="bg-[#0b1017]/90 hover:bg-[#182330] text-slate-300 hover:text-white font-medium px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg border border-white/10 transition active:scale-95"
+                title="Voltar para a visualização da miniatura 2D"
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline">Miniatura</span>
+              </button>
+
+              <button
+                onClick={captureSnapshot}
+                disabled={savingSnapshot}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 border border-indigo-400/40 transition active:scale-95 disabled:opacity-50"
+              >
+                {snapshotSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-300" />
+                    <span>Capa Salva!</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4" />
+                    <span>{savingSnapshot ? "Salvando..." : "Capa 3D"}</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        ) : <div />}
 
-        {/* Center Camera Controls Pill */}
-        <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-xl p-1 shadow-2xl flex items-center gap-1">
-          <button
-            onClick={() => setCameraView("iso")}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-200 bg-[#16212e] border border-cyan-500/30 hover:text-white transition"
-          >
-            Iso
-          </button>
-          <button
-            onClick={() => setCameraView("front")}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
-          >
-            Frente
-          </button>
-          <button
-            onClick={() => setCameraView("top")}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
-          >
-            Topo
-          </button>
-          <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
-          <button
-            onClick={() => setAutoRotate(!autoRotate)}
-            className={`p-1.5 rounded-lg transition ${
-              autoRotate ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
-            }`}
-            title={autoRotate ? "Pausar Rotação" : "Iniciar Rotação"}
-          >
-            {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => setWireframe(!wireframe)}
-            className={`p-1.5 rounded-lg transition ${
-              wireframe ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
-            }`}
-            title="Alternar Modo Wireframe / Sólido"
-          >
-            <Layers className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowBoundingBox(!showBoundingBox)}
-            className={`p-1.5 rounded-lg transition ${
-              showBoundingBox ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
-            }`}
-            title="Alternar Caixa Delimitadora"
-          >
-            <Box className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCameraView("reset")}
-            className="p-1.5 rounded-lg text-slate-300 hover:bg-[#182330] hover:text-cyan-400 transition"
-            title="Resetar Câmera"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
-          <button
-            onClick={() => setViewportTheme((prev) => (prev === "studio_light" ? "dark_canvas" : "studio_light"))}
-            className={`p-1.5 rounded-lg transition ${
-              viewportTheme === "studio_light"
-                ? "text-amber-400 bg-amber-950/40 border border-amber-700/50"
-                : "text-slate-300 hover:bg-[#182330] hover:text-amber-400"
-            }`}
-            title={viewportTheme === "studio_light" ? "Alternar para Dark Canvas Híbrido" : "Alternar para Estúdio Claro (Bambu/Fusion)"}
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              {viewportTheme === "studio_light" ? "light_mode" : "dark_mode"}
-            </span>
-          </button>
-        </div>
-
-        {/* Action Button: Snapshot / 3D Cover */}
-        <div className="pointer-events-auto">
-          <button
-            onClick={captureSnapshot}
-            disabled={savingSnapshot}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 border border-indigo-400/40 transition active:scale-95 disabled:opacity-50"
-          >
-            {snapshotSuccess ? (
-              <>
-                <Check className="w-4 h-4 text-emerald-300" />
-                <span>Capa Salva!</span>
-              </>
-            ) : (
-              <>
-                <Camera className="w-4 h-4" />
-                <span>{savingSnapshot ? "Salvando..." : "Capa 3D"}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom Viewport Floating Control Bar (Filament Type & Color Swatches) */}
-      <div className="absolute bottom-4 left-4 z-20 pointer-events-auto max-w-[calc(100%-2rem)]">
-        <div className="bg-[#0b1017]/95 backdrop-blur-md border border-[#1d2b3a] rounded-2xl p-1.5 px-3 shadow-2xl flex items-center gap-3 flex-wrap">
-          {/* Material Switcher Group */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 pl-1 pr-1">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
-              <span className="font-medium text-[11px]">Material:</span>
-            </div>
-            <button
-              onClick={() => setMaterialType("pla")}
-              className={`px-2.5 py-1 text-xs rounded-lg transition ${
-                materialType === "pla"
-                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
-                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
-              }`}
-            >
-              PLA
-            </button>
-            <button
-              onClick={() => setMaterialType("abs")}
-              className={`px-2.5 py-1 text-xs rounded-lg transition ${
-                materialType === "abs"
-                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
-                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
-              }`}
-            >
-              ABS
-            </button>
-            <button
-              onClick={() => setMaterialType("translucent")}
-              className={`px-2.5 py-1 text-xs rounded-lg transition ${
-                materialType === "translucent"
-                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
-                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
-              }`}
-            >
-              PETG
-            </button>
-            <button
-              onClick={() => setMaterialType("matte")}
-              className={`px-2.5 py-1 text-xs rounded-lg transition ${
-                materialType === "matte"
-                  ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
-                  : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
-              }`}
-            >
-              Fosco
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="h-5 w-[1px] bg-slate-800 hidden sm:block"></div>
-
-          {/* Color Swatches Palette */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {FILAMENT_COLORS.map((c) => {
-              const active = materialColor.toLowerCase() === c.hex.toLowerCase();
-              return (
+          {/* Bottom Viewport Floating Control Bar (Filament Type & Color Swatches) */}
+          <div className="absolute bottom-4 left-4 z-20 pointer-events-auto max-w-[calc(100%-2rem)]">
+            <div className="bg-[#0b1017]/95 backdrop-blur-md border border-[#1d2b3a] rounded-2xl p-1.5 px-3 shadow-2xl flex items-center gap-3 flex-wrap">
+              {/* Material Switcher Group */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 pl-1 pr-1">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
+                  <span className="font-medium text-[11px]">Material:</span>
+                </div>
                 <button
-                  key={c.hex}
-                  onClick={() => setMaterialColor(c.hex)}
-                  title={c.name}
-                  style={{ backgroundColor: c.hex }}
-                  className={`transition-all ${
-                    active
-                      ? "relative w-5 h-5 rounded-full ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0b1017] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.8)]"
-                      : "w-4 h-4 rounded-full border border-slate-700 hover:scale-110"
+                  onClick={() => setMaterialType("pla")}
+                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                    materialType === "pla"
+                      ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                      : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
                   }`}
                 >
-                  {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                  PLA
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                <button
+                  onClick={() => setMaterialType("abs")}
+                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                    materialType === "abs"
+                      ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                      : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+                  }`}
+                >
+                  ABS
+                </button>
+                <button
+                  onClick={() => setMaterialType("translucent")}
+                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                    materialType === "translucent"
+                      ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                      : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+                  }`}
+                >
+                  PETG
+                </button>
+                <button
+                  onClick={() => setMaterialType("matte")}
+                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                    materialType === "matte"
+                      ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
+                      : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
+                  }`}
+                >
+                  Fosco
+                </button>
+              </div>
 
-      {/* Multi-Part File Visibility Toggler (if > 1 file) */}
-      {files.length > 1 && (
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1 p-2 rounded-xl bg-[#111422]/85 backdrop-blur-md border border-white/10 max-h-36 overflow-y-auto text-xs shadow-2xl">
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">
-            Peças do Modelo ({files.length})
-          </span>
-          {files.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => toggleFileVisibility(f.id)}
-              className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-white/5 text-slate-300 text-left transition-all"
-            >
-              <span className="truncate max-w-[120px]">{f.fileName}</span>
-              {activeFiles[f.id] !== false ? (
-                <Eye className="w-3.5 h-3.5 text-indigo-400" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5 text-slate-600" />
-              )}
-            </button>
-          ))}
-        </div>
+              {/* Divider */}
+              <div className="h-5 w-[1px] bg-slate-800 hidden sm:block"></div>
+
+              {/* Color Swatches Palette */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {FILAMENT_COLORS.map((c) => {
+                  const active = materialColor.toLowerCase() === c.hex.toLowerCase();
+                  return (
+                    <button
+                      key={c.hex}
+                      onClick={() => setMaterialColor(c.hex)}
+                      title={c.name}
+                      style={{ backgroundColor: c.hex }}
+                      className={`transition-all ${
+                        active
+                          ? "relative w-5 h-5 rounded-full ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0b1017] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                          : "w-4 h-4 rounded-full border border-slate-700 hover:scale-110"
+                      }`}
+                    >
+                      {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Multi-Part File Visibility Toggler (if > 1 file) */}
+          {files.length > 1 && (
+            <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1 p-2 rounded-xl bg-[#111422]/85 backdrop-blur-md border border-white/10 max-h-36 overflow-y-auto text-xs shadow-2xl">
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">
+                Peças do Modelo ({files.length})
+              </span>
+              {files.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => toggleFileVisibility(f.id)}
+                  className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-white/5 text-slate-300 text-left transition-all"
+                >
+                  <span className="truncate max-w-[120px]">{f.fileName}</span>
+                  {activeFiles[f.id] !== false ? (
+                    <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                  ) : (
+                    <EyeOff className="w-3.5 h-3.5 text-slate-600" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

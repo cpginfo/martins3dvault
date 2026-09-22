@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.6.0)
+# Mapa do Projeto - Martins3DVault (v1.7.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.6.0                                  │
+│                           MARTINS3DVAULT v1.7.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -17,7 +17,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │  - Persistent Sidebar & NAS│  - Affine Transform Matrix  │  - Docker Volumes FS  │
 │  - Eagle-Style Studio Bar  │  - Companion Image Normaliz.│  - Session JWT (Jose) │
 │  - Zoom Slider & View Modes│  - Upload Multipart Parser  │  - Disk Cache (STL)   │
-│  - Three.js Fast Engine    │  - CSV/Excel Smart Importer │  - Stitch Design Sync │
+│  - Three.js sob demanda    │  - CSV/Excel Smart Importer │  - Stitch Design Sync │
 │  - Estúdio CAD / Dark 3D   │  - Streaming CSV Exporter   │  - LocalStorage Pref  │
 │  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - PrinterSettings DB │
 └────────────────────────────┴─────────────────────────────┴───────────────────────┘
@@ -176,7 +176,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │
     ├── components/                # Componentes React Reutilizáveis
     │   ├── layout/
-    │   │   ├── Sidebar.tsx        # Sidebar retrátil persistente: logo, menus por categoria, gauge NAS RAID 5 e perfil
+    │   │   ├── Sidebar.tsx        # Sidebar retrátil: logo, navegação reordenada (Modelos 3D antes de Coleções), gauge NAS RAID 5 e perfil
     │   │   └── Navbar.tsx         # Barra superior: busca global ⌘K, pills de formato (.STL, .3MF, G-Code), status NAS, ThemeToggle e scan
     │   ├── theme/
     │   │   └── ThemeToggle.tsx    # Botão de alternância animado Dark/Light Mode
@@ -188,7 +188,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   ├── upload/
     │   │   └── UploadModal.tsx    # Modal de Upload local e Download por Link (URL) com tabs e suporte a ZIP
     │   └── viewer3d/
-    │       └── ModelViewer3D.tsx  # Visualizador Three.js (STLLoader, Z-Up corrigido, PLA/ABS, presets de câmera, Estúdio Claro / Dark Canvas)
+    │       └── ModelViewer3D.tsx  # Viewport Three.js sob demanda: miniatura 2D inicial, botão 'Carregar Malha 3D', orbit, materiais e snapshot
     │
     ├── proxy.ts                   # Next.js 16 Proxy layer: proteção de rotas públicas e autenticação de API com ADMIN
     │
@@ -222,7 +222,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.6.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.0`) e uptime. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |
 | `GET` / `POST` | `/api/pricing/materials` | Lista filamentos ou cadastra novo material com custo por kg e densidade. |
 | `GET` / `POST` | `/api/pricing/budgets` | Busca/filtra orçamentos ou cria novo orçamento com snapshot paramétrico da máquina. |

@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.6.0)
+# Martins3DVault 🖨️✨ (v1.7.0)
 
 <div align="center">
 
@@ -53,6 +53,13 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 🚀 **Navegação & Carregamento 3D sob Demanda (`v1.7.0`)**:
+  - **Menu Lateral Reestruturado**: Item **"Modelos 3D"** reposicionado no topo da seção *Repositórios Locais*, antes de **"Coleções"**, agilizando o acesso imediato ao catálogo completo de peças e projetos.
+  - **Carregamento sob Demanda da Malha 3D**: Ao abrir qualquer arquivo (no modal de detalhes ou no estúdio 3D), o Three.js não baixa nem processa automaticamente as malhas pesadas (.stl, .3mf, .obj). Isso economiza largura de banda e elimina o consumo desnecessário de memória e GPU.
+  - **Miniatura com Metadados**: Exibição da thumbnail nítida do projeto com badges dos formatos disponíveis e cálculo automático do peso total do projeto.
+  - **Botão "Carregar Malha 3D"**: Inicialização do WebGL e renderização interativa sob demanda pelo usuário, com barra de progresso em tempo real.
+  - **Alternância Flexível "Ver Miniatura"**: Botão na barra superior para descarregar o WebGL e retornar à miniatura 2D a qualquer momento.
 
 - 🖩 **Calculadora de Preço de Venda 3D, Orçamentos & Vendas (`v1.6.0`)**:
   - **Motor Matemático Analítico Determinístico**: Cálculo rigoroso de custos combinando **Energia** (`(Watts/1000) × h × kWh`), **Desgaste/Depreciação** (`(Valor/VidaÚtil) × h`), **Material Consumido** (`(R$/kg ÷ 1000) × g`), **Mão de Obra** (`horas manuais × R$/h`) e **Acessórios Extras** (fitas LED, ímãs, parafusos, componentes eletrônicos).

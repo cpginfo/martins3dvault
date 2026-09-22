@@ -126,17 +126,17 @@ export default function Sidebar({
       group: "Repositórios Locais",
       items: [
         {
+          name: "Modelos 3D",
+          href: "/",
+          icon: "view_in_ar",
+          activeColor: "text-secondary",
+        },
+        {
           name: "Coleções",
           href: "/collections",
           icon: "dataset",
           activeColor: "text-primary-container",
           isCollections: true,
-        },
-        {
-          name: "Modelos 3D",
-          href: "/",
-          icon: "view_in_ar",
-          activeColor: "text-secondary",
         },
       ],
     },
