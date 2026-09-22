@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.5.7)
+# Mapa do Projeto - Martins3DVault (v1.6.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.5.7                                  │
+│                           MARTINS3DVAULT v1.6.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -17,8 +17,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │  - Persistent Sidebar & NAS│  - Affine Transform Matrix  │  - Docker Volumes FS  │
 │  - Eagle-Style Studio Bar  │  - Companion Image Normaliz.│  - Session JWT (Jose) │
 │  - Zoom Slider & View Modes│  - Upload Multipart Parser  │  - Disk Cache (STL)   │
-│  - Three.js Fast Engine    │  - PDF Manual Manager       │  - Stitch Design Sync │
-│  - Estúdio CAD / Dark 3D   │  - Theme State & Anti-FOUC  │  - LocalStorage Pref  │
+│  - Three.js Fast Engine    │  - CSV/Excel Smart Importer │  - Stitch Design Sync │
+│  - Estúdio CAD / Dark 3D   │  - Streaming CSV Exporter   │  - LocalStorage Pref  │
+│  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - PrinterSettings DB │
 └────────────────────────────┴─────────────────────────────┴───────────────────────┘
 ```
 
@@ -46,6 +47,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │       └── publish.yml            # Pipeline CI/CD: validação Node.js 22 LTS, login GHCR via GHCR_TOKEN, buildx e GitHub Releases
 │
 ├── screenshots/                   # Capturas de tela demonstrativas da interface (README e documentação)
+│   ├── calculadora.png            # Calculadora de Preço de Venda 3D e Live Breakdown
+│   ├── orcamentos.png             # Gestão Comercial, Vendas e Importação/Exportação
 │   ├── arquivo.png                # Estúdio CAD 3D e inspeção de arquivo
 │   ├── colecao.png                # Galeria de modelos em coleção
 │   ├── colecoes.png               # Visão geral de coleções
@@ -54,12 +57,12 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │   ├── upload.png                 # Formulário e upload de arquivos
 │   └── usuarios.png               # Painel de gerenciamento de usuários
 │
-├── stitch_export/                 # Exportação bruta das 6 telas e assets do Google Stitch (Martins3D Vault Manager)
-│   ├── screen_*.html              # Telas HTML geradas pelo Stitch
-│   └── *.png                      # Assets visuais originais do Stitch
+├── scripts/
+│   └── import-sales.ts            # Utilitário CLI para importação de vendas em lote direto no banco
 │
 ├── public/                        # Arquivos estáticos servidos diretamente pelo Next.js
-│   ├── logo.png                   # Logotipo oficial Martins3DVault (laranja industrial/3D cúbico)
+│   ├── logo.png                   # Logotipo oficial Martins3DVault Neon Isométrico com canal alfa RGBA
+│   ├── favicon.ico                # Ícone nativo multi-resolução (16x16, 32x32, 48x48, 64x64)
 │   └── avatar.png                 # Avatar padrão de perfil do operador
 │
 ├── prisma/
@@ -75,7 +78,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │
 └── src/
     ├── app/                       # Next.js App Router (Páginas e APIs)
-    │   ├── layout.tsx             # Layout global: Inter, JetBrains Mono, Material Symbols, Sidebar & Navbar
+    │   ├── layout.tsx             # Layout global: Inter, JetBrains Mono, Material Symbols, Sidebar & Navbar, Favicon Metadata
+    │   ├── favicon.ico            # Rota nativa do Favicon multi-resolução
     │   ├── globals.css            # Tema Stitch Industrial Dark Mode com Tailwind CSS v4 @theme tokens
     │   ├── page.tsx               # Explorador de Modelos 3D com breadcrumb, Eagle FilterBar e grid dinâmico
     │   │
@@ -101,8 +105,19 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   ├── metrics/
     │   │   └── page.tsx           # Métricas & Telemetria: telemetria de oficina e Bento KPIs
     │   │
+    │   ├── pricing/               # Módulo de Precificação & Vendas 3D (v1.6.0)
+    │   │   ├── page.tsx           # Hub de 4 abas: Calculadora, Orçamentos, Dashboard e Configurações
+    │   │   └── components/
+    │   │       ├── CalculatorTab.tsx   # Calculadora 2-colunas com preview em tempo real e acessórios
+    │   │       ├── BudgetsTab.tsx      # Listagem com busca, filtros (orçamentos vs vendas) e duplicação
+    │   │       ├── DashboardTab.tsx    # 6 Bento cards contábeis calculados estritamente sobre vendas
+    │   │       ├── SettingsTab.tsx     # Parâmetros da máquina, taxas horárias e catálogo de materiais
+    │   │       ├── ImportModal.tsx     # Modal inteligente de importação CSV / Excel
+    │   │       ├── BudgetDetailModal.tsx # Detalhamento analítico de custos e lucro
+    │   │       └── SaleModal.tsx       # Modal de conversão rápida e registro de preço real vendido
+    │   │
     │   ├── login/
-    │   │   └── page.tsx           # Tela de autenticação com fundo CAD isométrico e atalho de demonstração
+    │   │   └── page.tsx           # Tela de autenticação com fundo CAD isométrico e novo logotipo neon
     │   │
     │   └── api/                   # Rotas de API Backend
     │       ├── auth/
@@ -140,6 +155,16 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │   └── thumbnails/
     │       │       └── [...path]/route.ts # GET: Serve imagens e capas do diretório de thumbnails
     │       │
+    │       ├── pricing/            # Rotas da API de Precificação & Vendas (v1.5.10)
+    │       │   ├── settings/route.ts   # GET / PUT: Configurações persistentes da impressora e oficina
+    │       │   ├── materials/route.ts  # GET / POST: Catálogo de filamentos e materiais
+    │       │   ├── materials/[id]/route.ts # PUT / DELETE: Edição e exclusão de filamento
+    │       │   ├── budgets/route.ts    # GET (filtros) / POST: Criação transacional de orçamentos e acessórios
+    │       │   ├── budgets/[id]/route.ts # GET / PUT (edição/conversão em venda) / DELETE
+    │       │   ├── stats/route.ts      # GET: Agregação contábil restrita estritamente a vendas concretizadas
+    │       │   ├── import/route.ts     # POST: Importador inteligente de planilhas CSV/Excel com autodetecção de colunas
+    │       │   └── export/route.ts     # GET: Exportador completo de vendas em CSV com UTF-8 BOM e pontuação brasileira
+    │       │
     │       └── models/
     │           ├── route.ts        # GET: Busca inteligente multi-termo, pagina e filtra por formato e status de impresso (?printed=false)
     │           ├── move/route.ts   # POST: Movimentação em lote de arquivos e acompanhantes entre coleções no disco
@@ -175,6 +200,11 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         ├── users/
         │   └── avatar.ts          # Processador e persistência de fotos de avatar em /data/thumbnails/
         ├── prisma.ts              # Instância singleton global do Prisma Client
+        ├── pricing/               # Motor Matemático & Tipagens de Precificação 3D
+        │   ├── types.ts           # Interfaces de configuração, orçamentos, acessórios, vendas e métricas
+        │   ├── calculator.ts      # Fórmulas puras de custos, energia, depreciação, lucro e BRL
+        │   └── __tests__/
+        │       └── calculator.test.ts # Suíte com 5 testes unitários determinísticos
         ├── storage/
         │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
         └── scanner/
@@ -192,7 +222,14 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.5.7`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.6.0`) e uptime. |
+| `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |
+| `GET` / `POST` | `/api/pricing/materials` | Lista filamentos ou cadastra novo material com custo por kg e densidade. |
+| `GET` / `POST` | `/api/pricing/budgets` | Busca/filtra orçamentos ou cria novo orçamento com snapshot paramétrico da máquina. |
+| `GET` / `PUT` / `DELETE` | `/api/pricing/budgets/[id]` | Consulta analítica, edição completa, conversão em venda com preço real, ou exclusão. |
+| `GET` | `/api/pricing/stats` | Agregação contábil e telemetria comercial exclusivamente sobre vendas (`isSale: true`). |
+| `POST` | `/api/pricing/import` | Ingestão em lote de orçamentos e vendas via arquivo CSV ou dados colados do Excel. |
+| `GET` | `/api/pricing/export` | Exportação de dados e vendas em CSV compatível com o Microsoft Excel brasileiro. |
 | `GET` | `/api/users` | Lista usuários cadastrados (apenas Administrador). |
 | `POST` | `/api/users` | Cria novo usuário com todos os 5 campos (`name, email, password, role, avatar`). |
 | `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |

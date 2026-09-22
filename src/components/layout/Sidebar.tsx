@@ -44,7 +44,25 @@ export default function Sidebar({
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string; avatar?: string | null } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [collections, setCollections] = useState<CollectionSimple[]>([]);
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [collectionsExpanded, setCollectionsExpanded] = useState<boolean | null>(null);
+  const collectionsOpen =
+    collectionsExpanded !== null ? collectionsExpanded : pathname.startsWith("/collections");
+  const [currentSearch, setCurrentSearch] = useState("");
+
+  useEffect(() => {
+    const updateSearch = () => {
+      if (typeof window !== "undefined") {
+        setCurrentSearch(window.location.search);
+      }
+    };
+    updateSearch();
+    window.addEventListener("popstate", updateSearch);
+    window.addEventListener("locationchange", updateSearch);
+    return () => {
+      window.removeEventListener("popstate", updateSearch);
+      window.removeEventListener("locationchange", updateSearch);
+    };
+  }, [pathname]);
 
   const isCollapsed = controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
   const toggleCollapse = () => {
@@ -63,40 +81,35 @@ export default function Sidebar({
       .catch(() => {});
   }, []);
 
-  const fetchCollections = async () => {
-    try {
-      const res = await fetch("/api/collections");
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setCollections(
-            data.map((c: any) => ({
-              id: c.id,
-              name: c.name,
-              modelsCount: c.modelsCount || 0,
-            }))
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Erro ao carregar coleções para a sidebar:", err);
-    }
-  };
-
   useEffect(() => {
-    fetchCollections();
+    let ignore = false;
+    const load = () => {
+      fetch("/api/collections")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          if (!ignore && Array.isArray(data)) {
+            setCollections(
+              data.map((c: { id: string; name: string; modelsCount?: number }) => ({
+                id: c.id,
+                name: c.name,
+                modelsCount: c.modelsCount || 0,
+              }))
+            );
+          }
+        })
+        .catch(() => {});
+    };
+
+    load();
     const handleRefresh = () => {
-      fetchCollections();
+      load();
     };
     window.addEventListener("refreshCollections", handleRefresh);
-    return () => window.removeEventListener("refreshCollections", handleRefresh);
+    return () => {
+      ignore = true;
+      window.removeEventListener("refreshCollections", handleRefresh);
+    };
   }, []);
-
-  useEffect(() => {
-    if (pathname.startsWith("/collections")) {
-      setCollectionsOpen(true);
-    }
-  }, [pathname]);
 
   const handleLogout = async () => {
     try {
@@ -125,12 +138,33 @@ export default function Sidebar({
           icon: "view_in_ar",
           activeColor: "text-secondary",
         },
+      ],
+    },
+    {
+      group: "Calculadora",
+      items: [
         {
-          name: "Mapear Pastas & Scan",
-          href: "/libraries",
-          icon: "sync_saved_locally",
-          activeColor: "text-tertiary",
-          hasPing: true,
+          name: "Orçamentos & Preços",
+          href: "/pricing",
+          icon: "calculate",
+          activeColor: "text-primary-container",
+        },
+      ],
+    },
+    {
+      group: "Métricas",
+      items: [
+        {
+          name: "Métricas dos Arquivos",
+          href: "/metrics",
+          icon: "analytics",
+          activeColor: "text-secondary",
+        },
+        {
+          name: "Métricas de Vendas",
+          href: "/pricing?tab=dashboard",
+          icon: "monitoring",
+          activeColor: "text-emerald-500",
         },
       ],
     },
@@ -138,10 +172,11 @@ export default function Sidebar({
       group: "Configurações",
       items: [
         {
-          name: "Métricas",
-          href: "/metrics",
-          icon: "analytics",
-          activeColor: "text-secondary",
+          name: "Mapear Pastas & Scan",
+          href: "/libraries",
+          icon: "sync_saved_locally",
+          activeColor: "text-tertiary",
+          hasPing: true,
         },
         {
           name: "Gestão de Usuários",
@@ -174,14 +209,9 @@ export default function Sidebar({
               />
             </div>
             {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-base text-on-surface tracking-tight leading-none truncate">
-                  Martins<span className="text-primary-container font-bold">3D</span>Vault
-                </span>
-                <span className="text-[10px] text-secondary tracking-widest uppercase font-mono mt-0.5">
-                  Additive Vault {APP_VERSION}
-                </span>
-              </div>
+              <span className="font-semibold text-base text-on-surface tracking-tight leading-none truncate">
+                Martins<span className="text-primary-container font-bold">3D</span>Vault
+              </span>
             )}
           </Link>
           <button
@@ -213,10 +243,17 @@ export default function Sidebar({
               )}
               <nav className="flex flex-col gap-1 px-3">
                 {section.items.map((item) => {
-                  const isActive =
-                    item.href === "/"
-                      ? pathname === "/"
-                      : pathname.startsWith(item.href);
+                  const isActive = (() => {
+                    if (item.href === "/") return pathname === "/";
+                    if (item.href.includes("?")) {
+                      const [itemPath, itemQuery] = item.href.split("?");
+                      return pathname === itemPath && currentSearch.includes(itemQuery);
+                    }
+                    if (item.href === "/pricing") {
+                      return pathname === "/pricing" && !currentSearch.includes("tab=dashboard");
+                    }
+                    return pathname.startsWith(item.href);
+                  })();
 
                   // Special dropdown treatment for "Coleções"
                   if (item.isCollections && !isCollapsed) {
@@ -250,7 +287,9 @@ export default function Sidebar({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setCollectionsOpen((prev) => !prev);
+                              setCollectionsExpanded((prev) =>
+                                prev !== null ? !prev : !pathname.startsWith("/collections")
+                              );
                             }}
                             className="p-1 rounded hover:bg-white/10 text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center"
                             title={collectionsOpen ? "Recolher lista de coleções" : "Expandir lista de coleções"}

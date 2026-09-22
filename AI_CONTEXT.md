@@ -46,6 +46,39 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Dashboard de bancada preparado para integração Moonraker / Klipper.
   - 4 Cards Bento: Impressões Hoje, Taxa de Sucesso, Consumo de Filamento (kg) e Tempo Ativo.
   - Fila de bancada com status das impressoras e monitoramento de temperatura.
+- **Módulo de Precificação & Vendas 3D (`/pricing` - `v1.6.0`)**:
+  - **Calculadora Determinística (`src/lib/pricing/calculator.ts`)**:
+    - Custo de Energia = `(Potência Watts / 1000) * Horas Impressão * Custo kWh`.
+    - Depreciação da Máquina = `(Valor Compra Impressora / Vida Útil Horas) * Horas Impressão`.
+    - Custo de Material = `(Custo por kg / 1000) * Peso da Peça em gramas`.
+    - Custo de Mão de Obra = `Horas Trabalho Manual (Modelagem + Montagem) * Valor da Hora`.
+    - Custos de Acessórios = Soma de `(Preço Unitário * Quantidade)` com inserção dinâmica.
+    - Preço Sugerido = `Custo Total * (1 + Markup/100)`.
+    - Comparativo de Venda Real = Diferencial entre Preço Sugerido vs. Preço Efetivo Vendido (lucro real, descontos/acréscimos).
+  - **Gestão de Orçamentos (`BudgetsTab.tsx`)**:
+    - Busca parcial e case-insensitive por nome da peça, cliente ou material.
+    - Filtros por abas: Todos, Apenas Orçamentos Abertos e Apenas Vendas Concretizadas.
+    - Duplicação com 1 clique (injeta parâmetros na calculadora preservando tempos e margens).
+    - Modal analítico de custos e lucro (`BudgetDetailModal.tsx`).
+    - Conversão rápida em venda com registro do preço real praticado (`SaleModal.tsx`).
+  - **Dashboard & Telemetria Comercial (`DashboardTab.tsx`)**:
+    - **Regra Contábil Estrita**: Métricas agregadas exclusivamente sobre registros com `isSale: true` (`/api/pricing/stats?period=month|30days|all`).
+    - 6 Bento Cards: Faturamento Real, Custo Total de Produção, Lucro Líquido Real, Margem Média Efetiva, Quantidade de Peças Vendidas e Ticket Médio.
+  - **Importador & Exportador de Vendas em CSV (`v1.6.0`)**:
+    - Modal de importação (`ImportModal.tsx`) aceitando upload de arquivo `.csv` ou colar diretamente células do Excel (<kbd>Ctrl</kbd> + <kbd>V</kbd>) com autodetecção de separadores (`;`, `,`, `\t`) e conversão de moeda brasileira.
+    - Script CLI em lote (`scripts/import-sales.ts`) para ingestão direta via terminal.
+    - Exportador de vendas via streaming (`/api/pricing/export?type=sales`) gerando arquivo CSV padronizado para o Excel (ponto e vírgula e UTF-8 BOM).
+  - **Configurações Persistentes da Oficina (`SettingsTab.tsx`)**:
+    - Configurações da máquina (valor de compra, consumo W, vida útil h, kWh, taxa horária manual e markup padrão) salvas em `PrinterSettings`.
+    - Catálogo persistente e reutilizável de filamentos em `PrintMaterial` (nome, custo por kg, densidade).
+- **Reorganização Estrutural da Barra Lateral (`Sidebar.tsx`)**:
+  - Nova categoria **Calculadora** apontando para `/pricing`.
+  - Nova categoria **Métricas** agrupando *Métricas dos Arquivos* (`/metrics`) e *Métricas de Vendas* (`/pricing?tab=dashboard`).
+  - Categoria **Configurações** agrupando *Mapear Pastas & Scan* (`/libraries`) acima de *Gestão de Usuários* (`/users`).
+- **Nova Identidade Visual Neon & Favicon Multi-Resolução (`v1.6.0`)**:
+  - Emblema neon isométrico em [public/logo.png](file:///swarm/stl/public/logo.png) com transparência alfa de alta definição (32-bit RGBA) sem fundo falso.
+  - Arquivo nativo multi-resolução `favicon.ico` (16x16, 32x32, 48x48, 64x64 px) em [public/favicon.ico](file:///swarm/stl/public/favicon.ico) e [src/app/favicon.ico](file:///swarm/stl/src/app/favicon.ico), integrado aos metadados do Next.js App Router em [layout.tsx](file:///swarm/stl/src/app/layout.tsx).
+  - Remoção de poluidores visuais: subtítulo sob a logo e badge numérico da Navbar superior.
 - **Mapear Pastas & Central AdditiveCore (`/libraries`)**:
   - Monitoramento de volume RAID 5, hash monitor e logs em tempo real do crawler.
 - **Gestão Completa de Usuários & Controle de Acesso (`/users` - `v1.5.0`)**:
@@ -76,7 +109,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Sincronização Automática de Tabelas**: O container `web` aguarda o banco estar saudável (`pg_isready`) e executa `prisma db push --skip-generate` apontando dinamicamente para a `DATABASE_URL` construída pelas variáveis do Compose.
   - **Seed Automático de Administrador**: O script `docker-entrypoint.sh` verifica e cria o usuário administrador padrão (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) caso ainda não exista no banco.
   - **Resiliência de Variáveis**: Sintaxe `${VAR:-default}` no `docker-compose.yml` garante que a aplicação suba sem falhas mesmo na ausência de arquivo `.env`.
-- **CI/CD & Publicação Automática (GitHub Actions - `v1.5.7`)**:
+- **CI/CD & Publicação Automática (GitHub Actions - `v1.6.0`)**:
   - Workflow em `.github/workflows/publish.yml` ativado em pushes para `main` e tags `v*`.
   - Baseado em **Node.js 22 LTS** tanto no runner do GitHub Actions quanto na imagem base do `Dockerfile` (`node:22-alpine`), prevenindo alertas de depreciação do Node 20.
   - Autenticação configurada via Secret **`GHCR_TOKEN`** para login no GitHub Container Registry (`ghcr.io/cpginfo/martins3dvault`) e criação de releases via `softprops/action-gh-release`.
@@ -98,7 +131,7 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
 
 ## 2. Stack Tecnológica & Versões Ativas
 
-- **Versão do Aplicativo**: `v1.5.7` (configurada centralmente no `package.json`).
+- **Versão do Aplicativo**: `v1.6.0` (configurada centralmente no `package.json`).
 - **Framework & Runtime**: Next.js 16.3.5 (App Router, Node.js 22 LTS).
 - **UI Library & Styling**: React 19.2.8, Tailwind CSS v4 (`@theme` tokens do Google Stitch), Lucide React & Google Material Symbols Outlined.
 - **Motor 3D**: Three.js v0.183+ (`STLLoader.js`, `ThreeMFLoader.js`, `OBJLoader.js`, `OrbitControls.js`).

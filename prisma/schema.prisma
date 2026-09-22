@@ -143,3 +143,96 @@ model ScanJob {
 
   @@index([libraryId])
 }
+
+model PrinterSettings {
+  id                 String   @id @default(cuid())
+  printerName        String   @default("Impressora 3D Principal")
+  printerCost        Float    @default(2500.0) // Valor de compra (R$)
+  powerWatts         Float    @default(250.0)  // Potência em Watts
+  lifespanHours      Float    @default(3000.0) // Vida útil estimada em horas
+  electricityKwhCost Float    @default(0.85)   // Custo do kWh (R$)
+  manualHourlyRate   Float    @default(35.0)   // Valor da hora manual de trabalho (R$/h)
+  defaultMarkup      Float    @default(100.0)  // Markup padrão (%)
+  isDefault          Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model PrintMaterial {
+  id         String        @id @default(cuid())
+  name       String
+  costPerKg  Float         // Custo por kg (R$)
+  density    Float?        @default(1.24)
+  color      String?
+  brand      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  budgets    PrintBudget[]
+
+  @@index([name])
+}
+
+model PrintBudget {
+  id                  String                 @id @default(cuid())
+  productName         String
+  customerName        String?
+  printTimeMinutes    Int                    // Tempo total de impressão em minutos
+  weightGrams         Float                  // Peso da peça em gramas
+  
+  materialId          String?
+  material            PrintMaterial?         @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  materialName        String                 // Nome do material no momento do cálculo
+  materialCostPerKg   Float                  // Custo por kg no momento do cálculo
+
+  modelingTimeMinutes Int                    @default(0) // Tempo de modelagem em minutos
+  assemblyTimeMinutes Int                    @default(0) // Tempo de montagem/acabamento em minutos
+  markupPercent       Float                  @default(100.0)
+
+  // Snapshots de parâmetros da impressora/config no cálculo
+  powerWatts          Float
+  electricityKwhCost  Float
+  printerCost         Float
+  lifespanHours       Float
+  manualHourlyRate    Float
+
+  // Custos calculados
+  energyCost          Float
+  depreciationCost    Float
+  materialCost        Float
+  laborCost           Float
+  accessoriesCost     Float                  @default(0.0)
+  totalCost           Float                  // Custo total
+  suggestedPrice      Float                  // Preço simulado de venda
+  simulatedProfit     Float                  // Lucro simulado
+
+  // Venda real
+  isSale              Boolean                @default(false)
+  finalPrice          Float?                 // Preço real vendido
+  actualProfit        Float?                 // Margem real (R$)
+  priceDifference     Float?                 // Diferença vs simulado (R$)
+  soldAt              DateTime?              // Data da venda
+
+  notes               String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  accessories         PrintBudgetAccessory[]
+
+  @@index([productName])
+  @@index([customerName])
+  @@index([isSale])
+  @@index([createdAt])
+}
+
+model PrintBudgetAccessory {
+  id         String      @id @default(cuid())
+  budgetId   String
+  budget     PrintBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  name       String
+  unitPrice  Float
+  quantity   Int         @default(1)
+  totalPrice Float
+  createdAt  DateTime    @default(now())
+
+  @@index([budgetId])
+}

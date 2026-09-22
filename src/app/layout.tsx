@@ -15,9 +15,14 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Martins3DVault - Additive Vault Manager",
-  description: "Cofre e gerenciador inteligente de arquivos 3D (STL, 3MF, STEP, G-Code) com telemetria e visualização 3D",
+  description: "Gerenciador inteligente de arquivos 3D (STL, 3MF, STEP, G-Code) com telemetria e visualização 3D",
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/logo.png",
   },
 };
 

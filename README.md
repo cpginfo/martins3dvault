@@ -1,9 +1,9 @@
-# Martins3DVault 🖨️✨ (v1.5.7)
+# Martins3DVault 🖨️✨ (v1.6.0)
 
 <div align="center">
 
 **Sistema Moderno, Dark/Light Mode & Conteinerizado para Organização, Visualização 3D Ultrarrápida e Gerenciamento de Projetos de Impressão 3D (.stl, .3mf, .obj)**
-*Interface reconstruída e alinhada ao Google Stitch Design System ("Martins3D Vault Manager") com controles estilo Eagle App e alternância dinâmica de temas.*
+*Interface reconstruída e alinhada ao Google Stitch Design System ("Martins3D Vault Manager") com controles estilo Eagle App, alternância dinâmica de temas e precificação comercial analítica.*
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](#-execução-com-docker-compose)
 [![CI/CD](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml/badge.svg)](https://github.com/cpginfo/martins3dvault/actions/workflows/publish.yml)
@@ -22,6 +22,11 @@
 ## 📸 Demonstração Visual (Screenshots)
 
 <div align="center">
+
+| 🖩 Calculadora de Preço de Venda 3D | 📑 Gestão de Orçamentos & Vendas |
+|:---:|:---:|
+| <a href="screenshots/calculadora.png" target="_blank"><img src="screenshots/calculadora.png" width="460" alt="Calculadora de Preço de Venda 3D" /></a> | <a href="screenshots/orcamentos.png" target="_blank"><img src="screenshots/orcamentos.png" width="460" alt="Gestão de Orçamentos & Vendas" /></a> |
+| *Simulação analítica de energia, filamento, desgaste, mão de obra e markup dinâmico* | *Controle de pedidos, conversão em vendas reais, importação de planilhas e exportação CSV* |
 
 | 📐 Visualizador 3D Studio & Fatiamento | 🦅 Galeria de Modelos & Controles Eagle |
 |:---:|:---:|
@@ -48,6 +53,21 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 🖩 **Calculadora de Preço de Venda 3D, Orçamentos & Vendas (`v1.6.0`)**:
+  - **Motor Matemático Analítico Determinístico**: Cálculo rigoroso de custos combinando **Energia** (`(Watts/1000) × h × kWh`), **Desgaste/Depreciação** (`(Valor/VidaÚtil) × h`), **Material Consumido** (`(R$/kg ÷ 1000) × g`), **Mão de Obra** (`horas manuais × R$/h`) e **Acessórios Extras** (fitas LED, ímãs, parafusos, componentes eletrônicos).
+  - **Live Breakdown em Tempo Real**: Feedback visual instantâneo recalculado a cada digitação com barras proporcionais de custo e cálculo de MarkUp (%) customizável.
+  - **Gestão Comercial & Orçamentos**: Listagem com busca instantânea parcial por peça ou cliente, filtros rápidos por orçamentos abertos vs. vendas concretizadas e ação de **Duplicar / Reutilizar** orçamento antigo como base de novos pedidos.
+  - **Conversão em Venda & Preço Real**: Opção de marcar orçamento como venda informando o preço real vendido praticado, calculando automaticamente lucros líquidos e descontos/acréscimos.
+  - **Dashboard Financeiro Inteligente**: Métricas exclusivas sobre vendas concretizadas (Faturamento Real, Custos de Produção, Lucro Líquido, Margem Média %, Quantidade de Peças e Ticket Médio) com filtros de período (Mês Atual, Últimos 30 Dias ou Todo o Período).
+  - **Importação Inteligente de Vendas (CSV ou Excel)**: Suporte a upload de arquivo `.csv` ou colar diretamente células do Excel (<kbd>Ctrl</kbd> + <kbd>V</kbd>) com detecção automática de delimitadores (`;`, `,`, `\t`) e conversão de moeda brasileira. Disponível também via CLI (`scripts/import-sales.ts`).
+  - **Exportação de Vendas em CSV**: Botão nativo para exportar o histórico de vendas em `.csv` padronizado para o Microsoft Excel brasileiro (ponto e vírgula, decimais com vírgula e cabeçalho UTF-8 BOM).
+  - **Catálogo de Materiais & Configurações da Máquina**: Gestão persistente de filamentos e resinas (R$/kg) e parâmetros elétricos e depreciativos da impressora.
+
+- 💎 **Nova Identidade Visual & Branding Neon (`v1.6.0`)**:
+  - **Logotipo Neon Isométrico**: Novo emblema isométrico com acabamento de alta fidelidade e canal alfa verdadeiro (32-bit RGBA), eliminando padrões de fundo falso e artefatos de compressão.
+  - **Favicon Multi-Resolução**: Arquivo `favicon.ico` nativo em 16x16, 32x32, 48x48 e 64x64 px com suporte a telas HiDPI/Retina servido na raiz web e no App Router.
+  - **Navegação Reestruturada**: Barra lateral reordenada com menus dedicados (*Calculadora*, *Métricas* e *Configurações*), cabeçalho da Navbar limpo e alinhamento centrado da marca.
 
 - 🌓 **Temas Dark & Light Dinâmicos (`v1.5.5`)**:
   - **Botão de Alternância Integrado**: Atalho rápido no topo da Navbar e no menu do operador na Sidebar para trocar instantaneamente entre os modos **Dark** e **Light**, com persistência em `localStorage` e zero cintilação (*anti-FOUC*).

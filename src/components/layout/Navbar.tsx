@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UploadModal from "@/components/upload/UploadModal";
 import ThemeToggle from "@/components/theme/ThemeToggle";
-import { APP_VERSION } from "@/lib/version";
 
 interface NavbarProps {
   searchQuery?: string;
@@ -26,17 +25,12 @@ export default function Navbar({
 }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [search, setSearch] = useState(searchQuery || "");
+  const isControlled = searchQuery !== undefined;
+  const [internalSearch, setInternalSearch] = useState(searchQuery || "");
+  const search = isControlled ? searchQuery : internalSearch;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [scanning, setScanning] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [appVersion, setAppVersion] = useState<string>(APP_VERSION);
-
-  useEffect(() => {
-    if (searchQuery !== undefined) {
-      setSearch(searchQuery);
-    }
-  }, [searchQuery]);
 
   // Global Keyboard Shortcut: ⌘K or Ctrl+K
   useEffect(() => {
@@ -50,23 +44,14 @@ export default function Navbar({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    fetch("/api/health")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.version) setAppVersion(data.version);
-      })
-      .catch(() => {});
-  }, []);
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setSearch(val);
+    if (!isControlled) setInternalSearch(val);
     if (onSearchChange) onSearchChange(val);
   };
 
   const handleClearSearch = () => {
-    setSearch("");
+    if (!isControlled) setInternalSearch("");
     if (onSearchChange) onSearchChange("");
     searchInputRef.current?.focus();
   };
@@ -235,13 +220,6 @@ export default function Navbar({
             <span className="material-symbols-outlined text-[20px]">settings</span>
           </Link>
 
-          <span
-            className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high border border-white/5 text-[11px] font-mono text-outline select-none"
-            title={`Martins3DVault ${appVersion}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-            <span>{appVersion}</span>
-          </span>
         </div>
       </header>
 
