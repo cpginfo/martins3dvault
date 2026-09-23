@@ -15,7 +15,12 @@ export async function POST(
 
     const model = await prisma.model.findUnique({
       where: { id },
-      include: { library: true },
+      include: {
+        library: true,
+        files: {
+          orderBy: [{ isPrimary: "desc" }, { fileName: "asc" }],
+        },
+      },
     });
 
     if (!model) {
@@ -37,24 +42,37 @@ export async function POST(
       );
     }
 
+    const primaryFile = model.files.find((f) => f.isPrimary) || model.files[0];
     const libRoot = path.resolve(model.library.path);
     const modelDiskPath = path.join(libRoot, model.folderPath);
 
-    let targetDir = modelDiskPath;
-    if (fs.existsSync(modelDiskPath) && fs.statSync(modelDiskPath).isFile()) {
+    let targetDir: string;
+    let baseName: string;
+
+    if (primaryFile) {
+      const fileAbsPath = path.join(libRoot, primaryFile.relativePath);
+      targetDir = path.dirname(fileAbsPath);
+      baseName = path.parse(primaryFile.fileName).name;
+    } else if (fs.existsSync(modelDiskPath) && fs.statSync(modelDiskPath).isFile()) {
       targetDir = path.dirname(modelDiskPath);
+      baseName = path.parse(modelDiskPath).name;
+    } else {
+      targetDir = modelDiskPath;
+      baseName = path.parse(model.name).name;
     }
+
     await fs.promises.mkdir(targetDir, { recursive: true });
 
-    const safeName = file.name.replace(/[\/\\]/g, "_");
-    const filePath = path.join(targetDir, safeName);
+    // Salva no mesmo diretório do arquivo com o mesmo nome base, mantendo apenas a extensão .pdf
+    const targetFileName = `${baseName}.pdf`;
+    const filePath = path.join(targetDir, targetFileName);
     const bytes = await file.arrayBuffer();
     await fs.promises.writeFile(filePath, Buffer.from(bytes));
 
     const relPath = path.relative(libRoot, filePath);
 
     const existingAsset = await prisma.modelAsset.findFirst({
-      where: { modelId: id, fileName: safeName },
+      where: { modelId: id, assetType: "PDF_MANUAL" },
     });
 
     let asset;
@@ -62,6 +80,7 @@ export async function POST(
       asset = await prisma.modelAsset.update({
         where: { id: existingAsset.id },
         data: {
+          fileName: targetFileName,
           relativePath: relPath,
           fileSize: BigInt(bytes.byteLength),
           assetType: "PDF_MANUAL",
@@ -71,7 +90,7 @@ export async function POST(
       asset = await prisma.modelAsset.create({
         data: {
           modelId: id,
-          fileName: safeName,
+          fileName: targetFileName,
           relativePath: relPath,
           assetType: "PDF_MANUAL",
           fileSize: BigInt(bytes.byteLength),

@@ -17,17 +17,39 @@ export async function POST(
 
     const model = await prisma.model.findUnique({
       where: { id },
-      include: { library: true },
+      include: {
+        library: true,
+        files: {
+          orderBy: [{ isPrimary: "desc" }, { fileName: "asc" }],
+        },
+      },
     });
     if (!model) {
       return NextResponse.json({ error: "Modelo não encontrado" }, { status: 404 });
     }
 
-    const contentType = request.headers.get("content-type") || "";
-    const storageDataPath = process.env.STORAGE_DATA_PATH || "./data";
-    const thumbDir = path.resolve(path.join(storageDataPath, "thumbnails"));
-    await fs.promises.mkdir(thumbDir, { recursive: true });
+    const primaryFile = model.files.find((f) => f.isPrimary) || model.files[0];
+    const libRoot = path.resolve(model.library.path);
+    const modelDiskPath = path.join(libRoot, model.folderPath);
 
+    let targetDir: string;
+    let baseName: string;
+
+    if (primaryFile) {
+      const fileAbsPath = path.join(libRoot, primaryFile.relativePath);
+      targetDir = path.dirname(fileAbsPath);
+      baseName = path.parse(primaryFile.fileName).name;
+    } else if (fs.existsSync(modelDiskPath) && fs.statSync(modelDiskPath).isFile()) {
+      targetDir = path.dirname(modelDiskPath);
+      baseName = path.parse(modelDiskPath).name;
+    } else {
+      targetDir = modelDiskPath;
+      baseName = path.parse(model.name).name;
+    }
+
+    await fs.promises.mkdir(targetDir, { recursive: true });
+
+    const contentType = request.headers.get("content-type") || "";
     let coverUrl: string | null = null;
 
     if (contentType.includes("multipart/form-data")) {
@@ -46,25 +68,40 @@ export async function POST(
         );
       }
 
-      const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const fileName = `${id}_cover_${Date.now()}_${cleanFileName}`;
-      const targetPath = path.join(thumbDir, fileName);
+      // Salva no mesmo diretório do arquivo 3D com o mesmo nome base
+      const targetFileName = `${baseName}${ext}`;
+      const targetPath = path.join(targetDir, targetFileName);
 
       const bytes = await file.arrayBuffer();
       await fs.promises.writeFile(targetPath, Buffer.from(bytes));
 
-      coverUrl = `/api/assets/thumbnails/${fileName}`;
+      const relPath = path.relative(libRoot, targetPath);
+      coverUrl = `/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(relPath)}`;
 
-      // Registra também como asset do modelo
-      await prisma.modelAsset.create({
-        data: {
-          modelId: id,
-          fileName: file.name,
-          relativePath: fileName,
-          assetType: "IMAGE",
-          fileSize: BigInt(bytes.byteLength),
-        },
+      // Registra ou atualiza como asset do modelo
+      const existingAsset = await prisma.modelAsset.findFirst({
+        where: { modelId: id, assetType: "IMAGE", fileName: targetFileName },
       });
+
+      if (existingAsset) {
+        await prisma.modelAsset.update({
+          where: { id: existingAsset.id },
+          data: {
+            relativePath: relPath,
+            fileSize: BigInt(bytes.byteLength),
+          },
+        });
+      } else {
+        await prisma.modelAsset.create({
+          data: {
+            modelId: id,
+            fileName: targetFileName,
+            relativePath: relPath,
+            assetType: "IMAGE",
+            fileSize: BigInt(bytes.byteLength),
+          },
+        });
+      }
     } else {
       const body = await request.json();
 
@@ -74,11 +111,37 @@ export async function POST(
         const base64Data = body.dataUrl.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, "base64");
 
-        const fileName = `${id}_snapshot_${Date.now()}.png`;
-        const targetPath = path.join(thumbDir, fileName);
+        // Snapshot 3D salvo no mesmo diretório com o mesmo nome base (.png)
+        const targetFileName = `${baseName}.png`;
+        const targetPath = path.join(targetDir, targetFileName);
 
         await fs.promises.writeFile(targetPath, buffer);
-        coverUrl = `/api/assets/thumbnails/${fileName}`;
+        const relPath = path.relative(libRoot, targetPath);
+        coverUrl = `/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(relPath)}`;
+
+        const existingAsset = await prisma.modelAsset.findFirst({
+          where: { modelId: id, assetType: "IMAGE", fileName: targetFileName },
+        });
+
+        if (existingAsset) {
+          await prisma.modelAsset.update({
+            where: { id: existingAsset.id },
+            data: {
+              relativePath: relPath,
+              fileSize: BigInt(buffer.byteLength),
+            },
+          });
+        } else {
+          await prisma.modelAsset.create({
+            data: {
+              modelId: id,
+              fileName: targetFileName,
+              relativePath: relPath,
+              assetType: "IMAGE",
+              fileSize: BigInt(buffer.byteLength),
+            },
+          });
+        }
       } else {
         return NextResponse.json({ error: "Dados de imagem inválidos ou não fornecidos" }, { status: 400 });
       }

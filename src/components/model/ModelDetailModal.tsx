@@ -230,14 +230,9 @@ export default function ModelDetailModal({
 
       if (res.ok) {
         const data = await res.json();
-        const existingIdx = model.assets.findIndex((a) => a.fileName === data.asset.fileName);
-        let updatedAssets = [...model.assets];
-        if (existingIdx >= 0) {
-          updatedAssets[existingIdx] = data.asset;
-        } else {
-          updatedAssets.push(data.asset);
-        }
-        const newModel = { ...model, assets: updatedAssets };
+        const assetObj = data.asset || data;
+        const filtered = model.assets.filter((a) => a.id !== assetObj.id && a.fileName !== assetObj.fileName);
+        const newModel = { ...model, assets: [...filtered, assetObj] };
         setModel(newModel);
         if (onModelUpdated) onModelUpdated(newModel);
       }

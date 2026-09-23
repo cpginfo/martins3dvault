@@ -291,10 +291,12 @@ export default function ModelStudioPage(props: {
         body: formData,
       });
       if (res.ok) {
-        const newAsset = await res.json();
+        const data = await res.json();
+        const assetObj = data.asset || data;
+        const filtered = model.assets.filter((a) => a.id !== assetObj.id && a.fileName !== assetObj.fileName);
         setModel({
           ...model,
-          assets: [...model.assets, newAsset],
+          assets: [...filtered, assetObj],
         });
       }
     } catch (err) {
