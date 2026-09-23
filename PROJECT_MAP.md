@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.7.1)
+# Mapa do Projeto - Martins3DVault (v1.7.2)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.7.1                                  │
+│                           MARTINS3DVAULT v1.7.2                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -225,7 +225,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.1`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.2`) e uptime. |
+| `GET` | `/api/assets/file` | Streaming e download direto de arquivos 3D/PDF com resolução resiliente (fallback) e RFC 6266. |
 | `POST` | `/api/collections/[id]/scan` | Varredura diferencial e incremental estrita à subpasta física da coleção no disco. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |
 | `GET` / `POST` | `/api/pricing/materials` | Lista filamentos ou cadastra novo material com custo por kg e densidade. |

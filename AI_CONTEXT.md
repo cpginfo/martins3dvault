@@ -79,6 +79,19 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Emblema neon isométrico em [public/logo.png](file:///swarm/stl/public/logo.png) com transparência alfa de alta definição (32-bit RGBA) sem fundo falso.
   - Arquivo nativo multi-resolução `favicon.ico` (16x16, 32x32, 48x48, 64x64 px) em [public/favicon.ico](file:///swarm/stl/public/favicon.ico) e [src/app/favicon.ico](file:///swarm/stl/src/app/favicon.ico), integrado aos metadados do Next.js App Router em [layout.tsx](file:///swarm/stl/src/app/layout.tsx).
   - Remoção de poluidores visuais: subtítulo sob a logo e badge numérico da Navbar superior.
+- **Download Resiliente de Arquivos 3D, Fallback de Caminhos & Hardening de CI/CD (`v1.7.2`)**:
+  - **Entrega Resiliente de Arquivos (`/api/assets/file` e `/api/assets/mesh`)**:
+    - Algoritmo de resolução inteligente com busca em fallback: se o arquivo não estiver presente no caminho exato registrado na biblioteca (`library.path`), o backend busca automaticamente em `STORAGE_LIBRARIES_PATH` (`/libraries`) e `STORAGE_DATA_PATH` (`/data`).
+    - Prevenção ativa de erros `404 Not Found` caso volumes Docker sejam montados ou reconfigurados.
+  - **Padronização RFC 6266 / RFC 5987 para Content-Disposition**:
+    - Implementação de `filename="..."` (ASCII higienizado) + `filename*=UTF-8''...` (codificado sem quebrar espaços ou acentos).
+    - Inclusão mandatória de `&download=true` nos links de download de arquivos 3D e botão dedicado para baixar manuais PDF tanto em [src/app/models/[id]/page.tsx](file:///swarm/stl/src/app/models/[id]/page.tsx) quanto em [src/components/model/ModelDetailModal.tsx](file:///swarm/stl/src/components/model/ModelDetailModal.tsx).
+  - **Hardening do Pipeline CI/CD GitHub Actions (`.github/workflows/publish.yml`)**:
+    - Auditoria de dependências com `npm audit --audit-level=high` (tolerante).
+    - Execução de testes com `npm test --if-present`.
+    - Escaneamento de vulnerabilidades em contêineres com **Trivy Action**.
+    - Assinatura criptográfica keyless de contêineres no GHCR via **Cosign** com permissão OIDC `id-token: write`.
+
 - **Scanner Diferencial Incremental, Paginação & Estúdio em Coleções (`v1.7.1`)**:
   - **Crawler Diferencial de Alta Performance (`src/lib/scanner/crawler.ts`)**:
     - O crawler compara em memória o hash dos arquivos (`${mtimeMs}_${size}`), contagem de assets e metadados com os registros existentes.

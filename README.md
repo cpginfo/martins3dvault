@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.7.1)
+# Martins3DVault 🖨️✨ (v1.7.2)
 
 <div align="center">
 
@@ -53,6 +53,13 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 📦 **Download Direto, Resolução Resiliente de Arquivos & Pipeline CI/CD Seguro (`v1.7.2`)**:
+  - **Download Confiável de Arquivos 3D**: Correção de entrega e garantia da flag `&download=true` em todos os botões do sistema, assegurando o comportamento de `attachment` nativo nos navegadores.
+  - **Resolução de Caminhos com Fallback Inteligente**: Caso o caminho registrado no banco divirja da montagem física de volumes, a API busca automaticamente em `STORAGE_LIBRARIES_PATH`, `/libraries` e `/data`, eliminando erros `404 Not Found`.
+  - **Cabeçalho Content-Disposition Padronizado (RFC 6266 / RFC 5987)**: Nomes de arquivos baixados preservam acentuação, espaços e caracteres especiais sem codificação percentual indesejada (`%20`).
+  - **Download Direto de Manuais PDF**: Botão dedicado de download para manuais e documentações em PDF anexadas, tanto no modal de detalhes quanto na página Studio 3D.
+  - **Pipeline CI/CD Avançado com Segurança (GitHub Actions)**: Adição de auditoria de dependências (`npm audit`), testes automatizados (`npm test --if-present`), escaneamento de vulnerabilidades em containers com **Trivy** e assinatura keyless de imagens OIDC via **Cosign** no GHCR.
 
 - ⚡ **Scanner Diferencial, Paginação & Estúdio Eagle em Coleções (`v1.7.1`)**:
   - **Scanner Diferencial Incremental**: O crawler compara hashes de arquivos em disco (`${mtimeMs}_${size}`), contagem de arquivos e metadados, saltando modelos inalterados em 0ms (`unchangedModels`) sem reprocessar geometrias nem disparar queries no banco.
