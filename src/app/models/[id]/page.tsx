@@ -644,7 +644,7 @@ export default function ModelStudioPage(props: {
                   {model.files.map((file) => {
                     const downloadUrl = `/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
                       file.relativePath
-                    )}`;
+                    )}&download=true`;
                     return (
                       <div
                         key={file.id}
@@ -790,7 +790,7 @@ export default function ModelStudioPage(props: {
                     <a
                       href={`/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
                         primaryFile.relativePath
-                      )}`}
+                      )}&download=true`}
                       download={primaryFile.fileName}
                       className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 active:scale-[0.99] transition"
                     >
@@ -958,6 +958,14 @@ export default function ModelStudioPage(props: {
                               title="Abrir PDF"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                            <a
+                              href={`${manualUrl}&download=true`}
+                              download={m.fileName}
+                              className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition"
+                              title="Baixar Manual PDF"
+                            >
+                              <Download className="w-3.5 h-3.5" />
                             </a>
                             <button
                               onClick={() => handleDeleteManual(m.id)}

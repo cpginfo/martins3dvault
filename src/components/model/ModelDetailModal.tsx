@@ -653,7 +653,7 @@ export default function ModelDetailModal({
                         href={`/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
                           file.relativePath
                         )}&download=true`}
-                        download
+                        download={file.fileName}
                         className="p-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 transition-all"
                         title="Baixar arquivo 3D"
                       >
@@ -845,6 +845,17 @@ export default function ModelDetailModal({
                         >
                           <ExternalLink className="w-3 h-3" />
                           <span>Abrir</span>
+                        </a>
+
+                        <a
+                          href={`/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
+                            asset.relativePath
+                          )}&download=true`}
+                          download={asset.fileName}
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all"
+                          title="Baixar PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
                         </a>
 
                         <button

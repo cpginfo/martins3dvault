@@ -39,14 +39,34 @@ export async function GET(request: Request) {
 
     // Proteção rigorosa contra Directory Traversal
     const safeRelPath = path.normalize(relPath).replace(/^(\.\.[\/\\])+/, "");
-    const fullPath = path.join(path.resolve(library.path), safeRelPath);
+    const libRoot = path.resolve(library.path);
+    let fullPath = path.join(libRoot, safeRelPath);
 
     // Garante que o arquivo está contido dentro da raiz da biblioteca
-    if (!fullPath.startsWith(path.resolve(library.path))) {
-      return new NextResponse("Acesso não permitido", { status: 403 });
+    const isWithinLib = fullPath.startsWith(libRoot);
+    let fileFound = isWithinLib && fs.existsSync(fullPath);
+
+    // Fallback inteligente: se não encontrou no caminho cadastrado da biblioteca,
+    // verifica no diretório padrão de bibliotecas ou dados montados
+    if (!fileFound) {
+      const candidates = [
+        process.env.STORAGE_LIBRARIES_PATH ? path.resolve(process.env.STORAGE_LIBRARIES_PATH) : null,
+        "/libraries",
+        process.env.STORAGE_DATA_PATH ? path.resolve(process.env.STORAGE_DATA_PATH) : null,
+        "/data",
+      ].filter((p): p is string => Boolean(p));
+
+      for (const candidateRoot of candidates) {
+        const candidatePath = path.join(candidateRoot, safeRelPath);
+        if (candidatePath.startsWith(candidateRoot) && fs.existsSync(candidatePath)) {
+          fullPath = candidatePath;
+          fileFound = true;
+          break;
+        }
+      }
     }
 
-    if (!fs.existsSync(fullPath)) {
+    if (!fileFound) {
       return new NextResponse("Arquivo não encontrado", { status: 404 });
     }
 
@@ -68,10 +88,19 @@ export async function GET(request: Request) {
     headers.set("Accept-Ranges", "bytes");
     headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
 
+    const fallbackName = fileName.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "");
+    const encodedName = encodeURIComponent(fileName);
+
     if (download) {
-      headers.set("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName)}"`);
+      headers.set(
+        "Content-Disposition",
+        `attachment; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`
+      );
     } else {
-      headers.set("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"`);
+      headers.set(
+        "Content-Disposition",
+        `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`
+      );
     }
 
     return new NextResponse(readable, {

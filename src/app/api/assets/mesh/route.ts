@@ -26,13 +26,32 @@ export async function GET(request: Request) {
     }
 
     const safeRelPath = path.normalize(relPath).replace(/^(\.\.[\/\\])+/, "");
-    const fullPath = path.join(path.resolve(library.path), safeRelPath);
+    const libRoot = path.resolve(library.path);
+    let fullPath = path.join(libRoot, safeRelPath);
 
-    if (!fullPath.startsWith(path.resolve(library.path))) {
-      return new NextResponse("Acesso não permitido", { status: 403 });
+    const isWithinLib = fullPath.startsWith(libRoot);
+    let fileFound = isWithinLib && fs.existsSync(fullPath);
+
+    // Fallback inteligente se o caminho cadastrado estiver divergente
+    if (!fileFound) {
+      const candidates = [
+        process.env.STORAGE_LIBRARIES_PATH ? path.resolve(process.env.STORAGE_LIBRARIES_PATH) : null,
+        "/libraries",
+        process.env.STORAGE_DATA_PATH ? path.resolve(process.env.STORAGE_DATA_PATH) : null,
+        "/data",
+      ].filter((p): p is string => Boolean(p));
+
+      for (const candidateRoot of candidates) {
+        const candidatePath = path.join(candidateRoot, safeRelPath);
+        if (candidatePath.startsWith(candidateRoot) && fs.existsSync(candidatePath)) {
+          fullPath = candidatePath;
+          fileFound = true;
+          break;
+        }
+      }
     }
 
-    if (!fs.existsSync(fullPath)) {
+    if (!fileFound) {
       return new NextResponse("Arquivo não encontrado", { status: 404 });
     }
 
