@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.8.0)
+# Mapa do Projeto - Martins3DVault (v1.9.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,19 +8,19 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.8.0                                  │
+│                           MARTINS3DVAULT v1.9.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
 │  - Stitch Industrial Dark  │  - Differential Crawler     │  - PostgreSQL 16      │
-│  - Light Mode Calibrado    │  - mtimeMs_size File Hash   │  - Prisma ORM 6.19    │
+│  - Light Mode Calibrado    │  - Hierarchical Tree Colls  │  - Prisma ORM 6.19    │
 │  - Persistent Sidebar & NAS│  - 3MF to Binary STL Parser │  - Docker Volumes FS  │
-│  - Eagle Bar em Coleções   │  - Affine Transform Matrix  │  - Session JWT (Jose) │
+│  - Tree Explorer / Grid    │  - Affine Transform Matrix  │  - Session JWT (Jose) │
 │  - Zoom Slider & View Modes│  - Exact Base-Name Covers   │  - Disk Cache (STL)   │
-│  - Paginação sem Cap (All) │  - Upload Multipart Parser  │  - Stitch Design Sync │
-│  - Three.js sob demanda    │  - Subfolder Scope Scanning │  - LocalStorage Pref  │
-│  - Estúdio CAD / Dark 3D   │  - CSV/Excel Smart Importer │  - PrinterSettings DB │
-│  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - Dynamic Pagination │
+│  - Dynamic Breadcrumbs     │  - Disk Sync & Cascading    │  - Cache Size & Clear │
+│  - Subcollections Cards    │  - Subfolder Scope Scanning │  - Stitch Design Sync │
+│  - Estúdio CAD / Dark 3D   │  - CSV/Excel Smart Importer │  - LocalStorage Pref  │
+│  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - PrinterSettings DB │
 └────────────────────────────┴─────────────────────────────┴───────────────────────┘
 ```
 
@@ -59,7 +59,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │   └── usuarios.png               # Painel de gerenciamento de usuários
 │
 ├── scripts/
-│   └── import-sales.ts            # Utilitário CLI para importação de vendas em lote direto no banco
+│   ├── import-sales.ts            # Utilitário CLI para importação de vendas em lote direto no banco
+│   └── migrate-hierarchy.ts       # Utilitário CLI para migração e reparo de hierarquia de coleções
 │
 ├── public/                        # Arquivos estáticos servidos diretamente pelo Next.js
 │   ├── logo.png                   # Logotipo oficial Martins3DVault Neon Isométrico com canal alfa RGBA
@@ -67,7 +68,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 │   └── avatar.png                 # Avatar padrão de perfil do operador
 │
 ├── prisma/
-│   └── schema.prisma              # Schema do banco de dados (User, Library, Collection, Model, ModelFile, ModelAsset, Tag, ScanJob)
+│   └── schema.prisma              # Schema do banco de dados (auto-relacionamento de Collection, parentId, folderPath)
 │
 ├── libraries/                     # Ponto de montagem de volumes dos arquivos 3D do usuário/NAS
 │   └── sample_library/            # Biblioteca de exemplo com modelos STL e 3MF reais
@@ -85,9 +86,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   ├── page.tsx               # Explorador de Modelos 3D com breadcrumb, Eagle FilterBar e grid dinâmico
     │   │
     │   ├── collections/
-    │   │   ├── page.tsx           # Painel de Coleções: métricas (4 cards bento), catálogo temático e botão de criação
+    │   │   ├── page.tsx           # Painel de Coleções: alternador Grade vs Árvore, métricas e modal de subcoleções
     │   │   └── [id]/
-    │   │       └── page.tsx       # Detalhes da coleção, listagem de modelos e vinculação em lote
+    │   │       └── page.tsx       # Detalhes da coleção, breadcrumbs dinâmicos, cards de subcoleções e lote
     │   │
     │   ├── libraries/
     │   │   └── page.tsx           # Mapear Pastas & Scan: HUD AdditiveCore, status RAID 5, hash monitor e logs de scan
@@ -104,7 +105,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   │       └── page.tsx       # Alias de rota para o Visualizador 3D Studio
     │   │
     │   ├── metrics/
-    │   │   └── page.tsx           # Métricas & Telemetria: telemetria de oficina e Bento KPIs
+    │   │   └── page.tsx           # Métricas & Telemetria: Bento KPIs, painel e limpeza do cache de renderização (/data/cache)
     │   │
     │   ├── pricing/               # Módulo de Precificação & Vendas 3D (v1.6.0)
     │   │   ├── page.tsx           # Hub de 4 abas: Calculadora, Orçamentos, Dashboard e Configurações
@@ -126,6 +127,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │   ├── logout/route.ts # POST: Invalida sessão e remove cookie
     │       │   └── me/route.ts     # GET: Retorna dados do usuário autenticado
     │       │
+    │       ├── cache/
+    │       │   └── route.ts        # GET: Estatísticas do cache /data/cache | DELETE: Esvazia cache de malhas 3D
+    │       │
     │       ├── health/
     │       │   └── route.ts        # GET: Healthcheck do container e banco com versão e uptime
     │       │
@@ -135,9 +139,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │       └── route.ts    # GET: Detalhes | PUT: Edita os 5 campos (Nome, Foto, Senha, Email, Role) | DELETE: Exclui
     │       │
     │       ├── collections/
-    │       │   ├── route.ts        # GET: Lista coleções | POST: Cria nova coleção manual
+    │       │   ├── route.ts        # GET: Lista coleções (?tree=true) | POST: Cria nova coleção ou subcoleção
     │       │   └── [id]/
-    │       │       ├── route.ts    # GET: Detalhes da coleção | PUT: Edita | DELETE: Remove
+    │       │       ├── route.ts    # GET: Detalhes, breadcrumbs e children | PUT: Renomeia no disco em cascata | DELETE: Remove
     │       │       ├── models/
     │       │       │   └── route.ts # POST: Adiciona ou remove modelos em lote da coleção
     │       │       └── scan/
@@ -209,9 +213,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         │   └── __tests__/
         │       └── calculator.test.ts # Suíte com 5 testes unitários determinísticos
         ├── storage/
-        │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
+        │   ├── cache-ops.ts       # Estatísticas e limpeza da pasta /data/cache (STL binários de malha)
+        │   └── file-ops.ts        # Movimentação física em árvore, renomeação em cascata e criação de subpastas
         └── scanner/
-            ├── crawler.ts         # Motor de varredura diferencial incremental com hash mtimeMs_size e suporte a escopo de subpasta
+            ├── crawler.ts         # Motor de varredura diferencial incremental com suporte recursivo a subpastas
             └── extractors/
                 ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos com prioridade para mesmo nome base (.png, .jpg, .webp, .avif)
                 ├── stl-parser.ts  # Leitor e validor de geometria STL binário/ASCII
@@ -225,7 +230,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.8.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.9.0`) e uptime. |
+| `GET` | `/api/cache` | Retorna o tamanho total em bytes e contagem de arquivos em `/data/cache`. |
+| `DELETE` | `/api/cache` | Limpa com segurança o cache de malhas 3D liberando espaço em disco. |
+| `GET` | `/api/collections?tree=true` | Retorna a árvore hierárquica completa de coleções e contadores recursivos. |
 | `GET` | `/api/assets/file` | Streaming e download direto de arquivos 3D/PDF com resolução resiliente (fallback) e RFC 6266. |
 | `POST` | `/api/collections/[id]/scan` | Varredura diferencial e incremental estrita à subpasta física da coleção no disco. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |

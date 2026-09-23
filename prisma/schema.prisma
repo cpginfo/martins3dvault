@@ -38,12 +38,19 @@ model Collection {
   id          String   @id @default(cuid())
   name        String
   slug        String   @unique
+  folderPath  String?  // Caminho relativo à biblioteca (ex: "Casa/Cozinha")
   description String?
   coverImage  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  parentId    String?
+  parent      Collection?  @relation("CollectionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Collection[] @relation("CollectionHierarchy")
+
   models Model[]
+
+  @@index([parentId])
 }
 
 model Model {

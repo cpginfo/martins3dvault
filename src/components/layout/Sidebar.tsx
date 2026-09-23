@@ -16,6 +16,7 @@ interface CollectionSimple {
   id: string;
   name: string;
   modelsCount: number;
+  children?: CollectionSimple[];
 }
 
 interface NavItem {
@@ -31,6 +32,93 @@ interface NavSection {
   group: string;
   badge?: string;
   items: NavItem[];
+}
+
+function SidebarCollectionTreeItem({
+  col,
+  pathname,
+  level = 0,
+}: {
+  col: CollectionSimple;
+  pathname: string;
+  level?: number;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const isColActive = pathname === `/collections/${col.id}`;
+  const hasChildren = col.children && col.children.length > 0;
+
+  useEffect(() => {
+    const isChildActive = (item: CollectionSimple): boolean => {
+      if (pathname === `/collections/${item.id}`) return true;
+      return item.children ? item.children.some(isChildActive) : false;
+    };
+    if (hasChildren && col.children?.some(isChildActive)) {
+      setIsOpen(true);
+    }
+  }, [pathname, hasChildren, col.children]);
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className={`flex items-center justify-between px-2 py-1 rounded-md text-xs transition-colors group ${
+          isColActive
+            ? "text-secondary font-bold bg-surface-container-highest border border-secondary/20 shadow-sm"
+            : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+        }`}
+        style={{ paddingLeft: `${6 + level * 10}px` }}
+      >
+        <Link
+          href={`/collections/${col.id}`}
+          className="flex items-center gap-1.5 min-w-0 flex-1 py-0.5"
+          title={`${col.name} (${col.modelsCount} modelos)`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              isColActive ? "bg-secondary" : "bg-outline/50"
+            }`}
+          />
+          <span className="truncate">{col.name}</span>
+        </Link>
+        <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+          <span className="text-[10px] font-mono text-outline px-1 rounded bg-surface-container">
+            {col.modelsCount}
+          </span>
+          {hasChildren && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsOpen(!isOpen);
+              }}
+              className="p-0.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors"
+              title={isOpen ? "Recolher subcoleções" : "Expandir subcoleções"}
+            >
+              <span
+                className={`material-symbols-outlined text-[13px] transition-transform inline-block ${
+                  isOpen ? "rotate-90" : ""
+                }`}
+              >
+                chevron_right
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+      {hasChildren && isOpen && (
+        <div className="flex flex-col border-l border-white/5 ml-2">
+          {col.children!.map((child) => (
+            <SidebarCollectionTreeItem
+              key={child.id}
+              col={child}
+              pathname={pathname}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Sidebar({
@@ -83,18 +171,21 @@ export default function Sidebar({
 
   useEffect(() => {
     let ignore = false;
+    const mapTree = (items: any[]): CollectionSimple[] => {
+      return items.map((c) => ({
+        id: c.id,
+        name: c.name,
+        modelsCount: c.modelsCount || 0,
+        children: c.children && Array.isArray(c.children) ? mapTree(c.children) : [],
+      }));
+    };
+
     const load = () => {
-      fetch("/api/collections")
+      fetch("/api/collections?tree=true")
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => {
           if (!ignore && Array.isArray(data)) {
-            setCollections(
-              data.map((c: { id: string; name: string; modelsCount?: number }) => ({
-                id: c.id,
-                name: c.name,
-                modelsCount: c.modelsCount || 0,
-              }))
-            );
+            setCollections(mapTree(data));
           }
         })
         .catch(() => {});
@@ -329,33 +420,14 @@ export default function Sidebar({
                                 Nenhuma coleção cadastrada
                               </span>
                             ) : (
-                              collections.map((col) => {
-                                const isColActive = pathname === `/collections/${col.id}`;
-                                return (
-                                  <Link
-                                    key={col.id}
-                                    href={`/collections/${col.id}`}
-                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
-                                      isColActive
-                                        ? "text-secondary font-bold bg-surface-container-highest border border-secondary/20 shadow-sm"
-                                        : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
-                                    }`}
-                                    title={`${col.name} (${col.modelsCount} modelos)`}
-                                  >
-                                    <span className="flex items-center gap-2 truncate">
-                                      <span
-                                        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                                          isColActive ? "bg-secondary" : "bg-outline/50"
-                                        }`}
-                                      ></span>
-                                      <span className="truncate">{col.name}</span>
-                                    </span>
-                                    <span className="text-[10px] font-mono text-outline px-1 rounded bg-surface-container flex-shrink-0 ml-1">
-                                      {col.modelsCount}
-                                    </span>
-                                  </Link>
-                                );
-                              })
+                              collections.map((col) => (
+                                <SidebarCollectionTreeItem
+                                  key={col.id}
+                                  col={col}
+                                  pathname={pathname}
+                                  level={0}
+                                />
+                              ))
                             )}
                           </div>
                         )}

@@ -34,12 +34,17 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Materiais de impressão: **PLA**, **ABS**, **PETG (Translúcido)** e **Fosco (Matte)**.
   - Paleta com 12 cores populares de filamento 3D.
   - Medições tridimensionais (Bounding Box em mm) e captura de thumbnail com 1 clique.
-- **Scanner Inteligente & Espelhamento Físico de Pastas / Coleções (`v1.5.4`)**:
+- **Scanner Inteligente & Coleções Hierárquicas em Árvore (`v1.9.0`)**:
   - Varre recursivamente pastas locais ou montagens de rede (NFS/CIFS/SMB).
-  - **Coleções**: A pasta de primeiro nível (`dirParts[0]`) define a Coleção no banco. Subpastas pertencem à mesma coleção pai (o modelo de coleções é plano, não cria sub-coleções).
-  - **Espelhamento Físico & Remoção de Coleções**: Se uma pasta de coleção for deletada fisicamente do disco em `libraries`, o escaneamento remove todos os modelos órfãos e deleta a coleção correspondente do banco e da interface (`stats.deletedCollections`).
-  - **Sincronização Bidirecional**: Itens removidos do disco são deletados do banco. Renomeações são detectadas por hash/tamanho.
+  - **Coleções Hierárquicas (Árvore de Pastas)**: Cada subpasta do disco é mapeada com auto-relacionamento (`parentId` -> `children`) e `folderPath` normalizado no modelo `Collection`.
+  - **Atribuição Folha (*Leaf Assignment*)**: Arquivos 3D são atribuídos exclusivamente à coleção da subpasta imediata em que residem (`leafCollection`), evitando duplicatas nas coleções ascendentes.
+  - **Espelhamento Físico & Remoção**: Se uma pasta de coleção for deletada fisicamente do disco em `libraries`, o escaneamento remove todos os modelos órfãos e deleta a coleção correspondente em cascata do banco e da interface (`stats.deletedCollections`).
+  - **Sincronização Bidirecional**: Criar ou renomear coleções reflete no disco físico (`ensurePhysicalCollectionFolder`, `safeMove`). Itens removidos do disco são deletados do banco.
   - **Prioridade Absoluta para Capas Acompanhantes**: Arquivos de imagem (`.jpg`, `.png`, `.webp`) com o mesmo nome base normalizado são automaticamente priorizados como a thumbnail oficial.
+- **Gerenciamento e Limpeza de Cache de Malhas 3D (`v1.9.0`)**:
+  - Armazena conversões de STL binário otimizadas de arquivos `.3mf` complexos em `/data/cache/{fileHash}.stl`.
+  - Endpoints REST dedicados: `GET /api/cache` (tamanho em bytes e contagem de arquivos) e `DELETE /api/cache` (limpeza segura de arquivos de malhas).
+  - Integrado ao painel de telemetria `/metrics` com cards explicativos e modal de confirmação com feedback em tempo real.
 - **Opções de Edição do Modelo no Modal e no Studio**:
   - Renomear título inline com persistência imediata (`PUT /api/models/[id]`).
   - Trocar imagem de capa por upload ou por seleção de imagens existentes na pasta (`POST /api/models/[id]/cover`).
@@ -247,6 +252,13 @@ No container `web`, a diretiva `depends_on: db: condition: service_healthy` gara
 ### L. Carregamento sob Demanda no Three.js & Gestão de Memória GPU
 Em versões anteriores, a malha 3D começava o download imediatamente ao abrir qualquer modelo, consumindo banda e GPU mesmo quando o usuário só desejava checar notas ou alterar metadados.
 **Regra**: O componente `ModelViewer3D` deve sempre iniciar com `meshLoaded: false`, exibindo a thumbnail oficial com badges de extensão e tamanho. Apenas quando o usuário clicar explicitamente em **"Carregar Malha 3D"** o canvas WebGL e os loaders (`STLLoader`, `ThreeMFLoader`, `OBJLoader`) são acionados. Ao alternar para miniatura ou trocar de modelo (`modelId`), os recursos (`renderer.dispose()`, remoção de geometrias e cancelamento de `animationFrame`) devem ser liberados imediatamente para evitar vazamento de memória e exaustão de contextos WebGL do navegador.
+
+### M. Permissões de Volume de Cache no Host (`/data/cache`)
+O container executa como usuário não-root `nextjs` (UID 1001). Ao montar o volume `./data:/data`, pastas criadas previamente pelo Docker ou pelo host como `root:root` com máscara `755` causam erro `EACCES: permission denied, unlink` quando o endpoint `DELETE /api/cache` tenta excluir os arquivos de cache.
+**Regra**: Assegure que as pastas em `data/` e `data/cache/` tenham permissão de leitura/escrita para o usuário da aplicação (`chmod -R 777 data/cache` ou `chown -R 1001:1001 data/cache`).
+
+### N. Redefinição Administrativa com `ADMIN_FORCE_RESET`
+Se a senha do administrador padrão for alterada ou esquecida, o script `docker-entrypoint.sh` permite forçar o reset definindo a variável de ambiente `ADMIN_FORCE_RESET=true`. Nesse modo, a senha é sobrescrita com `ADMIN_PASSWORD` (criptografada via bcrypt) durante a inicialização do container.
 
 ---
 

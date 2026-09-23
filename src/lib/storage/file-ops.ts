@@ -81,26 +81,83 @@ export async function safeMove(src: string, dest: string): Promise<void> {
 }
 
 /**
- * Cria fisicamente a pasta de uma coleção no disco do repositório/biblioteca.
+ * Gera um slug padronizado para coleções com base em seu caminho ou nome
+ */
+export function slugifyCollection(text: string): string {
+  return (
+    text
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "colecao"
+  );
+}
+
+/**
+ * Obtém o caminho relativo completo da pasta de uma coleção no disco,
+ * subindo a árvore de pais caso o folderPath não esteja preenchido.
+ */
+export async function getCollectionFolderPath(collectionId: string): Promise<string> {
+  const col = (await prisma.collection.findUnique({
+    where: { id: collectionId },
+    select: { id: true, name: true, folderPath: true, parentId: true } as any,
+  })) as { id: string; name: string; folderPath?: string | null; parentId?: string | null } | null;
+  if (!col) return "";
+  if (col.folderPath) return col.folderPath;
+
+  const parts: string[] = [sanitizeFileName(col.name)];
+  let currParentId = col.parentId;
+  while (currParentId) {
+    const parent = (await prisma.collection.findUnique({
+      where: { id: currParentId },
+      select: { id: true, name: true, folderPath: true, parentId: true } as any,
+    })) as { id: string; name: string; folderPath?: string | null; parentId?: string | null } | null;
+    if (!parent) break;
+    if (parent.folderPath) {
+      parts.unshift(parent.folderPath);
+      break;
+    }
+    parts.unshift(sanitizeFileName(parent.name));
+    currParentId = parent.parentId;
+  }
+  return path.join(...parts);
+}
+
+/**
+ * Cria fisicamente a pasta de uma coleção no disco do repositório/biblioteca,
+ * suportando aninhamento caso parentId seja fornecido.
  */
 export async function ensureCollectionFolder(
   collectionName: string,
-  libraryId?: string
+  libraryId?: string,
+  parentId?: string | null
 ): Promise<string[]> {
   const safeName = sanitizeFileName(collectionName);
+  let parentFolderPath = "";
+
+  if (parentId) {
+    parentFolderPath = await getCollectionFolderPath(parentId);
+  }
+
+  const relativeFolderPath = parentFolderPath
+    ? path.join(parentFolderPath, safeName)
+    : safeName;
+
   const createdPaths: string[] = [];
 
   if (libraryId) {
     const library = await prisma.library.findUnique({ where: { id: libraryId } });
     if (library) {
-      const colDir = path.join(path.resolve(library.path), safeName);
+      const colDir = path.join(path.resolve(library.path), relativeFolderPath);
       await fs.promises.mkdir(colDir, { recursive: true });
       createdPaths.push(colDir);
     }
   } else {
     const libraries = await prisma.library.findMany({ where: { enabled: true } });
     for (const lib of libraries) {
-      const colDir = path.join(path.resolve(lib.path), safeName);
+      const colDir = path.join(path.resolve(lib.path), relativeFolderPath);
       await fs.promises.mkdir(colDir, { recursive: true });
       createdPaths.push(colDir);
     }
@@ -125,8 +182,14 @@ export async function ensureDownloadCollection(libraryId?: string) {
       data: {
         name: colName,
         slug: colSlug,
+        folderPath: colName,
         description: "Coleção de arquivos baixados via link da internet",
-      },
+      } as any,
+    });
+  } else if (!(collection as any).folderPath) {
+    collection = await prisma.collection.update({
+      where: { id: collection.id },
+      data: { folderPath: colName } as any,
     });
   }
 
@@ -158,6 +221,7 @@ export async function moveModelToCollection(
   }
 
   let targetCol = null;
+  let targetRelFolder = "";
   if (targetCollectionId) {
     targetCol = await prisma.collection.findUnique({
       where: { id: targetCollectionId },
@@ -165,14 +229,15 @@ export async function moveModelToCollection(
     if (!targetCol) {
       throw new Error(`Coleção de destino não encontrada: ${targetCollectionId}`);
     }
+    targetRelFolder = await getCollectionFolderPath(targetCol.id);
   }
 
   const libRoot = path.resolve(model.library.path);
   const currentDiskPath = path.join(libRoot, model.folderPath);
 
-  // Pasta de destino: se houver coleção, usa a pasta da coleção; se null, usa a raiz da biblioteca
-  const targetDir = targetCol
-    ? path.join(libRoot, sanitizeFileName(targetCol.name))
+  // Pasta de destino: se houver coleção, usa seu caminho relativo aninhado completo; se null, usa a raiz da biblioteca
+  const targetDir = targetRelFolder
+    ? path.join(libRoot, targetRelFolder)
     : libRoot;
 
   await fs.promises.mkdir(targetDir, { recursive: true });
@@ -535,3 +600,148 @@ export async function renameModelFiles(modelId: string, newName: string) {
     return updated;
   }
 }
+
+/**
+ * Renomeia fisicamente a pasta de uma coleção no disco e atualiza o folderPath
+ * da coleção, de suas subcoleções descendentes e dos modelos contidos.
+ */
+export async function renameCollectionFolder(collectionId: string, newName: string) {
+  const collection = await prisma.collection.findUnique({
+    where: { id: collectionId },
+  });
+  if (!collection) {
+    throw new Error(`Coleção não encontrada: ${collectionId}`);
+  }
+
+  const cleanNewName = sanitizeFileName(newName);
+  if (!cleanNewName) {
+    throw new Error("Novo nome de coleção inválido");
+  }
+
+  const oldFolderPath = await getCollectionFolderPath(collectionId);
+  const parentFolderPath = (collection as any).parentId
+    ? await getCollectionFolderPath((collection as any).parentId)
+    : "";
+  const newFolderPath = parentFolderPath
+    ? path.join(parentFolderPath, cleanNewName)
+    : cleanNewName;
+
+  if (oldFolderPath === newFolderPath) {
+    if (collection.name !== newName.trim()) {
+      return await prisma.collection.update({
+        where: { id: collectionId },
+        data: { name: newName.trim() },
+      });
+    }
+    return collection;
+  }
+
+  // Renomeia fisicamente no disco nas bibliotecas ativas
+  const libraries = await prisma.library.findMany({ where: { enabled: true } });
+  for (const lib of libraries) {
+    const libRoot = path.resolve(lib.path);
+    const oldDiskDir = path.join(libRoot, oldFolderPath);
+    const newDiskDir = path.join(libRoot, newFolderPath);
+
+    if (fs.existsSync(oldDiskDir)) {
+      await safeMove(oldDiskDir, newDiskDir);
+    }
+  }
+
+  // Gera slug único para a nova pasta
+  let newSlug = slugifyCollection(newFolderPath.replace(/[/\\]+/g, "-"));
+  let existingWithSlug = await prisma.collection.findFirst({
+    where: { slug: newSlug, NOT: { id: collectionId } },
+  });
+  if (existingWithSlug) {
+    newSlug = `${newSlug}-${Date.now().toString(36)}`;
+  }
+
+  const updatedCol = await prisma.collection.update({
+    where: { id: collectionId },
+    data: {
+      name: newName.trim(),
+      slug: newSlug,
+      folderPath: newFolderPath,
+    } as any,
+  });
+
+  // Atualiza em cascata subcoleções filhas e descendentes
+  const allCollections = (await prisma.collection.findMany()) as any[];
+  for (const col of allCollections) {
+    if (col.id === collectionId) continue;
+    if (col.folderPath && (col.folderPath === oldFolderPath || col.folderPath.startsWith(oldFolderPath + "/"))) {
+      const subRel = col.folderPath.slice(oldFolderPath.length);
+      const updatedSubPath = newFolderPath + subRel;
+      let subSlug = slugifyCollection(updatedSubPath.replace(/[/\\]+/g, "-"));
+      const slugClash = await prisma.collection.findFirst({
+        where: { slug: subSlug, NOT: { id: col.id } },
+      });
+      if (slugClash) {
+        subSlug = `${subSlug}-${Date.now().toString(36)}`;
+      }
+
+      await prisma.collection.update({
+        where: { id: col.id },
+        data: {
+          folderPath: updatedSubPath,
+          slug: subSlug,
+        } as any,
+      });
+    }
+  }
+
+  // Atualiza em cascata modelos afetados
+  const affectedModels = await prisma.model.findMany({
+    where: {
+      folderPath: { startsWith: oldFolderPath },
+    },
+    include: { files: true, assets: true },
+  });
+
+  for (const m of affectedModels) {
+    const rest = m.folderPath.slice(oldFolderPath.length);
+    const updatedModelFolderPath = newFolderPath + rest;
+
+    await prisma.model.update({
+      where: { id: m.id },
+      data: { folderPath: updatedModelFolderPath },
+    });
+
+    for (const f of m.files) {
+      if (f.relativePath.startsWith(oldFolderPath)) {
+        await prisma.modelFile.update({
+          where: { id: f.id },
+          data: {
+            relativePath: newFolderPath + f.relativePath.slice(oldFolderPath.length),
+          },
+        });
+      }
+    }
+
+    for (const a of m.assets) {
+      if (a.relativePath.startsWith(oldFolderPath)) {
+        await prisma.modelAsset.update({
+          where: { id: a.id },
+          data: {
+            relativePath: newFolderPath + a.relativePath.slice(oldFolderPath.length),
+          },
+        });
+      }
+    }
+
+    if (m.coverImage && m.coverImage.includes(encodeURIComponent(oldFolderPath))) {
+      const updatedCover = m.coverImage.replace(
+        encodeURIComponent(oldFolderPath),
+        encodeURIComponent(newFolderPath)
+      );
+      await prisma.model.update({
+        where: { id: m.id },
+        data: { coverImage: updatedCover },
+      });
+    }
+  }
+
+  return updatedCol;
+}
+

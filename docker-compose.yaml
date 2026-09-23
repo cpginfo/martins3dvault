@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       tags:
         - "martins3dvault:latest"
-        - "martins3dvault:1.8.0"
-    image: martins3dvault:1.8.0
+        - "martins3dvault:1.9.0"
+    image: martins3dvault:1.9.0
     container_name: 3d-vault-web
     restart: unless-stopped
     ports:
@@ -18,6 +18,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change_me_to_a_strong_random_secret_in_production}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@printvault.local}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_FORCE_RESET=false # true apenas se precisar forçar reset da senha
       - STORAGE_DATA_PATH=${STORAGE_DATA_PATH:-/data}
       - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH:-/libraries}
     volumes:

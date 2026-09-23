@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.8.0)
+# Martins3DVault 🖨️✨ (v1.9.0)
 
 <div align="center">
 
@@ -40,9 +40,15 @@
 - 🗂️ **Gestão Local dos Arquivos de Impressão**:
   - Todo o acervo é gerenciado diretamente a partir dos arquivos físicos no disco, sem depender de upload manual ou duplicação de dados.
 
-- 🧠 **Criação Automática de Coleções por Estrutura de Pastas**:
-  - Ao escanear a biblioteca, cada pasta do disco vira automaticamente uma coleção no sistema, respeitando fielmente a hierarquia original.
-  - Nenhuma organização manual é necessária: a estrutura de pastas já É a estrutura de coleções.
+- 🌳 **Coleções Hierárquicas em Árvore (Pastas Aninhadas)**:
+  - Espelhamento fiel da estrutura de subpastas do disco em formato de árvore (`parentId` recursivo).
+  - Atribuição automática de arquivos apenas na pasta folha (*leaf folder*), eliminando duplicidades na raiz.
+  - Navegação com Breadcrumbs dinâmicos, cards de subcoleções navegáveis e explorador em árvore expansível/retrátil na barra lateral (`Sidebar.tsx`) e na visualização de coleções.
+  - Criação de novas subpastas e sincronização bidirecional em tempo real com o sistema de arquivos físico.
+
+- 🧹 **Gerenciamento e Limpeza de Cache de Renderização 3D (`/metrics`)**:
+  - Monitoramento do armazenamento ocupado por malhas pré-processadas (`/data/cache`) com exibição de volume em MB/GB e contagem de arquivos.
+  - Ação de limpeza instantânea com modal de confirmação e relatório de bytes liberados.
 
 - ⚙️ **Extração Real de Fatiamento (.3mf) & Avaliação de Mesa**:
   - Leitura profunda de arquivos `.3mf` (Bambu Studio, OrcaSlicer, PrusaSlicer) extraindo altura de camada, filamento, bico, infill e malha de triângulos/faces.
@@ -158,5 +164,6 @@ Abra o navegador em: **[http://localhost:3000](http://localhost:3000)**
 | `JWT_SECRET` | `change_me_...` | Chave de assinatura dos tokens JWT |
 | `ADMIN_EMAIL` | `admin@printvault.local` | E-mail do administrador padrão |
 | `ADMIN_PASSWORD` | `admin123` | Senha inicial do administrador |
+| `ADMIN_FORCE_RESET` | `false` | Se `true`, força a redefinição de senha do admin para `ADMIN_PASSWORD` ao iniciar o container |
 | `STORAGE_DATA_PATH` | `/data` | Diretório de thumbnails, caches e uploads |
 | `STORAGE_LIBRARIES_PATH` | `/libraries` | Ponto de montagem de pastas de arquivos 3D |

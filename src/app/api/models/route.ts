@@ -53,7 +53,24 @@ export async function GET(request: Request) {
     }
 
     if (collectionId) {
-      andConditions.push({ collectionId });
+      const includeSubs = searchParams.get("includeSubcollections") !== "false";
+      if (includeSubs) {
+        const colIds = [collectionId];
+        let currentLevel = [collectionId];
+        while (currentLevel.length > 0) {
+          const children = await prisma.collection.findMany({
+            where: { parentId: { in: currentLevel } },
+            select: { id: true },
+          });
+          if (children.length === 0) break;
+          const childIds = children.map((c) => c.id);
+          colIds.push(...childIds);
+          currentLevel = childIds;
+        }
+        andConditions.push({ collectionId: { in: colIds } });
+      } else {
+        andConditions.push({ collectionId });
+      }
     }
 
     if (favorite) {

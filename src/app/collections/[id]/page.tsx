@@ -27,6 +27,18 @@ interface CollectionDetail {
   slug: string;
   description: string | null;
   coverImage: string | null;
+  parentId?: string | null;
+  folderPath?: string | null;
+  breadcrumbs?: Array<{ id: string; name: string; slug: string }>;
+  parent?: { id: string; name: string; slug: string; parentId: string | null; folderPath: string | null } | null;
+  children?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    folderPath: string | null;
+    coverImage: string | null;
+    _count: { models: number; children: number };
+  }>;
   models: ModelCardData[];
 }
 
@@ -59,7 +71,7 @@ export default function CollectionDetailPage(props: {
 
   // Modal para mover modelos selecionados
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
-  const [allCollections, setAllCollections] = useState<Array<{ id: string; name: string }>>([]);
+  const [allCollections, setAllCollections] = useState<Array<{ id: string; name: string; folderPath?: string | null }>>([]);
   const [targetCollectionId, setTargetCollectionId] = useState("");
   const [isCreatingNewCol, setIsCreatingNewCol] = useState(false);
   const [newColName, setNewColName] = useState("");
@@ -469,17 +481,29 @@ export default function CollectionDetailPage(props: {
         <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-24">
           <div className="flex flex-col w-full gap-5 pt-5">
             {/* Breadcrumb Navigation */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs text-on-surface-variant font-medium">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium flex-wrap">
                 <Link
                   href="/collections"
-                  className="flex items-center gap-1 hover:text-primary transition-colors"
+                  className="flex items-center gap-1 hover:text-primary transition-colors text-outline hover:text-white"
                 >
-                  <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                  <span className="material-symbols-outlined text-[16px]">folder_copy</span>
                   <span>Coleções</span>
                 </Link>
-                <span className="text-outline">/</span>
-                <span className="text-on-surface font-semibold truncate max-w-xs">
+                {collection?.breadcrumbs?.map((crumb) => (
+                  <React.Fragment key={crumb.id}>
+                    <span className="text-outline/60">/</span>
+                    <Link
+                      href={`/collections/${crumb.id}`}
+                      className="hover:text-primary transition-colors hover:underline truncate max-w-[140px]"
+                      title={crumb.name}
+                    >
+                      {crumb.name}
+                    </Link>
+                  </React.Fragment>
+                ))}
+                <span className="text-outline/60">/</span>
+                <span className="text-on-surface font-semibold truncate max-w-xs bg-surface-container px-2 py-0.5 rounded text-primary">
                   {collection?.name || "Carregando..."}
                 </span>
               </div>
@@ -552,6 +576,49 @@ export default function CollectionDetailPage(props: {
                 </div>
               </div>
             </div>
+
+            {/* Seção de Subcoleções (Pastas Filhas) */}
+            {collection?.children && collection.children.length > 0 && (
+              <div className="flex flex-col gap-3 p-4 rounded-xl bg-surface-container-low border border-white/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-on-surface uppercase tracking-wider font-mono">
+                    <span className="material-symbols-outlined text-[16px] text-secondary">folder_copy</span>
+                    <span>Subcoleções ({collection.children.length})</span>
+                  </div>
+                  <span className="text-[11px] text-outline font-mono">Pastas aninhadas</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {collection.children.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={`/collections/${child.id}`}
+                      className="group flex flex-col p-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/5 hover:border-secondary/40 transition-all shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-1.5 rounded-lg bg-surface-container-highest text-secondary group-hover:text-primary transition-colors">
+                          <span className="material-symbols-outlined text-[18px]">folder</span>
+                        </div>
+                        <span className="material-symbols-outlined text-[14px] text-outline group-hover:text-primary transition-colors">
+                          arrow_forward
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
+                        {child.name}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono text-on-surface-variant">
+                        <span>{child._count.models} modelos</span>
+                        {child._count.children > 0 && (
+                          <>
+                            <span>•</span>
+                            <span>{child._count.children} pastas</span>
+                          </>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Eagle-style Studio Control & Filter Bar */}
             <FilterBar
@@ -1012,7 +1079,7 @@ export default function CollectionDetailPage(props: {
                   <option value="">Selecione uma coleção...</option>
                   {allCollections.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.folderPath ? c.folderPath : c.name}
                     </option>
                   ))}
                 </select>

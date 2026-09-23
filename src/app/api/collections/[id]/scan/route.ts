@@ -40,27 +40,29 @@ export async function POST(
       );
     }
 
-    // 1. Tenta encontrar a pasta física direta correspondente ao nome ou slug da coleção
+    // 1. Tenta encontrar a pasta física direta correspondente ao folderPath, nome ou slug da coleção
     let targetLibraryId: string | null = null;
     let targetSubFolder: string | undefined = undefined;
+
+    const candidates = [
+      (collection as any).folderPath,
+      collection.name,
+      collection.slug,
+    ].filter(Boolean) as string[];
 
     for (const lib of libraries) {
       const libRoot = path.resolve(lib.path);
       if (!fs.existsSync(libRoot)) continue;
 
-      const directByName = path.join(libRoot, collection.name);
-      if (fs.existsSync(directByName) && fs.statSync(directByName).isDirectory()) {
-        targetLibraryId = lib.id;
-        targetSubFolder = collection.name;
-        break;
+      for (const candidate of candidates) {
+        const direct = path.join(libRoot, candidate);
+        if (fs.existsSync(direct) && fs.statSync(direct).isDirectory()) {
+          targetLibraryId = lib.id;
+          targetSubFolder = candidate;
+          break;
+        }
       }
-
-      const directBySlug = path.join(libRoot, collection.slug);
-      if (fs.existsSync(directBySlug) && fs.statSync(directBySlug).isDirectory()) {
-        targetLibraryId = lib.id;
-        targetSubFolder = collection.slug;
-        break;
-      }
+      if (targetLibraryId) break;
     }
 
     // 2. Se não encontrou pasta de primeiro nível, verifica através dos modelos vinculados

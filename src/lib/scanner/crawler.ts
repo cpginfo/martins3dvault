@@ -49,6 +49,7 @@ interface DiscoveredModelTarget {
   folderPath: string; // Caminho relativo único à biblioteca
   absDir: string;
   collectionName?: string;
+  collectionPath?: string; // Caminho relativo da coleção na hierarquia (ex: Casa/Cozinha)
   threeDFiles: string[];
   companionFiles: string[];
   manualFiles: string[];
@@ -108,9 +109,75 @@ export async function scanLibrary(
 
     // Cache de coleções existentes no banco
     const collections = await prisma.collection.findMany();
-    const collectionMap = new Map<string, (typeof collections)[0]>(
-      collections.map((c) => [c.slug, c])
-    );
+    const collectionMap = new Map<string, (typeof collections)[0]>();
+    for (const c of collections) {
+      collectionMap.set(c.slug, c);
+      if (c.folderPath) {
+        collectionMap.set(c.folderPath.replace(/\\/g, "/"), c);
+      }
+    }
+
+    // Função para garantir a hierarquia completa de uma coleção de forma recursiva
+    async function ensureHierarchyForPath(relColPath: string) {
+      const parts = relColPath.split(/[/\\]+/).filter((p) => p && p !== ".");
+      if (parts.length === 0) return null;
+
+      let currentParentId: string | null = null;
+      let accumulatedPath = "";
+      let leafCol: (typeof collections)[0] | null = null;
+
+      for (let i = 0; i < parts.length; i++) {
+        const partName = parts[i];
+        accumulatedPath = accumulatedPath ? `${accumulatedPath}/${partName}` : partName;
+        const normalizedAccumPath = accumulatedPath.replace(/\\/g, "/");
+
+        let col: (typeof collections)[0] | null | undefined =
+          collectionMap.get(normalizedAccumPath);
+        if (!col) {
+          const colSlug = slugify(normalizedAccumPath.replace(/[/\\]+/g, "-"));
+
+          col = await prisma.collection.findFirst({
+            where: {
+              OR: [
+                { folderPath: normalizedAccumPath },
+                { slug: colSlug },
+                { name: partName, parentId: currentParentId },
+              ],
+            },
+          });
+
+          if (!col) {
+            col = await prisma.collection.create({
+              data: {
+                name: partName,
+                slug: colSlug,
+                folderPath: normalizedAccumPath,
+                parentId: currentParentId,
+                description: `Coleção criada automaticamente da pasta ${partName}`,
+              },
+            });
+          } else {
+            // Atualiza folderPath ou parentId se necessário
+            if (col.folderPath !== normalizedAccumPath || col.parentId !== currentParentId) {
+              col = await prisma.collection.update({
+                where: { id: col.id },
+                data: {
+                  folderPath: normalizedAccumPath,
+                  parentId: currentParentId,
+                },
+              });
+            }
+          }
+          collectionMap.set(normalizedAccumPath, col);
+          collectionMap.set(col.slug, col);
+        }
+
+        currentParentId = col.id;
+        leafCol = col;
+      }
+
+      return leafCol;
+    }
 
     // Carrega modelos existentes da biblioteca para sincronização diferencial
     const existingDbModels = await prisma.model.findMany({
@@ -156,17 +223,24 @@ export async function scanLibrary(
         stats.scannedFolders++;
         const relDir = path.relative(rootPath, currentDir) || ".";
         const dirParts = relDir.split(path.sep).filter((p) => p && p !== ".");
-        const collectionName = dirParts.length > 0 ? dirParts[0] : undefined;
 
         const companionInfo = analyzeFolderCompanions(filesInDir);
 
-        // Verifica se a pasta possui múltiplos arquivos 3D independentes
-        const hasMultipleDistinctProjects =
-          threeDFiles.length > 1 &&
-          (threeDFiles.some((f) => path.extname(f).toLowerCase() === ".3mf") ||
-            threeDFiles.some((f) => !!findMatchingImage(companionInfo.allImages, f)));
+        // Se tem arquivo .3mf OU imagens casando individualmente com cada arquivo
+        // OU múltiplos projetos independentes OU estamos na raiz da biblioteca
+        const has3mf = threeDFiles.some((f) => path.extname(f).toLowerCase() === ".3mf");
+        const hasMatchingImages = threeDFiles.some((f) => !!findMatchingImage(companionInfo.allImages, f));
+        const isIndividualFiles =
+          relDir === "." ||
+          has3mf ||
+          hasMatchingImages ||
+          threeDFiles.length > 1;
 
-        if (hasMultipleDistinctProjects) {
+        if (isIndividualFiles) {
+          // A pasta atual é a coleção da qual os arquivos fazem parte
+          const collectionPath = relDir === "." ? undefined : relDir;
+          const collectionName = dirParts.length > 0 ? dirParts[dirParts.length - 1] : undefined;
+
           // Cada arquivo 3D vira um modelo individual dentro da pasta/coleção
           for (const file of threeDFiles) {
             const baseName = path.parse(file).name;
@@ -180,6 +254,7 @@ export async function scanLibrary(
               folderPath: fileRelPath,
               absDir: currentDir,
               collectionName,
+              collectionPath,
               threeDFiles: [file],
               companionFiles: matchingImage ? [matchingImage] : [],
               manualFiles: companionInfo.manualPdfs,
@@ -188,10 +263,15 @@ export async function scanLibrary(
             discoveredFolderPaths.add(fileRelPath);
           }
         } else {
-          // Trata a pasta como um único modelo multi-peças
+          // Trata a pasta como um único modelo multi-peças (ex: Articulated_Dragon com vários .stl de peças)
           const folderName =
             relDir === "." ? path.basename(rootPath) : path.basename(currentDir);
           const targetPath = relDir;
+
+          // A coleção deste modelo é a pasta pai da pasta do modelo
+          const parentDirParts = dirParts.slice(0, -1);
+          const collectionPath = parentDirParts.length > 0 ? parentDirParts.join(path.sep) : undefined;
+          const collectionName = parentDirParts.length > 0 ? parentDirParts[parentDirParts.length - 1] : undefined;
 
           // Procura imagem de capa correspondente ao arquivo principal, à pasta ou prioridade
           const primaryFile = threeDFiles[0];
@@ -205,6 +285,7 @@ export async function scanLibrary(
             folderPath: targetPath,
             absDir: currentDir,
             collectionName,
+            collectionPath,
             threeDFiles,
             companionFiles: companionInfo.allImages,
             manualFiles: companionInfo.manualPdfs,
@@ -227,24 +308,18 @@ export async function scanLibrary(
     // 1. Processa cada alvo descoberto (Verificação Diferencial Inteligente)
     for (const target of discoveredTargets) {
       try {
-        // Garante que a Coleção exista caso a pasta pertença a uma
+        // Garante que a Coleção e toda a sua hierarquia existam
         let targetCollectionId: string | null = null;
-        if (target.collectionName) {
-          const colSlug = slugify(target.collectionName);
-          let col = collectionMap.get(colSlug);
-          if (!col) {
-            col = await prisma.collection.upsert({
-              where: { slug: colSlug },
-              update: {},
-              create: {
-                name: target.collectionName,
-                slug: colSlug,
-                description: `Coleção criada automaticamente da pasta ${target.collectionName}`,
-              },
-            });
-            collectionMap.set(colSlug, col);
+        if (target.collectionPath) {
+          const col = await ensureHierarchyForPath(target.collectionPath);
+          if (col) {
+            targetCollectionId = col.id;
           }
-          targetCollectionId = col.id;
+        } else if (target.collectionName) {
+          const col = await ensureHierarchyForPath(target.collectionName);
+          if (col) {
+            targetCollectionId = col.id;
+          }
         }
 
         // Tenta encontrar o modelo por folderPath exato
@@ -651,30 +726,18 @@ export async function scanLibrary(
       const allLibraries = await prisma.library.findMany({ where: { enabled: true } });
       const allDbCollections = await prisma.collection.findMany();
 
-      // Mapeia pastas de primeiro nível das bibliotecas para verificação O(1)
-      const existingFirstLevelDirs = new Set<string>();
-      for (const lib of allLibraries) {
-        const libRoot = path.resolve(lib.path);
-        if (!fs.existsSync(libRoot)) continue;
-        try {
-          const entries = await fs.promises.readdir(libRoot, { withFileTypes: true });
-          for (const e of entries) {
-            if (e.isDirectory() && !IGNORED_DIRS.has(e.name.toLowerCase()) && !e.name.startsWith(".")) {
-              existingFirstLevelDirs.add(e.name.toLowerCase().trim());
-              existingFirstLevelDirs.add(slugify(e.name));
-            }
-          }
-        } catch {
-          // ignora falha de leitura
-        }
-      }
-
       for (const col of allDbCollections) {
-        const colNameNorm = col.name.toLowerCase().trim();
-        const colSlugNorm = col.slug.toLowerCase().trim();
+        // Coleção "download" nunca deve ser excluída automaticamente
+        if (col.slug === "download") continue;
 
-        const folderExists =
-          existingFirstLevelDirs.has(colNameNorm) || existingFirstLevelDirs.has(colSlugNorm);
+        const colFolderPath = col.folderPath || col.name;
+
+        // Verifica se a pasta desta coleção existe no disco em pelo menos uma biblioteca ativa
+        const folderExists = allLibraries.some((lib) => {
+          const libRoot = path.resolve(lib.path);
+          const fullPath = path.join(libRoot, colFolderPath);
+          return fs.existsSync(fullPath);
+        });
 
         if (!folderExists) {
           try {

@@ -43,10 +43,21 @@ RUN addgroup --system --gid 1001 nodejs && \
 RUN mkdir -p /data/thumbnails /data/uploads /data/cache /libraries && \
     chown -R nextjs:nodejs /data /libraries
 
-# Instalar Prisma CLI globalmente e limpar cache do npm imediatamente para reduzir o tamanho da imagem
-RUN npm install -g prisma@6.19.3 && \
+# Instala o Prisma CLI de forma isolada (não global), forçando a versão
+# corrigida do deepmerge-ts via "overrides" do npm — resolve CVE-2026-40345
+# sem depender de patch oficial do Prisma. Em seguida remove o npm/npx/corepack
+# embutidos na imagem base, já que não são usados em runtime pela aplicação
+# (apenas "node" e o binário "prisma" são necessários).
+RUN mkdir -p /opt/prisma-cli && cd /opt/prisma-cli && \
+    printf '{"name":"prisma-cli","private":true,"dependencies":{"prisma":"6.19.3"},"overrides":{"deepmerge-ts":"8.0.0"}}' > package.json && \
+    npm install && \
+    ln -s /opt/prisma-cli/node_modules/.bin/prisma /usr/local/bin/prisma && \
+    chown -R nextjs:nodejs /opt/prisma-cli && \
     npm cache clean --force && \
-    rm -rf /root/.npm /root/.cache /tmp/*
+    rm -rf /root/.npm /root/.cache /tmp/* \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 
 # Copiar apenas os artefatos estritamente necessários para execução standalone
 COPY --from=builder /app/public ./public
@@ -60,6 +71,8 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chmod +x ./docker-entrypoint.sh
+
+USER nextjs
 
 EXPOSE 3000
 

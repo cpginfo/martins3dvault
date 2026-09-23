@@ -1,15 +1,24 @@
+import path from "path";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, handleAuthError } from "@/lib/auth/session";
-import { ensureCollectionFolder } from "@/lib/storage/file-ops";
+import {
+  ensureCollectionFolder,
+  sanitizeFileName,
+  slugifyCollection,
+  getCollectionFolderPath,
+} from "@/lib/storage/file-ops";
 
 export async function GET(request: Request) {
   try {
     await requireAdmin(request);
+    const { searchParams } = new URL(request.url);
+    const isTree = searchParams.get("tree") === "true";
+
     const collections = await prisma.collection.findMany({
       include: {
         _count: {
-          select: { models: true },
+          select: { models: true, children: true },
         },
         models: {
           take: 4,
@@ -37,14 +46,37 @@ export async function GET(request: Request) {
         id: col.id,
         name: col.name,
         slug: col.slug,
+        folderPath: col.folderPath,
+        parentId: col.parentId,
         description: col.description,
         coverImage: cover,
         modelsCount: col._count.models,
+        childrenCount: col._count.children,
         previewThumbnails: col.models.map((m) => m.coverImage).filter(Boolean),
         createdAt: col.createdAt,
         updatedAt: col.updatedAt,
       };
     });
+
+    if (isTree) {
+      // Monta estrutura em árvore recursiva para navegação
+      const itemMap = new Map<string, any>();
+      enriched.forEach((col) => {
+        itemMap.set(col.id, { ...col, children: [] });
+      });
+
+      const roots: any[] = [];
+      enriched.forEach((col) => {
+        const node = itemMap.get(col.id);
+        if (col.parentId && itemMap.has(col.parentId)) {
+          itemMap.get(col.parentId).children.push(node);
+        } else {
+          roots.push(node);
+        }
+      });
+
+      return NextResponse.json(roots);
+    }
 
     return NextResponse.json(enriched);
   } catch (err: any) {
@@ -58,32 +90,44 @@ export async function POST(request: Request) {
   try {
     await requireAdmin(request);
 
-    const { name, description, coverImage } = await request.json();
+    const { name, description, coverImage, parentId } = await request.json();
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json({ error: "Nome da coleção é obrigatório" }, { status: 400 });
     }
 
-    const slug = name
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+    const cleanName = sanitizeFileName(name);
+    let parentCol = null;
+    let folderPath = cleanName;
+    let baseSlug = slugifyCollection(name);
 
-    const existing = await prisma.collection.findUnique({
+    if (parentId) {
+      parentCol = await prisma.collection.findUnique({
+        where: { id: parentId },
+      });
+      if (!parentCol) {
+        return NextResponse.json({ error: "Coleção pai informada não existe" }, { status: 404 });
+      }
+
+      const parentFolderPath = await getCollectionFolderPath(parentId);
+      folderPath = parentFolderPath ? path.join(parentFolderPath, cleanName) : cleanName;
+      baseSlug = `${parentCol.slug}-${slugifyCollection(name)}`;
+    }
+
+    let slug = baseSlug;
+    const existingSlug = await prisma.collection.findUnique({
       where: { slug },
     });
-
-    if (existing) {
-      return NextResponse.json({ error: "Já existe uma coleção com este nome" }, { status: 409 });
+    if (existingSlug) {
+      slug = `${baseSlug}-${Date.now().toString(36)}`;
     }
 
     const collection = await prisma.collection.create({
       data: {
         name: name.trim(),
         slug,
+        folderPath,
+        parentId: parentId || null,
         description: description?.trim() || null,
         coverImage: coverImage?.trim() || null,
       },
@@ -91,7 +135,7 @@ export async function POST(request: Request) {
 
     // Cria a pasta física no repositório de arquivos
     try {
-      await ensureCollectionFolder(collection.name);
+      await ensureCollectionFolder(collection.name, undefined, parentId || null);
     } catch (fsErr) {
       console.warn("Aviso ao criar pasta física da coleção:", fsErr);
     }

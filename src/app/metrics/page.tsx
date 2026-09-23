@@ -18,12 +18,19 @@ interface StatsData {
     startedAt: string;
     library: { name: string };
   }>;
+  cache?: {
+    sizeBytes: number;
+    fileCount: number;
+  };
 }
 
 export default function MetricsPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clearingCache, setClearingCache] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -36,6 +43,32 @@ export default function MetricsPage() {
       console.error("Erro ao carregar métricas:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    setClearingCache(true);
+    setCacheMessage(null);
+    try {
+      const res = await fetch("/api/cache", { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Falha ao limpar o cache.");
+      }
+      const data = await res.json();
+      setCacheMessage({
+        type: "success",
+        text: `Cache limpo com sucesso! ${formatBytes(data.freedBytes)} liberados em ${data.deletedFiles} ${data.deletedFiles === 1 ? "arquivo" : "arquivos"}.`,
+      });
+      setShowClearConfirm(false);
+      await fetchStats();
+    } catch (err: any) {
+      setCacheMessage({
+        type: "error",
+        text: err.message || "Erro ao limpar cache.",
+      });
+    } finally {
+      setClearingCache(false);
     }
   };
 
@@ -189,6 +222,117 @@ export default function MetricsPage() {
                       <div className="h-full bg-secondary-container w-full"></div>
                     </div>
                   </div>
+                </section>
+
+                {/* Seção de Cache de Renderização e Limpeza */}
+                <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-4 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="flex items-start gap-3.5">
+                      <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                        <span className="material-symbols-outlined text-[26px]">memory</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-base font-bold text-on-surface tracking-tight">
+                            Cache de Renderização 3D
+                          </h2>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-surface-container-highest text-on-surface-variant border border-white/5">
+                            /data/cache
+                          </span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant max-w-xl">
+                          Armazena malhas binárias (.stl) pré-convertidas de arquivos .3mf para carregamento ultrarrápido no Three.js (Modo Studio). Pode ser limpo a qualquer momento sem afetar os arquivos do seu acervo.
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-md bg-surface-container text-amber-300 font-mono text-xs font-semibold border border-white/5">
+                            {formatBytes(stats.cache?.sizeBytes || 0)} ocupados
+                          </span>
+                          <span className="px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant font-mono text-xs border border-white/5">
+                            {stats.cache?.fileCount || 0} {stats.cache?.fileCount === 1 ? "malha salva" : "malhas salvas"}
+                          </span>
+                          {(!stats.cache || stats.cache.sizeBytes === 0) && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-tertiary/10 text-tertiary border border-tertiary/20">
+                              Cache Vazio
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+                      {!showClearConfirm ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowClearConfirm(true)}
+                          disabled={clearingCache || !stats.cache || stats.cache.sizeBytes === 0}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container hover:bg-error-container/30 text-on-surface hover:text-error text-xs font-semibold transition-all border border-white/10 hover:border-error/40 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                          title={
+                            !stats.cache || stats.cache.sizeBytes === 0
+                              ? "O cache já está vazio"
+                              : "Liberar espaço ocupado pelo cache de malhas 3D"
+                          }
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                          <span>Limpar Cache</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-container border border-error/30 animate-fadeIn">
+                          <span className="text-xs text-error font-medium px-2">
+                            Confirmar limpeza?
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleClearCache}
+                            disabled={clearingCache}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-error text-white text-xs font-semibold hover:bg-error/90 transition-all disabled:opacity-50 shadow-sm"
+                          >
+                            {clearingCache ? (
+                              <>
+                                <span className="material-symbols-outlined text-[16px] animate-spin">
+                                  sync
+                                </span>
+                                <span>Limpando...</span>
+                              </>
+                            ) : (
+                              <span>Sim, Limpar</span>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowClearConfirm(false)}
+                            disabled={clearingCache}
+                            className="px-2.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface text-xs font-medium transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {cacheMessage && (
+                    <div
+                      className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 border animate-fadeIn ${
+                        cacheMessage.type === "success"
+                          ? "bg-tertiary/10 border-tertiary/30 text-tertiary"
+                          : "bg-error-container/40 border-error/30 text-error"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">
+                          {cacheMessage.type === "success" ? "check_circle" : "error"}
+                        </span>
+                        <span>{cacheMessage.text}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCacheMessage(null)}
+                        className="p-1 rounded hover:bg-white/10 text-on-surface-variant hover:text-on-surface"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">close</span>
+                      </button>
+                    </div>
+                  )}
                 </section>
 
                 {/* Formats Distribution Breakdown */}

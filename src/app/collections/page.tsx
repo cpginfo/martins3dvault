@@ -9,23 +9,133 @@ interface CollectionItem {
   id: string;
   name: string;
   slug: string;
+  folderPath?: string | null;
+  parentId?: string | null;
   description: string | null;
   coverImage: string | null;
   modelsCount: number;
+  childrenCount?: number;
   previewThumbnails: string[];
   createdAt: string;
+  children?: CollectionItem[];
+}
+
+function CollectionTreeCard({
+  col,
+  onEdit,
+  onDelete,
+  level = 0,
+}: {
+  col: CollectionItem;
+  onEdit: (col: CollectionItem, e: React.MouseEvent) => void;
+  onDelete: (id: string, name: string, e: React.MouseEvent) => void;
+  level?: number;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const hasChildren = col.children && col.children.length > 0;
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-white/5 transition-all group my-1"
+        style={{ marginLeft: `${level * 24}px` }}
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {hasChildren ? (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+              title={isExpanded ? "Recolher subcoleções" : "Expandir subcoleções"}
+            >
+              <span
+                className={`material-symbols-outlined text-[18px] transition-transform inline-block ${
+                  isExpanded ? "rotate-90" : ""
+                }`}
+              >
+                chevron_right
+              </span>
+            </button>
+          ) : (
+            <span className="w-6 flex-shrink-0" />
+          )}
+
+          <Link
+            href={`/collections/${col.id}`}
+            className="flex items-center gap-2.5 min-w-0 group-hover:text-primary transition-colors flex-1"
+          >
+            <div className="p-2 rounded-lg bg-surface-container-highest text-primary-container flex-shrink-0">
+              <span className="material-symbols-outlined text-[20px]">folder</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-on-surface truncate group-hover:text-primary">
+                {col.name}
+              </span>
+              <span className="text-[11px] font-mono text-outline truncate">
+                {col.folderPath || col.name}
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs font-mono text-on-surface-variant px-2 py-0.5 rounded-md bg-surface-container-high border border-white/5">
+            {col.modelsCount} modelo{col.modelsCount !== 1 ? "s" : ""}
+          </span>
+          {hasChildren && (
+            <span className="text-xs font-mono text-secondary px-2 py-0.5 rounded-md bg-secondary/10 border border-secondary/20">
+              {col.children!.length} subpasta{col.children!.length !== 1 ? "s" : ""}
+            </span>
+          )}
+
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => onEdit(col, e)}
+              className="p-1.5 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+              title="Editar"
+            >
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button
+              onClick={(e) => onDelete(col.id, col.name, e)}
+              className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors"
+              title="Excluir"
+            >
+              <span className="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {hasChildren && isExpanded && (
+        <div className="flex flex-col border-l-2 border-white/5 ml-4 pl-1">
+          {col.children!.map((child) => (
+            <CollectionTreeCard
+              key={child.id}
+              col={child}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function CollectionsPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
+  const [treeCollections, setTreeCollections] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCol, setEditingCol] = useState<CollectionItem | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "tree">("grid");
 
   // Form states
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
+  const [formParentId, setFormParentId] = useState("");
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,10 +171,17 @@ export default function CollectionsPage() {
   const fetchCollections = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/collections");
-      if (res.ok) {
-        const data = await res.json();
+      const [resFlat, resTree] = await Promise.all([
+        fetch("/api/collections"),
+        fetch("/api/collections?tree=true"),
+      ]);
+      if (resFlat.ok) {
+        const data = await resFlat.json();
         setCollections(data);
+      }
+      if (resTree.ok) {
+        const treeData = await resTree.json();
+        setTreeCollections(treeData);
       }
     } catch (err) {
       console.error("Erro ao buscar coleções:", err);
@@ -81,6 +198,7 @@ export default function CollectionsPage() {
   const handleOpenCreate = () => {
     setFormName("");
     setFormDesc("");
+    setFormParentId("");
     setErrorMsg("");
     setEditingCol(null);
     setIsCreateOpen(true);
@@ -92,6 +210,7 @@ export default function CollectionsPage() {
     setEditingCol(col);
     setFormName(col.name);
     setFormDesc(col.description || "");
+    setFormParentId(col.parentId || "");
     setErrorMsg("");
     setIsCreateOpen(true);
   };
@@ -116,6 +235,7 @@ export default function CollectionsPage() {
         body: JSON.stringify({
           name: formName.trim(),
           description: formDesc.trim(),
+          parentId: formParentId || null,
         }),
       });
 
@@ -125,6 +245,7 @@ export default function CollectionsPage() {
       }
 
       setIsCreateOpen(false);
+      window.dispatchEvent(new Event("refreshCollections"));
       fetchCollections();
     } catch (err: any) {
       setErrorMsg(err.message || "Ocorreu um erro ao salvar");
@@ -291,16 +412,46 @@ export default function CollectionsPage() {
                 </span>
               </div>
 
-              <button
-                onClick={handleOpenCreate}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                <span>Nova Coleção</span>
-              </button>
+              <div className="flex items-center gap-2.5">
+                {/* View Mode Toggle: Grid vs Tree */}
+                <div className="flex items-center p-0.5 rounded-lg bg-surface-container-high border border-white/5">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-primary-container text-on-primary font-bold shadow-sm"
+                        : "text-on-surface-variant hover:text-on-surface"
+                    }`}
+                    title="Visualização em Grade"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">grid_view</span>
+                    <span>Grade</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("tree")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === "tree"
+                        ? "bg-primary-container text-on-primary font-bold shadow-sm"
+                        : "text-on-surface-variant hover:text-on-surface"
+                    }`}
+                    title="Visualização em Árvore Hierárquica"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">account_tree</span>
+                    <span>Árvore</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleOpenCreate}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  <span>Nova Coleção</span>
+                </button>
+              </div>
             </div>
 
-            {/* Collections Grid */}
+            {/* Collections Content */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24 gap-3 text-on-surface-variant">
                 <span className="material-symbols-outlined text-[36px] animate-spin text-primary-container">
@@ -324,6 +475,25 @@ export default function CollectionsPage() {
                   <span className="material-symbols-outlined text-[18px]">add</span>
                   <span>Criar Primeira Coleção</span>
                 </button>
+              </div>
+            ) : viewMode === "tree" ? (
+              <div className="flex flex-col gap-1 p-4 rounded-2xl bg-surface-container-low border border-white/5 shadow-inner">
+                <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/5 text-xs font-mono text-outline">
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">folder_copy</span>
+                    <span>Estrutura de Pastas e Subcoleções</span>
+                  </span>
+                  <span>{treeCollections.length} coleções na raiz</span>
+                </div>
+                {treeCollections.map((col) => (
+                  <CollectionTreeCard
+                    key={col.id}
+                    col={col}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleDeleteCollection}
+                    level={0}
+                  />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -442,6 +612,27 @@ export default function CollectionsPage() {
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-on-surface">Coleção Pai (Opcional)</label>
+                <select
+                  value={formParentId}
+                  onChange={(e) => setFormParentId(e.target.value)}
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                >
+                  <option value="">Nenhuma (Coleção Raiz)</option>
+                  {collections
+                    .filter((c) => !editingCol || c.id !== editingCol.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.folderPath ? c.folderPath : c.name}
+                      </option>
+                    ))}
+                </select>
+                <span className="text-[10px] text-on-surface-variant font-mono">
+                  Selecione uma coleção pai para aninhar esta subcoleção em pasta.
+                </span>
               </div>
 
               <div className="flex flex-col gap-1">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { getCacheStats } from "@/lib/storage/cache-ops";
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
       formatGroups,
       recentScans,
       allFilesSize,
+      cacheStats,
     ] = await Promise.all([
       prisma.model.count(),
       prisma.library.count(),
@@ -29,6 +31,7 @@ export async function GET(request: Request) {
       prisma.modelFile.aggregate({
         _sum: { fileSize: true },
       }),
+      getCacheStats(),
     ]);
 
     const formatDistribution: Record<string, number> = {};
@@ -43,6 +46,10 @@ export async function GET(request: Request) {
       totalSizeBytes: Number(allFilesSize._sum.fileSize || 0),
       formatDistribution,
       recentScans,
+      cache: {
+        sizeBytes: cacheStats.sizeBytes,
+        fileCount: cacheStats.fileCount,
+      },
     });
   } catch (err: any) {
     const authRes = handleAuthError(err);
