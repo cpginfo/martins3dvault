@@ -22,9 +22,11 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Captura instantânea de capa 3D (`Capa 3D`) gerando thumbnail oficial do modelo.
   - Barra inferior flutuante com troca de material (`PLA`, `ABS`, `PETG`, `Fosco`) e paleta com 12 cores de filamento.
   - Painel lateral (drawer) com breadcrumbs, renomeação de modelo inline, seleção de coleções, troca de capa, abas de arquivos, notas técnicas e manuais em PDF.
-  - Parâmetros recomendados de fatiamento (altura de camada, tempo estimado, consumo em gramas e metros, e contagem de triângulos da malha).
+  - Parâmetros recomendados de fatiamento reais extraídos dos arquivos `.3mf` (altura de camada, tempo estimado, consumo em gramas e metros, e contagem de triângulos da malha).
   - Verificação algorítmica de compatibilidade de volume de mesa (Bambu Lab 256×256×256 mm, Voron 2.4 300×300 mm, etc.).
-- **Engine 3D de Alta Velocidade (Three.js + Streaming Binário)**:
+  - Paridade total de informações no modal rápido de visualização (`ModelDetailModal.tsx`) e no Studio 3D (`/models/[id]`).
+- **Engine 3D & Extração Nativa de Fatiamento (`v1.8.0`)**:
+  - Leitor profundo de `.3mf` (`threemf.ts`) que analisa `project_settings.config`, `model_settings.config` e `plate_*.json` para extrair camada, infill, bico, filamento e faces.
   - Conversor de servidor para arquivos `.3mf` complexos (Bambu Studio, OrcaSlicer, Prusa), convertendo em tempo real e cacheando em formato STL Binário consolidado (`threemf-converter.ts` e `/api/assets/mesh`).
   - Trata o problema clássico de travamento em "100%" causado pelo `DOMParser` do Three.js em arquivos 3MF de mais de 200MB de XML.
   - Orientação correta de impressão (conversão Z-Up para Y-Up com rotação `-Math.PI / 2`, apoiado perfeitamente na mesa a `Y = 0`).

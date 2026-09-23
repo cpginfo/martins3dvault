@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.7.2)
+# Mapa do Projeto - Martins3DVault (v1.8.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.7.2                                  │
+│                           MARTINS3DVAULT v1.8.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -188,7 +188,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   │   ├── PaginationBar.tsx  # Barra de paginação dinâmica: seletor de itens por página (24, 48, 96, 192, Todos), saltos e reticências
     │   │   └── ModelCard.tsx      # Card de modelo Stitch: capa prioritária, badges de polímero, medidas mm e toggle de impressão
     │   ├── model/
-    │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js sob demanda, caminho 100% completo sem truncamento (break-all), abas e ações
+    │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js sob demanda, parâmetros de fatiamento (.3mf), volume de mesa, especificações de material e caminho completo legível
     │   ├── upload/
     │   │   └── UploadModal.tsx    # Modal de Upload local e Download por Link (URL) com tabs e suporte a ZIP
     │   └── viewer3d/
@@ -225,7 +225,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.2`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.8.0`) e uptime. |
 | `GET` | `/api/assets/file` | Streaming e download direto de arquivos 3D/PDF com resolução resiliente (fallback) e RFC 6266. |
 | `POST` | `/api/collections/[id]/scan` | Varredura diferencial e incremental estrita à subpasta física da coleção no disco. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |

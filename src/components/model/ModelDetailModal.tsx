@@ -20,6 +20,9 @@ import {
   Loader2,
   Folder,
   Copy,
+  Sliders,
+  Cpu,
+  FileCode,
 } from "lucide-react";
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
 
@@ -90,10 +93,15 @@ export default function ModelDetailModal({
   const [nozzleSize, setNozzleSize] = useState(model.nozzleSize?.toString() || "0.4");
   const [infillDensity, setInfillDensity] = useState(model.infillDensity?.toString() || "15");
   const [layerHeight, setLayerHeight] = useState(model.layerHeight?.toString() || "0.2");
+  const [printTimeMinutes, setPrintTimeMinutes] = useState(model.printTimeMinutes?.toString() || "");
   const [notes, setNotes] = useState(model.notes || "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copiedPath, setCopiedPath] = useState(false);
+
+  // Estados para dimensões e contagem de triângulos calculados dinamicamente no visualizador 3D
+  const [liveDimensions, setLiveDimensions] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [liveTriangleCount, setLiveTriangleCount] = useState<number | null>(null);
 
   const handleCopyPath = () => {
     const fullPath = `${model.library.name}/${model.folderPath}`;
@@ -101,6 +109,17 @@ export default function ModelDetailModal({
     setCopiedPath(true);
     setTimeout(() => setCopiedPath(false), 2000);
   };
+
+  useEffect(() => {
+    setModel(initialModel);
+    setEditedName(initialModel.name);
+    setFilamentType(initialModel.filamentType || "PLA");
+    setNozzleSize(initialModel.nozzleSize?.toString() || "0.4");
+    setInfillDensity(initialModel.infillDensity?.toString() || "15");
+    setLayerHeight(initialModel.layerHeight?.toString() || "0.2");
+    setPrintTimeMinutes(initialModel.printTimeMinutes?.toString() || "");
+    setNotes(initialModel.notes || "");
+  }, [initialModel]);
 
   useEffect(() => {
     fetch("/api/collections")
@@ -327,6 +346,7 @@ export default function ModelDetailModal({
           nozzleSize: parseFloat(nozzleSize) || null,
           infillDensity: parseInt(infillDensity) || null,
           layerHeight: parseFloat(layerHeight) || null,
+          printTimeMinutes: printTimeMinutes ? parseInt(printTimeMinutes) : null,
           notes,
         }),
       });
@@ -355,8 +375,40 @@ export default function ModelDetailModal({
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
+  const primaryFile = model.files.find((f) => f.isPrimary) || model.files[0];
   const manualAssets = model.assets.filter((a) => a.assetType === "PDF_MANUAL");
   const imageAssets = model.assets.filter((a) => a.assetType === "IMAGE");
+
+  // Dimensões efetivas (calculadas em tempo real ou vindas do arquivo)
+  const dimsX = liveDimensions?.x ?? primaryFile?.dimensionsX ?? null;
+  const dimsY = liveDimensions?.y ?? primaryFile?.dimensionsY ?? null;
+  const dimsZ = liveDimensions?.z ?? primaryFile?.dimensionsZ ?? null;
+
+  // Triângulos totais
+  const trisCount =
+    liveTriangleCount ??
+    primaryFile?.triangleCount ??
+    (model.files.reduce((acc, f) => acc + (f.triangleCount || 0), 0) || null);
+
+  // Fator de preenchimento real (se disponível no modelo, ex: infillDensity 15 -> 0.15)
+  const realInfillPercent = model.infillDensity ?? (infillDensity ? parseInt(infillDensity) : null);
+  const effectiveInfillFactor = realInfillPercent !== null 
+    ? Math.min(1, Math.max(0.05, 0.10 + (realInfillPercent / 100) * 0.5))
+    : 0.20;
+
+  // Estimativa de consumo de filamento baseada no volume da bounding box (densidade ~1.24g/cm³ com infill)
+  const estimatedVolumeCm3 =
+    dimsX && dimsY && dimsZ
+      ? (dimsX * dimsY * dimsZ * 0.001) * effectiveInfillFactor
+      : null;
+  const estimatedGrams = estimatedVolumeCm3 ? Math.round(estimatedVolumeCm3 * 1.24) : null;
+  const estimatedMeters = estimatedGrams ? (estimatedGrams / 2.98).toFixed(1) : null;
+
+  // Avaliação de compatibilidade de mesa
+  const hasDimensions = Boolean(dimsX && dimsY && dimsZ);
+  const maxDim = hasDimensions ? Math.max(dimsX || 0, dimsY || 0, dimsZ || 0) : null;
+  const isBambuCompatible = maxDim !== null ? maxDim <= 256 : null;
+  const isVoronCompatible = maxDim !== null ? maxDim <= 300 : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
@@ -377,6 +429,30 @@ export default function ModelDetailModal({
             modelId={model.id}
             coverImageUrl={model.coverImage}
             onSnapshotSaved={handleSnapshotSaved}
+            onDimensionsCalculated={(dims) => {
+              setLiveDimensions(dims);
+              if (primaryFile && (!primaryFile.dimensionsX || !primaryFile.dimensionsZ)) {
+                fetch(`/api/models/${model.id}/files/${primaryFile.id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    dimensionsX: dims.x,
+                    dimensionsY: dims.y,
+                    dimensionsZ: dims.z,
+                  }),
+                }).catch(() => {});
+              }
+            }}
+            onTriangleCountCalculated={(tris) => {
+              setLiveTriangleCount(tris);
+              if (primaryFile && !primaryFile.triangleCount) {
+                fetch(`/api/models/${model.id}/files/${primaryFile.id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ triangleCount: tris }),
+                }).catch(() => {});
+              }
+            }}
             headerAction={
               <Link
                 href={`/models/${model.id}`}
@@ -635,58 +711,213 @@ export default function ModelDetailModal({
 
           {/* Tab Content */}
           <div className="flex-1 p-5 overflow-y-auto">
-            {/* TAB 1: Arquivos 3D */}
+            {/* TAB 1: Arquivos 3D & Parâmetros Técnicos */}
             {activeTab === "files" && (
-              <div className="flex flex-col gap-2.5">
-                {model.files.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-white truncate max-w-[200px]">
-                        {file.fileName}
-                      </span>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-                        <span className="font-bold text-indigo-400">.{file.format}</span>
-                        <span>•</span>
-                        <span>{formatFileSize(file.fileSize)}</span>
-                        {file.triangleCount && (
-                          <>
-                            <span>•</span>
-                            <span>{file.triangleCount.toLocaleString()} faces</span>
-                          </>
-                        )}
+              <div className="flex flex-col gap-4">
+                {/* Files List */}
+                <div className="flex flex-col gap-2.5">
+                  {model.files.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-white truncate max-w-[200px]" title={file.fileName}>
+                          {file.fileName}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                          <span className="font-bold text-indigo-400">.{file.format}</span>
+                          <span>•</span>
+                          <span>{formatFileSize(file.fileSize)}</span>
+                          {(file.triangleCount || (file.id === primaryFile?.id && trisCount)) && (
+                            <>
+                              <span>•</span>
+                              <span>{(file.triangleCount || trisCount)?.toLocaleString("pt-BR")} faces</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Check Piece Printed */}
+                        <button
+                          onClick={() => handleToggleFilePrinted(file.id, !file.isPrinted)}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                            file.isPrinted
+                              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                              : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
+                          }`}
+                          title={file.isPrinted ? "Peça marcada como impressa (clique para desmarcar)" : "Marcar peça como impressa"}
+                        >
+                          <CheckCircle2 className={`w-3.5 h-3.5 ${file.isPrinted ? "text-emerald-400 fill-emerald-400/20" : "text-slate-500"}`} />
+                          <span className="text-[11px]">{file.isPrinted ? "Impresso" : "Imprimir"}</span>
+                        </button>
+
+                        <a
+                          href={`/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
+                            file.relativePath
+                          )}&download=true`}
+                          download={file.fileName}
+                          className="p-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 transition-all"
+                          title="Baixar arquivo 3D"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {/* Check Piece Printed */}
-                      <button
-                        onClick={() => handleToggleFilePrinted(file.id, !file.isPrinted)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                          file.isPrinted
-                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                            : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
-                        }`}
-                        title={file.isPrinted ? "Peça marcada como impressa (clique para desmarcar)" : "Marcar peça como impressa"}
-                      >
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${file.isPrinted ? "text-emerald-400 fill-emerald-400/20" : "text-slate-500"}`} />
-                        <span className="text-[11px]">{file.isPrinted ? "Impresso" : "Imprimir"}</span>
-                      </button>
+                  ))}
+                </div>
 
-                      <a
-                        href={`/api/assets/file?libraryId=${model.libraryId}&relPath=${encodeURIComponent(
-                          file.relativePath
-                        )}&download=true`}
-                        download={file.fileName}
-                        className="p-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 transition-all"
-                        title="Baixar arquivo 3D"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
+                {/* Slicing & Print Profile Technical Parameters */}
+                <div className="space-y-2.5 pt-1">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Parâmetros de Fatiamento (Perfil do Arquivo)</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                        Altura de Camada
+                      </span>
+                      <span className="text-xs font-mono font-bold text-white mt-0.5 block">
+                        {model.layerHeight || layerHeight ? (
+                          <>
+                            {model.layerHeight || layerHeight} mm{" "}
+                            <span className="text-[10px] font-normal text-slate-400">
+                              {parseFloat(String(model.layerHeight || layerHeight)) <= 0.12 ? "(Fina)" : parseFloat(String(model.layerHeight || layerHeight)) <= 0.20 ? "(Standard)" : "(Rápida)"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-500 font-normal">--</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                        Tempo Estimado
+                      </span>
+                      <span className="text-xs font-mono font-bold text-orange-400 mt-0.5 block">
+                        {model.printTimeMinutes || printTimeMinutes ? (
+                          `${Math.floor(parseInt(String(model.printTimeMinutes || printTimeMinutes)) / 60)}h ${parseInt(String(model.printTimeMinutes || printTimeMinutes)) % 60}m`
+                        ) : (
+                          <span className="text-slate-500 font-normal text-[11px]" title="Tempo não embutido no arquivo. Você pode definir na aba Notas de Impressão">
+                            -- <span className="text-[10px] text-slate-600 block">(na aba Notas)</span>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                        Consumo de Filamento
+                      </span>
+                      <span className="text-xs font-mono font-bold text-cyan-300 mt-0.5 block">
+                        {estimatedGrams ? (
+                          <>
+                            {estimatedGrams} g{" "}
+                            <span className="text-[10px] font-normal text-slate-400">
+                              (~{estimatedMeters || "0"} m)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-500 font-normal text-[11px]" title="Calculado automaticamente ao abrir a malha 3D">
+                            -- <span className="text-[10px] text-slate-600 block">(carregue 3D)</span>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                        Triângulos (Malha)
+                      </span>
+                      <span className="text-xs font-mono font-bold text-purple-300 mt-0.5 block">
+                        {trisCount ? (
+                          `${trisCount.toLocaleString("pt-BR")} faces`
+                        ) : (
+                          <span className="text-slate-500 font-normal text-[11px]">
+                            -- <span className="text-[10px] text-slate-600 block">(carregue 3D)</span>
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Bed Compatibility & Printer Hardware Match */}
+                <div className="bg-white/5 border border-white/10 p-3 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                      <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Compatibilidade de Volume</span>
+                    </span>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                        isBambuCompatible === true
+                          ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/40"
+                          : isVoronCompatible === true
+                          ? "bg-amber-950/60 text-amber-400 border-amber-800/40"
+                          : isBambuCompatible === false
+                          ? "bg-rose-950/60 text-rose-400 border-rose-800/40"
+                          : "bg-slate-800/60 text-slate-400 border-slate-700/40"
+                      }`}
+                    >
+                      {isBambuCompatible === true
+                        ? "100% Compatível"
+                        : isVoronCompatible === true
+                        ? "Mesa Grande Requerida"
+                        : isBambuCompatible === false
+                        ? "Excede Mesas"
+                        : "Aguardando 3D"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    {hasDimensions ? (
+                      <>
+                        <span className="text-slate-300 font-mono block mb-1">
+                          Dimensões reais: {dimsX} × {dimsY} × {dimsZ} mm
+                        </span>
+                        {isBambuCompatible
+                          ? "O volume cabe perfeitamente nas mesas padrão 256×256×256 mm (Bambu Lab X1/P1P) e 300×300 mm (Voron 2.4 / Creality K1 Max)."
+                          : isVoronCompatible
+                          ? "O volume excede 256mm mas cabe nas mesas de 300×300 mm (Voron 2.4 / Creality K1 Max)."
+                          : "O volume excede as mesas padrão convencionais. Requer corte ou redução de escala no fatiador."}
+                      </>
+                    ) : (
+                      "Clique em 'Carregar Malha 3D' para calcular as dimensões reais da peça e verificar compatibilidade de mesa."
+                    )}
+                  </p>
+                  {hasDimensions && (
+                    <div className="flex gap-1.5 pt-0.5 text-[10px] font-mono flex-wrap">
+                      <span className={`px-2 py-0.5 rounded border ${isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-black/30 text-slate-500 border-white/5"}`}>
+                        Bambu X1C (256mm)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded border ${isVoronCompatible || isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-black/30 text-slate-500 border-white/5"}`}>
+                        Voron 2.4 (300mm)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded border ${isVoronCompatible || isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-black/30 text-slate-500 border-white/5"}`}>
+                        Creality K1 Max
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Material & Slicing Specifications */}
+                <div className="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Filamento Recomendado</span>
+                    <span className="text-white font-medium">{model.filamentType || filamentType || "--"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Preenchimento (Infill)</span>
+                    <span className="text-cyan-300 font-mono">
+                      {realInfillPercent ? `${realInfillPercent}% Gyroid/Grid` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Bico (Nozzle)</span>
+                    <span className="text-white font-mono">
+                      {model.nozzleSize || nozzleSize ? `${model.nozzleSize || nozzleSize} mm` : "--"}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -765,6 +996,16 @@ export default function ModelDetailModal({
                       value={layerHeight}
                       onChange={(e) => setLayerHeight(e.target.value)}
                       placeholder="0.2"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Tempo Estimado (minutos)</label>
+                    <input
+                      type="number"
+                      value={printTimeMinutes}
+                      onChange={(e) => setPrintTimeMinutes(e.target.value)}
+                      placeholder="Ex: 180"
                       className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>

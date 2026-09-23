@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.7.2)
+# Martins3DVault 🖨️✨ (v1.8.0)
 
 <div align="center">
 
@@ -43,6 +43,11 @@
 - 🧠 **Criação Automática de Coleções por Estrutura de Pastas**:
   - Ao escanear a biblioteca, cada pasta do disco vira automaticamente uma coleção no sistema, respeitando fielmente a hierarquia original.
   - Nenhuma organização manual é necessária: a estrutura de pastas já É a estrutura de coleções.
+
+- ⚙️ **Extração Real de Fatiamento (.3mf) & Avaliação de Mesa**:
+  - Leitura profunda de arquivos `.3mf` (Bambu Studio, OrcaSlicer, PrusaSlicer) extraindo altura de camada, filamento, bico, infill e malha de triângulos/faces.
+  - Avaliação imediata de **Compatibilidade de Volume de Mesa** com chips dinâmicos para Bambu Lab X1C (256mm), Voron 2.4 (300mm) e Creality K1 Max.
+  - Estimativa precisa de consumo de filamento em gramas e metros no Studio 3D e no modal de detalhes rápidos.
 
 - 🖼️ **Catálogo com Capas Automáticas**:
   - Arquivos `.3mf` que possuam uma imagem correspondente (mesmo nome, extensão `.jpeg` ou `.png`) exibem essa imagem automaticamente como capa no catálogo.
