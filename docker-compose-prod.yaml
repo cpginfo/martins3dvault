@@ -1,0 +1,44 @@
+services:
+  web:
+    image: ghcr.io/cpginfo/martins3dvault:latest
+    container_name: vault3d-vault-web
+    restart: no
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=${vault3d_PORT:-3000}
+      - DATABASE_URL=postgresql://${vault3d_POSTGRES_USER:-printvault}:${vault3d_POSTGRES_PASSWORD:-vaultpass123}@db:5432/${vault3d_POSTGRES_DB:-printvault}?schema=public
+      - JWT_SECRET=${vault3d_JWT_SECRET:-f3aba2217e17d5a7da1beb60c1371688eec6d9655b9556bc5eed7a6a4dfdcf33}
+      - ADMIN_EMAIL=${vault3d_ADMIN_EMAIL:-admin@printvault.local}
+      - ADMIN_PASSWORD=${vault3d_ADMIN_PASSWORD:-admin123}
+      - STORAGE_DATA_PATH=${vault3d_STORAGE_DATA_PATH:-/data}
+      - STORAGE_LIBRARIES_PATH=${vault3d_STORAGE_LIBRARIES_PATH:-/libraries}
+    volumes:
+      - ./data:/data # Armazenamento de thumbnails extraídas e uploads
+      - ./stls:/libraries # Montagem dos diretórios de arquivos 3D
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  db:
+    image: postgres:16-alpine
+    container_name: vault3d-vault-db
+    restart: no
+    environment:
+      - POSTGRES_USER=${vault3d_POSTGRES_USER:-printvault}
+      - POSTGRES_PASSWORD=${vault3d_POSTGRES_PASSWORD:-vaultpass123}
+      - POSTGRES_DB=${vault3d_POSTGRES_DB:-printvault}
+    volumes:
+      - ./3dpostgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${vault3d_POSTGRES_USER:-printvault} -d ${vault3d_POSTGRES_DB:-printvault}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
