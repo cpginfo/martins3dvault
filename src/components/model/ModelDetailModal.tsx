@@ -351,16 +351,6 @@ export default function ModelDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-surface-container-low border border-white/10 shadow-2xl overflow-hidden relative">
-        {/* Studio 3D Fullscreen Button */}
-        <Link
-          href={`/models/${model.id}`}
-          className="absolute top-4 right-16 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/90 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-all backdrop-blur-md shadow-lg hover:shadow-cyan-500/20"
-          title="Abrir no Visualizador 3D Studio"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Modo Studio 3D</span>
-        </Link>
-
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -377,6 +367,16 @@ export default function ModelDetailModal({
             modelId={model.id}
             coverImageUrl={model.coverImage}
             onSnapshotSaved={handleSnapshotSaved}
+            headerAction={
+              <Link
+                href={`/models/${model.id}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-all backdrop-blur-md shadow-xl hover:shadow-cyan-500/25 shrink-0"
+                title="Abrir no Visualizador 3D Studio em tela cheia"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Modo Studio 3D</span>
+              </Link>
+            }
           />
         </div>
 
@@ -384,14 +384,20 @@ export default function ModelDetailModal({
         <div className="w-full md:w-[40%] h-[55vh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest">
           {/* Header */}
           <div className="p-5 border-b border-white/10">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs font-semibold text-primary">
-                {model.library.name}
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs text-slate-500 truncate max-w-[200px]">
-                {model.folderPath}
-              </span>
+            {/* Full File / Folder Path Container */}
+            <div className="pr-12 mb-3">
+              <div
+                className="flex flex-wrap items-center gap-1.5 text-xs font-mono bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 leading-relaxed break-all select-all shadow-sm"
+                title={`${model.library.name} / ${model.folderPath}`}
+              >
+                <span className="text-primary font-semibold shrink-0">
+                  {model.library.name}
+                </span>
+                <span className="text-slate-500 shrink-0">/</span>
+                <span className="text-slate-200 font-mono break-all font-medium">
+                  {model.folderPath}
+                </span>
+              </div>
             </div>
 
             {/* Editable Title */}
@@ -552,6 +558,16 @@ export default function ModelDetailModal({
                   </div>
                 )}
               </div>
+
+              {/* Studio 3D Shortcut Button */}
+              <Link
+                href={`/models/${model.id}`}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-semibold transition-all shadow-sm hover:shadow-cyan-500/20"
+                title="Abrir no Visualizador 3D Studio em tela cheia"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Modo Studio 3D</span>
+              </Link>
             </div>
           </div>
 

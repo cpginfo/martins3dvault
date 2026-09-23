@@ -44,6 +44,7 @@ interface ModelViewer3DProps {
   onDimensionsCalculated?: (dims: { x: number; y: number; z: number }) => void;
   onTriangleCountCalculated?: (tris: number) => void;
   autoLoad?: boolean;
+  headerAction?: React.ReactNode;
 }
 
 type MaterialType = "pla" | "abs" | "translucent" | "matte";
@@ -72,6 +73,7 @@ export default function ModelViewer3D({
   onDimensionsCalculated,
   onTriangleCountCalculated,
   autoLoad = false,
+  headerAction,
 }: ModelViewer3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -642,11 +644,11 @@ export default function ModelViewer3D({
           <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
 
           {/* Barra superior de badges informativos */}
-          <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto">
+          <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none gap-2">
+            <div className="flex items-center gap-2 pointer-events-auto flex-wrap">
               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-highest/90 backdrop-blur-md border border-white/10 text-[11px] font-medium text-slate-300 shadow-lg">
                 <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Miniatura do Arquivo</span>
+                <span>Miniatura</span>
               </span>
               {formats.map((fmt) => (
                 <span
@@ -656,12 +658,17 @@ export default function ModelViewer3D({
                   .{fmt}
                 </span>
               ))}
+              {totalSize > 0 && (
+                <span className="px-2.5 py-1 rounded-lg bg-[#0b1017]/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-slate-400 shadow-lg">
+                  {formatBytes(totalSize)}
+                </span>
+              )}
             </div>
 
-            {totalSize > 0 && (
-              <span className="pointer-events-auto px-2.5 py-1 rounded-lg bg-[#0b1017]/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-slate-400 shadow-lg">
-                {formatBytes(totalSize)}
-              </span>
+            {headerAction && (
+              <div className="pointer-events-auto flex items-center gap-2">
+                {headerAction}
+              </div>
             )}
           </div>
 
@@ -889,6 +896,8 @@ export default function ModelViewer3D({
                   </>
                 )}
               </button>
+
+              {headerAction}
             </div>
           </div>
 

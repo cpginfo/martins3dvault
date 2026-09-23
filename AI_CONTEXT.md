@@ -79,6 +79,26 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - Emblema neon isométrico em [public/logo.png](file:///swarm/stl/public/logo.png) com transparência alfa de alta definição (32-bit RGBA) sem fundo falso.
   - Arquivo nativo multi-resolução `favicon.ico` (16x16, 32x32, 48x48, 64x64 px) em [public/favicon.ico](file:///swarm/stl/public/favicon.ico) e [src/app/favicon.ico](file:///swarm/stl/src/app/favicon.ico), integrado aos metadados do Next.js App Router em [layout.tsx](file:///swarm/stl/src/app/layout.tsx).
   - Remoção de poluidores visuais: subtítulo sob a logo e badge numérico da Navbar superior.
+- **Scanner Diferencial Incremental, Paginação & Estúdio em Coleções (`v1.7.1`)**:
+  - **Crawler Diferencial de Alta Performance (`src/lib/scanner/crawler.ts`)**:
+    - O crawler compara em memória o hash dos arquivos (`${mtimeMs}_${size}`), contagem de assets e metadados com os registros existentes.
+    - Modelos e arquivos sem modificação no disco são saltados instantaneamente (`stats.unchangedModels++`), eliminando re-parsing desnecessário de malhas STL/3MF e dezenas de transações Prisma.
+    - Geometrias e metadados só são reextraídos se o carimbo de alteração em disco (`mtimeMs`) tiver mudado.
+  - **Scan Direcionado por Coleção (`POST /api/collections/[id]/scan`)**:
+    - Nova rota que mapeia a pasta física da coleção em disco e executa o scan incremental estritamente dentro daquele escopo (`options.subFolder`), restringindo a limpeza de órfãos apenas àquela subpasta.
+    - Botão "Escanear Pasta" interativo no cabeçalho da página de detalhes da coleção (`/collections/[id]`).
+  - **Detecção de Capas por Correspondência de Nome Base (`src/lib/scanner/extractors/companion.ts`)**:
+    - Prioridade de primeiro nível para imagens (`.png`, `.jpg`, `.jpeg`, `.webp`, `.avif`, `.bmp`, `.tiff`) que compartilham o mesmo nome base exato ou normalizado do arquivo 3D ou do diretório do modelo.
+  - **Barra de Ferramentas / Filtros Eagle em Coleções (`/collections/[id]`)**:
+    - Integração de `FilterBar` com visualização em Grid Grande (com slider de zoom dinâmico), Grid Compacto e Tabela detalhada.
+    - Filtros por favoritos, status de impressão, formatos (`.3MF`, `.STL`, `.STEP`, `.OBJ`, `.GCODE`) e polímeros (`PLA`, `PETG`, `ABS/ASA`, `TPU`).
+  - **Paginação Dinâmica Sem Limites Arbitrários (`src/components/gallery/PaginationBar.tsx`)**:
+    - Removido o teto de 100 da rota `/api/models`, adicionado suporte a `limit=all` (até 10.000) e paginação completa (24, 48, 96, 192 e "Todos").
+  - **Refinamento de Layout e UX do Modal e Modo Studio**:
+    - Caminho da pasta 100% completo com quebra contínua (`break-all`), sem cortes nem reticências (`...`).
+    - Remoção de telemetria estática / simulada na barra superior do Modo Studio 3D (`OFICINA [CONECTADA] | MESA: 60°C BICO: 215°C`), com navegação contextual `router.back()`.
+    - Agrupamento dos metadados de tamanho do arquivo (`formatBytes`) à esquerda na miniatura e passagem do botão Studio via `headerAction` no `ModelViewer3D`, eliminando sobreposições.
+
 - **Navegação & Carregamento 3D sob Demanda (`v1.7.0`)**:
   - **Reordenação da Barra Lateral (`Sidebar.tsx`)**: O item **"Modelos 3D"** foi reposicionado no topo da seção *Repositórios Locais*, antes de **"Coleções"**, garantindo acesso direto ao catálogo completo de arquivos do repositório enquanto preserva o dropdown de coleções.
   - **Visualização sob Demanda da Malha 3D (`ModelViewer3D.tsx`)**: Ao abrir qualquer arquivo ou modelo (no modal de detalhes ou estúdio 3D), o Three.js não inicia o download nem a extração automática de malhas pesadas (.stl, .3mf, .obj).

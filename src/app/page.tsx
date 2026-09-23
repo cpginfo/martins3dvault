@@ -7,6 +7,7 @@ import FilterBar, { ViewMode } from "@/components/gallery/FilterBar";
 import ModelCard, { ModelCardData } from "@/components/gallery/ModelCard";
 import ModelDetailModal, { ModelDetailData } from "@/components/model/ModelDetailModal";
 import UploadModal from "@/components/upload/UploadModal";
+import PaginationBar from "@/components/gallery/PaginationBar";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -22,6 +23,9 @@ export default function HomePage() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sort, setSort] = useState("date_desc");
   const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(48);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedModel, setSelectedModel] = useState<ModelDetailData | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [zoomSize, setZoomSize] = useState(280);
@@ -62,20 +66,78 @@ export default function HomePage() {
       if (favoritesOnly) params.set("favorite", "true");
       if (printedFilter === "unprinted") params.set("printed", "false");
       if (printedFilter === "printed") params.set("printed", "true");
+      if (selectedPolymer) params.set("polymer", selectedPolymer);
       if (sort) params.set("sort", sort);
+
+      if (pageSize === "all") {
+        params.set("limit", "all");
+      } else {
+        params.set("limit", String(pageSize));
+        params.set("page", String(currentPage));
+      }
 
       const res = await fetch(`/api/models?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setModels(data.items || []);
         setTotalCount(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (err) {
       console.error("Erro ao buscar modelos:", err);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedFormat, selectedCollection, favoritesOnly, printedFilter, sort]);
+  }, [
+    searchQuery,
+    selectedFormat,
+    selectedCollection,
+    favoritesOnly,
+    printedFilter,
+    selectedPolymer,
+    sort,
+    currentPage,
+    pageSize,
+  ]);
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+  const handleFormatChange = (f: string) => {
+    setSelectedFormat(f);
+    setCurrentPage(1);
+  };
+  const handleCollectionChange = (c: string) => {
+    setSelectedCollection(c);
+    setCurrentPage(1);
+  };
+  const handlePrintedFilterChange = (p: "all" | "unprinted" | "printed") => {
+    setPrintedFilter(p);
+    setCurrentPage(1);
+  };
+  const handleFavoritesToggle = () => {
+    setFavoritesOnly((prev) => !prev);
+    setCurrentPage(1);
+  };
+  const handlePolymerChange = (poly: string) => {
+    setSelectedPolymer(poly);
+    setCurrentPage(1);
+  };
+  const handleSortChange = (s: string) => {
+    setSort(s);
+    setCurrentPage(1);
+  };
+  const handlePageSizeChange = (size: number | "all") => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     fetchCollections();
@@ -103,18 +165,6 @@ export default function HomePage() {
     }
   };
 
-  // Filter models by polymer client-side if selected
-  const filteredModels = selectedPolymer
-    ? models.filter((m) =>
-        m.files.some(
-          (f) =>
-            f.fileName.toLowerCase().includes(selectedPolymer.toLowerCase()) ||
-            (m.filamentType &&
-              m.filamentType.toLowerCase().includes(selectedPolymer.toLowerCase()))
-        )
-      )
-    : models;
-
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Persistent Sidebar */}
@@ -132,13 +182,13 @@ export default function HomePage() {
         {/* Top Navbar */}
         <Navbar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           onScanTriggered={() => {
             fetchCollections();
             fetchModels();
           }}
           selectedFormat={selectedFormat}
-          onFormatChange={setSelectedFormat}
+          onFormatChange={handleFormatChange}
           isSidebarCollapsed={isSidebarCollapsed}
         />
 
@@ -173,9 +223,21 @@ export default function HomePage() {
                       : "Todos os Modelos 3D"}
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-surface-container-highest text-secondary text-[11px] font-mono">
-                  {filteredModels.length} {filteredModels.length === 1 ? "Modelo" : "Modelos"}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="px-2 py-0.5 rounded bg-surface-container-highest text-secondary text-[11px] font-mono font-semibold">
+                    {totalCount} {totalCount === 1 ? "Modelo" : "Modelos"}
+                  </span>
+                  {pageSize !== "all" && totalCount > models.length && (
+                    <button
+                      type="button"
+                      onClick={() => handlePageSizeChange("all")}
+                      className="px-2 py-0.5 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-primary text-[11px] font-mono transition-colors border border-white/5 cursor-pointer"
+                      title="Mostrar todos os modelos em uma única página"
+                    >
+                      Exibindo {models.length} (Ver todos)
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Quick Actions */}
@@ -206,25 +268,25 @@ export default function HomePage() {
             {/* Eagle-style Studio Control & Filter Bar */}
             <FilterBar
               searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+              onSearchChange={handleSearchChange}
               printedFilter={printedFilter}
-              onPrintedFilterChange={setPrintedFilter}
+              onPrintedFilterChange={handlePrintedFilterChange}
               selectedFormat={selectedFormat}
-              onFormatSelect={setSelectedFormat}
+              onFormatSelect={handleFormatChange}
               favoritesOnly={favoritesOnly}
-              onToggleFavorites={() => setFavoritesOnly((prev) => !prev)}
+              onToggleFavorites={handleFavoritesToggle}
               sort={sort}
-              onSortChange={setSort}
+              onSortChange={handleSortChange}
               totalCount={totalCount}
               collections={collections}
               selectedCollection={selectedCollection}
-              onCollectionSelect={setSelectedCollection}
+              onCollectionSelect={handleCollectionChange}
               zoomSize={zoomSize}
               onZoomChange={setZoomSize}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               selectedPolymer={selectedPolymer}
-              onPolymerSelect={setSelectedPolymer}
+              onPolymerSelect={handlePolymerChange}
             />
 
             {/* Gallery View (Grid or Table) */}
@@ -235,14 +297,14 @@ export default function HomePage() {
                 </span>
                 <span className="text-xs font-mono">Indexando arquivos 3D no cofre...</span>
               </div>
-            ) : filteredModels.length === 0 ? (
+            ) : models.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 rounded-2xl bg-surface-container-low border border-white/5 text-center gap-3">
                 <div className="p-4 rounded-full bg-surface-container-highest text-primary-container">
                   <span className="material-symbols-outlined text-[40px]">view_in_ar</span>
                 </div>
                 <h3 className="font-semibold text-base text-on-surface">Nenhum modelo encontrado</h3>
                 <p className="text-xs text-on-surface-variant max-w-sm">
-                  {searchQuery || selectedFormat || printedFilter !== "all"
+                  {searchQuery || selectedFormat || printedFilter !== "all" || selectedPolymer
                     ? "Tente ajustar os filtros ou pesquisar por outro termo."
                     : "Mapeie um diretório local ou faça o upload de arquivos STL / 3MF para começar."}
                 </p>
@@ -268,7 +330,7 @@ export default function HomePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredModels.map((model) => (
+                    {models.map((model) => (
                       <ModelCard
                         key={model.id}
                         model={model}
@@ -298,7 +360,7 @@ export default function HomePage() {
                   }px, 1fr))`,
                 }}
               >
-                {filteredModels.map((model) => (
+                {models.map((model) => (
                   <ModelCard
                     key={model.id}
                     model={model}
@@ -318,6 +380,17 @@ export default function HomePage() {
                 ))}
               </div>
             )}
+
+            {/* Barra de Paginação Completa */}
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              currentCount={models.length}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
           </div>
         </main>
       </div>

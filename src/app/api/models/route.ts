@@ -14,27 +14,21 @@ export async function GET(request: Request) {
     const favorite = searchParams.get("favorite") === "true";
     const sort = searchParams.get("sort") || "date_desc";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "24")));
-    const skip = (page - 1) * limit;
+    const limitRaw = searchParams.get("limit");
+    const isAll = limitRaw === "all" || limitRaw === "0" || limitRaw === "-1";
+    const limit = isAll
+      ? 10000
+      : Math.min(10000, Math.max(1, parseInt(limitRaw || "48")));
+    const skip = isAll ? 0 : (page - 1) * limit;
+    const polymer = searchParams.get("polymer");
 
-    const where: any = {};
+    const andConditions: any[] = [];
 
     const trimmedQ = q.trim();
     if (trimmedQ) {
       const terms = trimmedQ.split(/\s+/).filter(Boolean);
-      if (terms.length === 1) {
-        const term = terms[0];
-        where.OR = [
-          { name: { contains: term, mode: "insensitive" } },
-          { folderPath: { contains: term, mode: "insensitive" } },
-          { description: { contains: term, mode: "insensitive" } },
-          { collection: { name: { contains: term, mode: "insensitive" } } },
-          { library: { name: { contains: term, mode: "insensitive" } } },
-          { tags: { some: { name: { contains: term, mode: "insensitive" } } } },
-          { files: { some: { fileName: { contains: term, mode: "insensitive" } } } },
-        ];
-      } else {
-        where.AND = terms.map((term) => ({
+      for (const term of terms) {
+        andConditions.push({
           OR: [
             { name: { contains: term, mode: "insensitive" } },
             { folderPath: { contains: term, mode: "insensitive" } },
@@ -44,35 +38,48 @@ export async function GET(request: Request) {
             { tags: { some: { name: { contains: term, mode: "insensitive" } } } },
             { files: { some: { fileName: { contains: term, mode: "insensitive" } } } },
           ],
-        }));
+        });
       }
     }
 
     if (printedParam === "true") {
-      where.isPrinted = true;
+      andConditions.push({ isPrinted: true });
     } else if (printedParam === "false") {
-      where.isPrinted = false;
+      andConditions.push({ isPrinted: false });
     }
 
     if (libraryId) {
-      where.libraryId = libraryId;
+      andConditions.push({ libraryId });
     }
 
     if (collectionId) {
-      where.collectionId = collectionId;
+      andConditions.push({ collectionId });
     }
 
     if (favorite) {
-      where.isFavorite = true;
+      andConditions.push({ isFavorite: true });
     }
 
     if (format) {
-      where.files = {
-        some: {
-          format: format.toUpperCase(),
+      andConditions.push({
+        files: {
+          some: {
+            format: format.toUpperCase(),
+          },
         },
-      };
+      });
     }
+
+    if (polymer) {
+      andConditions.push({
+        OR: [
+          { filamentType: { contains: polymer, mode: "insensitive" } },
+          { files: { some: { fileName: { contains: polymer, mode: "insensitive" } } } },
+        ],
+      });
+    }
+
+    const where: any = andConditions.length > 0 ? { AND: andConditions } : {};
 
     let orderBy: any = { createdAt: "desc" };
     if (sort === "name_asc") orderBy = { name: "asc" };
@@ -124,10 +131,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       items: sanitizedModels,
       pagination: {
-        page,
-        limit,
+        page: isAll ? 1 : page,
+        limit: isAll ? total : limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: isAll ? 1 : Math.max(1, Math.ceil(total / limit)),
       },
     });
   } catch (err: any) {

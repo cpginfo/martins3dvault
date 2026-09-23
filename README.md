@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.7.0)
+# Martins3DVault 🖨️✨ (v1.7.1)
 
 <div align="center">
 
@@ -53,6 +53,14 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- ⚡ **Scanner Diferencial, Paginação & Estúdio Eagle em Coleções (`v1.7.1`)**:
+  - **Scanner Diferencial Incremental**: O crawler compara hashes de arquivos em disco (`${mtimeMs}_${size}`), contagem de arquivos e metadados, saltando modelos inalterados em 0ms (`unchangedModels`) sem reprocessar geometrias nem disparar queries no banco.
+  - **Scan Sob Demanda da Coleção (`/api/collections/[id]/scan`)**: Botão "Escanear Pasta" diretamente na visualização da coleção para re-escanear estritamente a subpasta física correspondente no disco.
+  - **Prioridade Absoluta para Capas Acompanhantes**: Reconhecimento automático de qualquer imagem com nome base correspondente (`.png`, `.jpg`, `.jpeg`, `.webp`, `.avif`, etc.) tanto para arquivos avulsos quanto para diretórios.
+  - **Controles de Estúdio & Filtros nas Coleções (`/collections/[id]`)**: Barra de opções completa (Grid Grande com slider de zoom, Grid Compacto, Tabela, filtros de polímeros, favoritos e extensões).
+  - **Paginação Dinâmica do Catálogo (`PaginationBar.tsx`)**: Remoção do teto rígido de 24/100 modelos na rota `/api/models`, paginação com seletor de itens por página (24, 48, 96, 192 e "Todos").
+  - **Exibição Contínua do Caminho do Arquivo & Layout Desobstruído**: Caminho da pasta 100% visível sem truncamento forçado (`break-all`), remoção de telemetria estática no Modo Studio e alinhamento responsivo entre badges de tamanho e botões de ação 3D.
 
 - 🚀 **Navegação & Carregamento 3D sob Demanda (`v1.7.0`)**:
   - **Menu Lateral Reestruturado**: Item **"Modelos 3D"** reposicionado no topo da seção *Repositórios Locais*, antes de **"Coleções"**, agilizando o acesso imediato ao catálogo completo de peças e projetos.

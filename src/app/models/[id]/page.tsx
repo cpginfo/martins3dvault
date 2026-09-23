@@ -404,26 +404,22 @@ export default function ModelStudioPage(props: {
           </span>
         </div>
 
-        <div className="flex items-center space-x-4 text-slate-400 font-mono text-[11px]">
-          <div className="flex items-center space-x-1.5 text-emerald-400">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>OFICINA [CONECTADA]</span>
-          </div>
-          <span className="text-slate-700 hidden sm:inline">|</span>
-          <span className="hidden sm:inline">MESA: 60°C</span>
-          <span className="hidden sm:inline">BICO: 215°C</span>
-          <span className="text-slate-700 hidden sm:inline">|</span>
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-slate-400 hover:text-white transition"
+        <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/");
+              }
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition"
             title="Voltar ao Catálogo"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Catálogo</span>
-          </Link>
+            <span>Catálogo</span>
+          </button>
         </div>
       </header>
       {/* END: TopGlobalBar */}
@@ -481,13 +477,20 @@ export default function ModelStudioPage(props: {
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
-                <Link
-                  href="/"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.history.length > 1) {
+                      router.back();
+                    } else {
+                      router.push("/");
+                    }
+                  }}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-[#16202c] transition"
                   title="Fechar painel e voltar ao catálogo"
                 >
                   <X className="w-4 h-4" />
-                </Link>
+                </button>
               </div>
             </div>
 

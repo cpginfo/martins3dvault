@@ -25,6 +25,9 @@ export interface ModelCardData {
     triangleCount?: number | null;
     isPrinted?: boolean;
   }>;
+  description?: string | null;
+  createdAt?: string | Date;
+  tags?: Array<{ id: string; name: string }>;
   _count: {
     files: number;
     assets: number;

@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.7.0)
+# Mapa do Projeto - Martins3DVault (v1.7.1)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,18 +8,19 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.7.0                                  │
+│                           MARTINS3DVAULT v1.7.1                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
-│  - Stitch Industrial Dark  │  - Directory Crawler & Sync │  - PostgreSQL 16      │
-│  - Light Mode Calibrado    │  - 3MF to Binary STL Parser │  - Prisma ORM 6.19    │
-│  - Persistent Sidebar & NAS│  - Affine Transform Matrix  │  - Docker Volumes FS  │
-│  - Eagle-Style Studio Bar  │  - Companion Image Normaliz.│  - Session JWT (Jose) │
-│  - Zoom Slider & View Modes│  - Upload Multipart Parser  │  - Disk Cache (STL)   │
-│  - Three.js sob demanda    │  - CSV/Excel Smart Importer │  - Stitch Design Sync │
-│  - Estúdio CAD / Dark 3D   │  - Streaming CSV Exporter   │  - LocalStorage Pref  │
-│  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - PrinterSettings DB │
+│  - Stitch Industrial Dark  │  - Differential Crawler     │  - PostgreSQL 16      │
+│  - Light Mode Calibrado    │  - mtimeMs_size File Hash   │  - Prisma ORM 6.19    │
+│  - Persistent Sidebar & NAS│  - 3MF to Binary STL Parser │  - Docker Volumes FS  │
+│  - Eagle Bar em Coleções   │  - Affine Transform Matrix  │  - Session JWT (Jose) │
+│  - Zoom Slider & View Modes│  - Exact Base-Name Covers   │  - Disk Cache (STL)   │
+│  - Paginação sem Cap (All) │  - Upload Multipart Parser  │  - Stitch Design Sync │
+│  - Three.js sob demanda    │  - Subfolder Scope Scanning │  - LocalStorage Pref  │
+│  - Estúdio CAD / Dark 3D   │  - CSV/Excel Smart Importer │  - PrinterSettings DB │
+│  - Calculadora & Vendas 3D │  - Theme State & Anti-FOUC  │  - Dynamic Pagination │
 └────────────────────────────┴─────────────────────────────┴───────────────────────┘
 ```
 
@@ -137,8 +138,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │   ├── route.ts        # GET: Lista coleções | POST: Cria nova coleção manual
     │       │   └── [id]/
     │       │       ├── route.ts    # GET: Detalhes da coleção | PUT: Edita | DELETE: Remove
-    │       │       └── models/
-    │       │           └── route.ts # POST: Adiciona ou remove modelos em lote da coleção
+    │       │       ├── models/
+    │       │       │   └── route.ts # POST: Adiciona ou remove modelos em lote da coleção
+    │       │       └── scan/
+    │       │           └── route.ts # POST: Varredura diferencial e incremental estrita à subpasta física da coleção
     │       │
     │       ├── upload/
     │       │   ├── route.ts        # POST: Upload multipart de STL, 3MF, imagens e manuais PDF
@@ -147,7 +150,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       ├── libraries/
     │       │   ├── route.ts        # GET: Lista bibliotecas | POST: Cria nova biblioteca
     │       │   └── [id]/scan/
-    │       │       └── route.ts    # POST: Dispara varredura recursiva e sincronização
+    │       │       └── route.ts    # POST: Dispara varredura recursiva (incremental ou forceFullScan, com suporte a subFolder)
     │       │
     │       ├── assets/
     │       │   ├── file/route.ts   # GET: Streaming direto de arquivos originais (com buffer 1MB)
@@ -166,7 +169,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │       │   └── export/route.ts     # GET: Exportador completo de vendas em CSV com UTF-8 BOM e pontuação brasileira
     │       │
     │       └── models/
-    │           ├── route.ts        # GET: Busca inteligente multi-termo, pagina e filtra por formato e status de impresso (?printed=false)
+    │           ├── route.ts        # GET: Busca inteligente multi-termo, paginação flexível (sem cap de 100), limit=all (até 10.000) e filtro por polímero
     │           ├── move/route.ts   # POST: Movimentação em lote de arquivos e acompanhantes entre coleções no disco
     │           └── [id]/
     │               ├── route.ts    # GET: Detalhes completos | PUT: Renomeia no disco, Move coleção, Notas, isPrinted | DELETE
@@ -181,14 +184,15 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     │   ├── theme/
     │   │   └── ThemeToggle.tsx    # Botão de alternância animado Dark/Light Mode
     │   ├── gallery/
-    │   │   ├── FilterBar.tsx      # Controles de estúdio Eagle: zoom slider (180-400px), modos de visualização (grade/tabela), polímeros
+    │   │   ├── FilterBar.tsx      # Controles de estúdio Eagle: zoom slider (180-400px), modos de visualização (grade/tabela), polímeros e ordenação
+    │   │   ├── PaginationBar.tsx  # Barra de paginação dinâmica: seletor de itens por página (24, 48, 96, 192, Todos), saltos e reticências
     │   │   └── ModelCard.tsx      # Card de modelo Stitch: capa prioritária, badges de polímero, medidas mm e toggle de impressão
     │   ├── model/
-    │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js, abas, renomeação, capa, manuais e status de impresso
+    │   │   └── ModelDetailModal.tsx # Modal interativo com Three.js sob demanda, caminho 100% completo sem truncamento (break-all), abas e ações
     │   ├── upload/
     │   │   └── UploadModal.tsx    # Modal de Upload local e Download por Link (URL) com tabs e suporte a ZIP
     │   └── viewer3d/
-    │       └── ModelViewer3D.tsx  # Viewport Three.js sob demanda: miniatura 2D inicial, botão 'Carregar Malha 3D', orbit, materiais e snapshot
+    │       └── ModelViewer3D.tsx  # Viewport Three.js sob demanda com headerAction integrado, badges agrupados de formato e tamanho, orbit e snapshot
     │
     ├── proxy.ts                   # Next.js 16 Proxy layer: proteção de rotas públicas e autenticação de API com ADMIN
     │
@@ -198,9 +202,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         ├── auth/
         │   └── session.ts         # Autenticação JWT, Cookie pv_session, Bearer Token, Basic Auth e requireAdmin
         ├── users/
-        │   └── avatar.ts          # Processador e persistência de fotos de avatar em /data/thumbnails/
-        ├── prisma.ts              # Instância singleton global do Prisma Client
-        ├── pricing/               # Motor Matemático & Tipagens de Precificação 3D
+        │   └── avatar.ts          # Processamento físico e salvamento de avatares de operadores no disco
+        ├── pricing/
         │   ├── types.ts           # Interfaces de configuração, orçamentos, acessórios, vendas e métricas
         │   ├── calculator.ts      # Fórmulas puras de custos, energia, depreciação, lucro e BRL
         │   └── __tests__/
@@ -208,10 +211,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         ├── storage/
         │   └── file-ops.ts        # Movimentação física de arquivos, renomeação no disco e prevenção de sobrescrita (sufixo)
         └── scanner/
-            ├── crawler.ts         # Motor de varredura recursiva com espelhamento total (remoção de coleções/modelos deletados no disco)
+            ├── crawler.ts         # Motor de varredura diferencial incremental com hash mtimeMs_size e suporte a escopo de subpasta
             └── extractors/
-                ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos
-                ├── stl-parser.ts  # Leitor e validador de geometria STL binário/ASCII
+                ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos com prioridade para mesmo nome base (.png, .jpg, .webp, .avif)
+                ├── stl-parser.ts  # Leitor e validor de geometria STL binário/ASCII
                 ├── threemf.ts     # Extrator de thumbnails embutidas e metadados de fatiamento
                 └── threemf-converter.ts # Extrator de geometrias 3MF e montador de STL Binário
 ```
@@ -222,7 +225,8 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.7.1`) e uptime. |
+| `POST` | `/api/collections/[id]/scan` | Varredura diferencial e incremental estrita à subpasta física da coleção no disco. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |
 | `GET` / `POST` | `/api/pricing/materials` | Lista filamentos ou cadastra novo material com custo por kg e densidade. |
 | `GET` / `POST` | `/api/pricing/budgets` | Busca/filtra orçamentos ou cria novo orçamento com snapshot paramétrico da máquina. |
