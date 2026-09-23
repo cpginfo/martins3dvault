@@ -2,8 +2,8 @@ name: Publicação Automática (CI/CD & Docker)
 
 on:
   push:
-    branches:
-      - main
+#    branches:
+#      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -85,7 +85,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Extrair Metadados do Docker (Tags & Labels)
         id: meta
@@ -140,4 +140,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}

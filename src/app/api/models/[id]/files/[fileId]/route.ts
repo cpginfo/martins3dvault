@@ -11,15 +11,22 @@ export async function PUT(
 
     const { id, fileId } = await props.params;
     const body = await request.json();
-    const { isPrinted } = body;
+    const { isPrinted, dimensionsX, dimensionsY, dimensionsZ, triangleCount } = body;
 
-    if (isPrinted === undefined) {
-      return NextResponse.json({ error: "Campo isPrinted é obrigatório" }, { status: 400 });
+    const dataToUpdate: Record<string, any> = {};
+    if (isPrinted !== undefined) dataToUpdate.isPrinted = Boolean(isPrinted);
+    if (dimensionsX !== undefined && !isNaN(Number(dimensionsX))) dataToUpdate.dimensionsX = Number(dimensionsX);
+    if (dimensionsY !== undefined && !isNaN(Number(dimensionsY))) dataToUpdate.dimensionsY = Number(dimensionsY);
+    if (dimensionsZ !== undefined && !isNaN(Number(dimensionsZ))) dataToUpdate.dimensionsZ = Number(dimensionsZ);
+    if (triangleCount !== undefined && !isNaN(Number(triangleCount))) dataToUpdate.triangleCount = Number(triangleCount);
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return NextResponse.json({ error: "Nenhum dado válido para atualizar" }, { status: 400 });
     }
 
     const updatedFile = await prisma.modelFile.update({
       where: { id: fileId, modelId: id },
-      data: { isPrinted: Boolean(isPrinted) },
+      data: dataToUpdate,
     });
 
     return NextResponse.json({

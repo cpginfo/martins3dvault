@@ -195,8 +195,8 @@ export default function Sidebar({
       }`}
     >
       {/* Top Header & Brand */}
-      <div className="flex flex-col">
-        <div className="h-16 px-4 flex items-center justify-between bg-surface-container-lowest border-b border-white/5">
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="h-16 px-4 flex items-center justify-between bg-surface-container-lowest border-b border-white/5 flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5 overflow-hidden group">
             <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-surface-container-high p-1">
               <Image
@@ -226,7 +226,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Sections */}
-        <div className="py-3 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+        <div className="py-3 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
           {navItems.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {!isCollapsed && (
@@ -405,7 +405,7 @@ export default function Sidebar({
       </div>
 
       {/* Bottom Area: User Profile */}
-      <div className="flex flex-col p-3 gap-3 bg-surface-container-lowest border-t border-white/5">
+      <div className="flex flex-col p-3 gap-2.5 bg-surface-container-lowest border-t border-white/5 flex-shrink-0">
         {/* User Badge */}
         <div className="relative">
           <div className="flex items-center justify-between pt-1">

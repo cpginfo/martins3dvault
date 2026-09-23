@@ -27,6 +27,8 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
+  Folder,
+  Copy,
 } from "lucide-react";
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
 
@@ -97,14 +99,24 @@ export default function ModelStudioPage(props: {
   const manualInputRef = useRef<HTMLInputElement>(null);
 
   // Formulário de notas técnicas
-  const [filamentType, setFilamentType] = useState("PLA");
-  const [nozzleSize, setNozzleSize] = useState("0.4");
-  const [infillDensity, setInfillDensity] = useState("15");
-  const [layerHeight, setLayerHeight] = useState("0.20");
+  const [filamentType, setFilamentType] = useState("");
+  const [nozzleSize, setNozzleSize] = useState("");
+  const [infillDensity, setInfillDensity] = useState("");
+  const [layerHeight, setLayerHeight] = useState("");
   const [printTimeMinutes, setPrintTimeMinutes] = useState("");
   const [notes, setNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [copiedPath, setCopiedPath] = useState(false);
+
+  const handleCopyPath = () => {
+    if (!model) return;
+    const primary = model.files.find((f) => f.isPrimary) || model.files[0];
+    const fullPath = `${model.library?.name || "Arquivos"}/${primary?.relativePath || model.folderPath}`;
+    navigator.clipboard.writeText(fullPath);
+    setCopiedPath(true);
+    setTimeout(() => setCopiedPath(false), 2000);
+  };
 
   // Busca detalhes do modelo
   const fetchModel = async () => {
@@ -118,10 +130,10 @@ export default function ModelStudioPage(props: {
       const data: ModelDetailData = await res.json();
       setModel(data);
       setEditedName(data.name);
-      setFilamentType(data.filamentType || "PLA");
-      setNozzleSize(data.nozzleSize?.toString() || "0.4");
-      setInfillDensity(data.infillDensity?.toString() || "15");
-      setLayerHeight(data.layerHeight?.toString() || "0.20");
+      setFilamentType(data.filamentType || "");
+      setNozzleSize(data.nozzleSize?.toString() || "");
+      setInfillDensity(data.infillDensity?.toString() || "");
+      setLayerHeight(data.layerHeight?.toString() || "");
       setPrintTimeMinutes(data.printTimeMinutes?.toString() || "");
       setNotes(data.notes || "");
     } catch (err: any) {
@@ -359,18 +371,26 @@ export default function ModelStudioPage(props: {
     primaryFile?.triangleCount ??
     (model.files.reduce((acc, f) => acc + (f.triangleCount || 0), 0) || null);
 
+  // Fator de preenchimento real (se disponível no modelo, ex: infillDensity 15 -> 0.15)
+  // Modelo FDM usa casca externa sólida (walls/top/bottom ~12%) + preenchimento interno esparso
+  const realInfillPercent = model.infillDensity ?? (infillDensity ? parseInt(infillDensity) : null);
+  const effectiveInfillFactor = realInfillPercent !== null 
+    ? Math.min(1, Math.max(0.05, 0.10 + (realInfillPercent / 100) * 0.5))
+    : 0.20;
+
   // Estimativa de consumo de filamento baseada no volume da bounding box (densidade ~1.24g/cm³ com infill)
   const estimatedVolumeCm3 =
     dimsX && dimsY && dimsZ
-      ? (dimsX * dimsY * dimsZ * 0.001) * 0.35 // fator aproximado de preenchimento
+      ? (dimsX * dimsY * dimsZ * 0.001) * effectiveInfillFactor
       : null;
   const estimatedGrams = estimatedVolumeCm3 ? Math.round(estimatedVolumeCm3 * 1.24) : null;
   const estimatedMeters = estimatedGrams ? (estimatedGrams / 2.98).toFixed(1) : null;
 
   // Avaliação de compatibilidade de mesa
-  const maxDim = Math.max(dimsX || 0, dimsY || 0, dimsZ || 0);
-  const isBambuCompatible = maxDim <= 256;
-  const isVoronCompatible = maxDim <= 300;
+  const hasDimensions = Boolean(dimsX && dimsY && dimsZ);
+  const maxDim = hasDimensions ? Math.max(dimsX || 0, dimsY || 0, dimsZ || 0) : null;
+  const isBambuCompatible = maxDim !== null ? maxDim <= 256 : null;
+  const isVoronCompatible = maxDim !== null ? maxDim <= 300 : null;
 
   // Formatação de bytes
   const formatBytes = (bytes: number) => {
@@ -391,17 +411,29 @@ export default function ModelStudioPage(props: {
     <div className="h-screen w-screen overflow-hidden bg-[#070a0e] text-slate-200 flex flex-col select-none">
       {/* BEGIN: TopGlobalBar */}
       <header className="h-10 bg-[#090d13] border-b border-[#182230] px-4 flex items-center justify-between text-xs shrink-0 z-30">
-        <div className="flex items-center space-x-3">
-          <Link href="/" className="flex items-center space-x-2 group">
+        <div className="flex items-center space-x-3 min-w-0">
+          <Link href="/" className="flex items-center space-x-2 group shrink-0">
             <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-cyan-500 to-orange-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
             <span className="font-bold tracking-wider text-slate-100 uppercase text-[11px] group-hover:text-white transition">
               Martins<span className="text-cyan-400">3D</span>Vault
             </span>
           </Link>
-          <span className="text-slate-600">/</span>
-          <span className="px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 font-mono text-[10px] border border-cyan-800/40">
+          <span className="text-slate-600 shrink-0">/</span>
+          <span className="px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 font-mono text-[10px] border border-cyan-800/40 shrink-0">
             VISUALIZADOR 3D STUDIO
           </span>
+          {model && (
+            <>
+              <span className="text-slate-700 hidden lg:inline shrink-0">|</span>
+              <span
+                className="hidden lg:inline text-slate-400 font-mono text-[11px] truncate max-w-sm xl:max-w-md select-all"
+                title={`${model.library?.name || 'Arquivos'} / ${primaryFile?.relativePath || model.folderPath}`}
+              >
+                <span className="text-slate-500">{model.library?.name || 'Arquivos'} / </span>
+                <span className="text-slate-300">{primaryFile?.relativePath || model.folderPath}</span>
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
@@ -444,8 +476,30 @@ export default function ModelStudioPage(props: {
               onSnapshotSaved={(newCover) => {
                 setModel((prev) => (prev ? { ...prev, coverImage: newCover } : prev));
               }}
-              onDimensionsCalculated={(dims) => setLiveDimensions(dims)}
-              onTriangleCountCalculated={(tris) => setLiveTriangleCount(tris)}
+              onDimensionsCalculated={(dims) => {
+                setLiveDimensions(dims);
+                if (primaryFile && (!primaryFile.dimensionsX || !primaryFile.dimensionsZ)) {
+                  fetch(`/api/models/${model.id}/files/${primaryFile.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      dimensionsX: dims.x,
+                      dimensionsY: dims.y,
+                      dimensionsZ: dims.z,
+                    }),
+                  }).catch(() => {});
+                }
+              }}
+              onTriangleCountCalculated={(tris) => {
+                setLiveTriangleCount(tris);
+                if (primaryFile && !primaryFile.triangleCount) {
+                  fetch(`/api/models/${model.id}/files/${primaryFile.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ triangleCount: tris }),
+                  }).catch(() => {});
+                }
+              }}
             />
           </div>
         </section>
@@ -459,17 +513,17 @@ export default function ModelStudioPage(props: {
           {/* Drawer Header with breadcrumb, action buttons and title */}
           <div className="p-5 border-b border-[#182332]">
             {/* Breadcrumb & Close/Edit Controls */}
-            <div className="flex items-center justify-between mb-3">
-              <nav className="flex items-center space-x-1.5 text-xs text-slate-400 truncate max-w-[280px]">
-                <Link href="/" className="hover:text-slate-200 transition">
-                  Arquivos
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <nav className="flex items-center space-x-1.5 text-xs text-slate-400 min-w-0 pr-2">
+                <Link href="/" className="hover:text-cyan-400 transition shrink-0">
+                  Catálogo
                 </Link>
-                <span className="text-slate-600">•</span>
+                <span className="text-slate-600 shrink-0">/</span>
                 <span className="text-slate-400 truncate">
-                  {model.collection?.name || model.library?.name} / {primaryFile?.fileName || model.name}
+                  {model.collection?.name || model.library?.name || "Arquivos"}
                 </span>
               </nav>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1 shrink-0">
                 <button
                   onClick={() => setIsEditingName(!isEditingName)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#16202c] transition"
@@ -490,6 +544,37 @@ export default function ModelStudioPage(props: {
                   title="Fechar painel e voltar ao catálogo"
                 >
                   <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Full File / Folder Path Container */}
+            <div className="mb-3.5">
+              <div
+                className="flex items-start gap-2.5 text-xs font-mono bg-[#111722] border border-[#1f2b3a] rounded-xl p-2.5 text-slate-300 shadow-sm group hover:border-[#2f4058] transition"
+                title={`${model.library?.name || 'Arquivos'} / ${primaryFile?.relativePath || model.folderPath}`}
+              >
+                <Folder className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0 font-mono text-[11px] leading-relaxed break-words [overflow-wrap:anywhere] select-all">
+                  <span className="text-cyan-400 font-semibold shrink-0">
+                    {model.library?.name || "Arquivos"}
+                  </span>
+                  <span className="text-slate-500 mx-1 shrink-0">/</span>
+                  <span className="text-slate-200 font-medium">
+                    {primaryFile?.relativePath || model.folderPath}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyPath}
+                  className="p-1 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-white/5 transition shrink-0"
+                  title="Copiar caminho completo"
+                >
+                  {copiedPath ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -652,11 +737,14 @@ export default function ModelStudioPage(props: {
                         data-purpose="file-card"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="space-y-1 min-w-0 pr-2">
-                            <h2 className="text-sm font-semibold text-white tracking-wide flex items-center gap-1.5 truncate">
+                          <div className="space-y-1.5 min-w-0 pr-2 flex-1">
+                            <h2 className="text-sm font-semibold text-white tracking-wide flex items-center gap-1.5">
                               <FileCode className="w-4 h-4 text-orange-500 shrink-0" />
-                              <span className="truncate">{file.fileName}</span>
+                              <span className="break-words [overflow-wrap:anywhere]" title={file.fileName}>{file.fileName}</span>
                             </h2>
+                            <div className="text-[11px] font-mono text-slate-400 break-words [overflow-wrap:anywhere] select-all">
+                              {file.relativePath}
+                            </div>
                             <div className="text-xs font-mono text-slate-400 flex items-center space-x-2">
                               <span className="px-1.5 py-0.5 rounded bg-blue-950/60 text-cyan-300 font-bold border border-cyan-800/40">
                                 .{file.format.toUpperCase()}
@@ -687,7 +775,7 @@ export default function ModelStudioPage(props: {
                 <div className="space-y-3">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                     <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Parâmetros de Fatiamento (Perfil Recomendado)</span>
+                    <span>Parâmetros de Fatiamento (Perfil do Arquivo)</span>
                   </h3>
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="bg-[#10161f] border border-[#1b2635] p-3 rounded-lg">
@@ -695,8 +783,16 @@ export default function ModelStudioPage(props: {
                         Altura de Camada
                       </span>
                       <span className="text-sm font-mono font-bold text-white mt-0.5 block">
-                        {layerHeight} mm{" "}
-                        <span className="text-xs font-normal text-slate-500">(Standard)</span>
+                        {layerHeight ? (
+                          <>
+                            {layerHeight} mm{" "}
+                            <span className="text-xs font-normal text-slate-500">
+                              {parseFloat(layerHeight) <= 0.12 ? "(Fina)" : parseFloat(layerHeight) <= 0.20 ? "(Standard)" : "(Rápida)"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-500 font-normal">--</span>
+                        )}
                       </span>
                     </div>
                     <div className="bg-[#10161f] border border-[#1b2635] p-3 rounded-lg">
@@ -704,7 +800,13 @@ export default function ModelStudioPage(props: {
                         Tempo Estimado
                       </span>
                       <span className="text-sm font-mono font-bold text-orange-400 mt-0.5 block">
-                        {printTimeMinutes ? `${Math.floor(parseInt(printTimeMinutes) / 60)}h ${parseInt(printTimeMinutes) % 60}m` : "5h 42m"}
+                        {printTimeMinutes ? (
+                          `${Math.floor(parseInt(printTimeMinutes) / 60)}h ${parseInt(printTimeMinutes) % 60}m`
+                        ) : (
+                          <span className="text-slate-500 font-normal text-xs" title="Tempo não embutido no arquivo. Você pode definir na aba Parâmetros & Notas">
+                            -- <span className="text-[10px] text-slate-600 block">(na aba Notas)</span>
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="bg-[#10161f] border border-[#1b2635] p-3 rounded-lg">
@@ -712,10 +814,18 @@ export default function ModelStudioPage(props: {
                         Consumo de Filamento
                       </span>
                       <span className="text-sm font-mono font-bold text-cyan-300 mt-0.5 block">
-                        {estimatedGrams ? `${estimatedGrams} g` : "142 g"}{" "}
-                        <span className="text-xs font-normal text-slate-500">
-                          (~{estimatedMeters || "47.6"} m)
-                        </span>
+                        {estimatedGrams ? (
+                          <>
+                            {estimatedGrams} g{" "}
+                            <span className="text-xs font-normal text-slate-500">
+                              (~{estimatedMeters || "0"} m)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-500 font-normal text-xs" title="Calculado automaticamente ao abrir a malha 3D">
+                            -- <span className="text-[10px] text-slate-600 block">(carregue 3D)</span>
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="bg-[#10161f] border border-[#1b2635] p-3 rounded-lg">
@@ -723,7 +833,13 @@ export default function ModelStudioPage(props: {
                         Triângulos (Malha)
                       </span>
                       <span className="text-sm font-mono font-bold text-purple-300 mt-0.5 block">
-                        {trisCount ? trisCount.toLocaleString("pt-BR") : "184.200"} tris
+                        {trisCount ? (
+                          `${trisCount.toLocaleString("pt-BR")} tris`
+                        ) : (
+                          <span className="text-slate-500 font-normal text-xs">
+                            -- <span className="text-[10px] text-slate-600 block">(carregue 3D)</span>
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -738,49 +854,72 @@ export default function ModelStudioPage(props: {
                     </span>
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                        isBambuCompatible
+                        isBambuCompatible === true
                           ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/40"
-                          : isVoronCompatible
+                          : isVoronCompatible === true
                           ? "bg-amber-950/60 text-amber-400 border-amber-800/40"
-                          : "bg-rose-950/60 text-rose-400 border-rose-800/40"
+                          : isBambuCompatible === false
+                          ? "bg-rose-950/60 text-rose-400 border-rose-800/40"
+                          : "bg-slate-800/60 text-slate-400 border-slate-700/40"
                       }`}
                     >
-                      {isBambuCompatible ? "100% Compatível" : isVoronCompatible ? "Mesa Grande Requerida" : "Excede Mesas"}
+                      {isBambuCompatible === true
+                        ? "100% Compatível"
+                        : isVoronCompatible === true
+                        ? "Mesa Grande Requerida"
+                        : isBambuCompatible === false
+                        ? "Excede Mesas"
+                        : "Aguardando 3D"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    {isBambuCompatible
-                      ? "O volume cabe perfeitamente nas mesas padrão 256×256×256 mm (Bambu Lab X1/P1P) e 300×300 mm (Voron 2.4 / Creality K1 Max)."
-                      : isVoronCompatible
-                      ? "O volume excede 256mm mas cabe nas mesas de 300×300 mm (Voron 2.4 / Creality K1 Max)."
-                      : "O volume excede as mesas padrão convencionais. Requer corte ou redução de escala no fatiador."}
+                    {hasDimensions ? (
+                      <>
+                        <span className="text-slate-300 font-mono block mb-1">
+                          Dimensões reais: {dimsX} × {dimsY} × {dimsZ} mm
+                        </span>
+                        {isBambuCompatible
+                          ? "O volume cabe perfeitamente nas mesas padrão 256×256×256 mm (Bambu Lab X1/P1P) e 300×300 mm (Voron 2.4 / Creality K1 Max)."
+                          : isVoronCompatible
+                          ? "O volume excede 256mm mas cabe nas mesas de 300×300 mm (Voron 2.4 / Creality K1 Max)."
+                          : "O volume excede as mesas padrão convencionais. Requer corte ou redução de escala no fatiador."}
+                      </>
+                    ) : (
+                      "Clique em 'Carregar Malha 3D' para calcular as dimensões reais da peça e verificar compatibilidade de mesa."
+                    )}
                   </p>
-                  <div className="flex gap-2 pt-1 text-[11px] font-mono flex-wrap">
-                    <span className="px-2 py-0.5 rounded bg-[#16202c] text-slate-300 border border-[#243344]">
-                      Bambu X1C
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-[#16202c] text-slate-300 border border-[#243344]">
-                      Voron 2.4
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-[#16202c] text-slate-300 border border-[#243344]">
-                      Ender-3 S1 Plus
-                    </span>
-                  </div>
+                  {hasDimensions && (
+                    <div className="flex gap-2 pt-1 text-[11px] font-mono flex-wrap">
+                      <span className={`px-2 py-0.5 rounded border ${isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-[#16202c] text-slate-500 border-[#243344]"}`}>
+                        Bambu X1C (256mm)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded border ${isVoronCompatible || isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-[#16202c] text-slate-500 border-[#243344]"}`}>
+                        Voron 2.4 (300mm)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded border ${isVoronCompatible || isBambuCompatible ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/40" : "bg-[#16202c] text-slate-500 border-[#243344]"}`}>
+                        Creality K1 Max
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Material & Temperature Specs */}
                 <div className="bg-[#0f151d] border border-[#1a2533] p-3.5 rounded-xl space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Filamento Recomendado</span>
-                    <span className="text-white font-medium">{filamentType || "PLA Premium / PETG"}</span>
+                    <span className="text-white font-medium">{filamentType || "--"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Preenchimento (Infill)</span>
-                    <span className="text-cyan-300 font-mono">{infillDensity}% Gyroid</span>
+                    <span className="text-cyan-300 font-mono">
+                      {infillDensity ? `${infillDensity}% Gyroid/Grid` : "--"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Bico (Nozzle)</span>
-                    <span className="text-white font-mono">{nozzleSize} mm</span>
+                    <span className="text-white font-mono">
+                      {nozzleSize ? `${nozzleSize} mm` : "--"}
+                    </span>
                   </div>
                 </div>
 
@@ -811,12 +950,21 @@ export default function ModelStudioPage(props: {
                     onChange={(e) => setFilamentType(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-[#141e2a] border border-[#203042] text-white focus:outline-none focus:border-cyan-500"
                   >
+                    <option value="">Não definido</option>
                     <option value="PLA">PLA</option>
+                    <option value="PLA-CF">PLA-CF (Fibra de Carbono)</option>
                     <option value="PETG">PETG</option>
+                    <option value="PETG-HF">PETG-HF</option>
                     <option value="ABS">ABS</option>
                     <option value="ASA">ASA</option>
                     <option value="TPU">TPU (Flexível)</option>
+                    <option value="PC">PC (Policarbonato)</option>
+                    <option value="PA-CF">PA-CF (Nylon)</option>
                     <option value="RESIN">Resina UV</option>
+                    {filamentType &&
+                      !["PLA", "PLA-CF", "PETG", "PETG-HF", "ABS", "ASA", "TPU", "PC", "PA-CF", "RESIN"].includes(filamentType) && (
+                        <option value={filamentType}>{filamentType}</option>
+                      )}
                   </select>
                 </div>
 

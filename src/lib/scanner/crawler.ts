@@ -461,22 +461,34 @@ export async function scanLibrary(
 
             if (threeMfMeta.thumbnailPath && !modelCover) {
               modelCover = threeMfMeta.thumbnailPath;
+            }
+
+            // Atualiza parâmetros de fatiamento do modelo
+            if (
+              modelCover ||
+              threeMfMeta.filamentType ||
+              threeMfMeta.layerHeight ||
+              threeMfMeta.nozzleSize ||
+              threeMfMeta.infillDensity
+            ) {
               await prisma.model.update({
                 where: { id: modelId },
                 data: {
-                  coverImage: modelCover,
-                  filamentType: threeMfMeta.filamentType || undefined,
-                  layerHeight: threeMfMeta.layerHeight || undefined,
+                  ...(modelCover ? { coverImage: modelCover } : {}),
+                  ...(threeMfMeta.filamentType ? { filamentType: threeMfMeta.filamentType } : {}),
+                  ...(threeMfMeta.layerHeight ? { layerHeight: threeMfMeta.layerHeight } : {}),
+                  ...(threeMfMeta.nozzleSize ? { nozzleSize: threeMfMeta.nozzleSize } : {}),
+                  ...(threeMfMeta.infillDensity ? { infillDensity: threeMfMeta.infillDensity } : {}),
                 },
               });
-            } else if (threeMfMeta.filamentType || threeMfMeta.layerHeight) {
-              await prisma.model.update({
-                where: { id: modelId },
-                data: {
-                  filamentType: threeMfMeta.filamentType || undefined,
-                  layerHeight: threeMfMeta.layerHeight || undefined,
-                },
-              });
+            }
+
+            if (threeMfMeta.triangleCount) {
+              triangleCount = threeMfMeta.triangleCount;
+            }
+            if (threeMfMeta.dimensionsX && threeMfMeta.dimensionsY) {
+              dimensionsX = threeMfMeta.dimensionsX;
+              dimensionsY = threeMfMeta.dimensionsY;
             }
           }
 
