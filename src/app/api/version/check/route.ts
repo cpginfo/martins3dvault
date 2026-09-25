@@ -3,6 +3,7 @@ import { checkGitHubRelease, isNewerVersion, VersionCheckResult } from "@/lib/ve
 import { APP_VERSION } from "@/lib/version";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const force = searchParams.get("force") === "true";
     const mock = searchParams.get("mock");
 
-    // Consulta release real no GitHub (com cache de 30 minutos)
+    // Consulta release real no GitHub
     const result = await checkGitHubRelease(force);
 
     // Suporte a modo mock para validação e testes da interface
@@ -25,10 +26,18 @@ export async function GET(request: NextRequest) {
         releaseNotes: `### Novidades da versão ${mockTag}\n- 🚀 Melhorias de desempenho e telemetria 3D\n- 🛡️ Notificação automática de versão no GitHub\n- 🐞 Correções e estabilidade geral`,
         checkedAt: new Date().toISOString(),
       };
-      return NextResponse.json(mockResult);
+      return NextResponse.json(mockResult, {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      },
+    });
   } catch (error: any) {
     console.error("Erro ao verificar versão:", error);
     return NextResponse.json(

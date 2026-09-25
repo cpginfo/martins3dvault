@@ -13,8 +13,8 @@ export interface VersionCheckResult {
   error?: string;
 }
 
-// Cache em memória no servidor Next.js (30 minutos de TTL)
-const CACHE_TTL_MS = 30 * 60 * 1000;
+// Cache em memória no servidor Next.js (10 minutos de TTL para requisições automáticas)
+const CACHE_TTL_MS = 10 * 60 * 1000;
 let cachedResult: { timestamp: number; data: VersionCheckResult } | null = null;
 
 /**
@@ -66,14 +66,17 @@ export function isNewerVersion(current: string, latest: string): boolean {
 }
 
 /**
- * Consulta a última versão publicada no GitHub Releases
+ * Consulta a última versão publicada no GitHub (Releases e Tags)
  */
 export async function checkGitHubRelease(force = false): Promise<VersionCheckResult> {
   const repo = process.env.GITHUB_REPOSITORY || "cpginfo/martins3dvault";
   const now = Date.now();
 
-  // Retorna cache caso não tenha expirado e não seja uma checagem forçada
-  if (!force && cachedResult && now - cachedResult.timestamp < CACHE_TTL_MS) {
+  // Se a checagem for forçada (clique no botão), limpa o cache em memória
+  if (force) {
+    cachedResult = null;
+  } else if (cachedResult && now - cachedResult.timestamp < CACHE_TTL_MS) {
+    // Retorna cache caso não tenha expirado e não seja forçado
     return cachedResult.data;
   }
 
@@ -82,7 +85,7 @@ export async function checkGitHubRelease(force = false): Promise<VersionCheckRes
     latestVersion: null,
     hasUpdate: false,
     releaseName: null,
-    releaseUrl: null,
+    releaseUrl: `https://github.com/${repo}/releases`,
     releaseNotes: null,
     publishedAt: null,
     checkedAt: new Date().toISOString(),
@@ -93,41 +96,87 @@ export async function checkGitHubRelease(force = false): Promise<VersionCheckRes
     const headers: Record<string, string> = {
       Accept: "application/vnd.github.v3+json",
       "User-Agent": "Martins3DVault-VersionChecker",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
     };
 
     if (process.env.GITHUB_TOKEN) {
       headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
     }
 
-    const apiUrl = `https://api.github.com/repos/${repo}/releases/latest`;
-    const response = await fetch(apiUrl, {
-      headers,
-      signal: AbortSignal.timeout(6000), // Timeout de 6s para evitar bloqueio
-      next: { revalidate: 1800 }, // Suporte a cache Next.js fetch
-    });
+    let latestTag = "";
+    let releaseName = "";
+    let releaseUrl = `https://github.com/${repo}/releases`;
+    let releaseNotes = "";
+    let publishedAt: string | null = null;
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        // Nenhuma release encontrada
-        const res = { ...defaultResult, latestVersion: APP_VERSION };
-        cachedResult = { timestamp: now, data: res };
-        return res;
+    // 1. Tenta obter a última release oficial do GitHub
+    try {
+      const releaseApiUrl = `https://api.github.com/repos/${repo}/releases/latest?_t=${Date.now()}`;
+      const releaseRes = await fetch(releaseApiUrl, {
+        headers,
+        signal: AbortSignal.timeout(6000),
+        cache: "no-store",
+      });
+
+      if (releaseRes.ok) {
+        const releaseData = await releaseRes.json();
+        latestTag = releaseData.tag_name || "";
+        releaseName = releaseData.name || latestTag;
+        releaseUrl = releaseData.html_url || releaseUrl;
+        releaseNotes = releaseData.body || "";
+        publishedAt = releaseData.published_at || null;
       }
-      throw new Error(`GitHub API retornou status HTTP ${response.status}`);
+    } catch (e: any) {
+      console.warn("⚠️ [VersionChecker] Erro ao buscar release/latest:", e?.message);
     }
 
-    const data = await response.json();
-    const latestTag = data.tag_name || "";
+    // 2. Consulta também /tags para garantir que tags recém-publicadas (ex: v1.10.0)
+    // sejam detectadas imediatamente mesmo se a release ainda estiver compilando no CI
+    try {
+      const tagsApiUrl = `https://api.github.com/repos/${repo}/tags?per_page=3&_t=${Date.now()}`;
+      const tagsRes = await fetch(tagsApiUrl, {
+        headers,
+        signal: AbortSignal.timeout(4000),
+        cache: "no-store",
+      });
+
+      if (tagsRes.ok) {
+        const tags = await tagsRes.json();
+        if (Array.isArray(tags) && tags.length > 0) {
+          const newestTag = tags[0].name;
+          // Se a tag mais recente for maior que a obtida no /releases/latest, usa a tag
+          if (!latestTag || isNewerVersion(latestTag, newestTag)) {
+            latestTag = newestTag;
+            if (!releaseName || releaseName === latestTag) {
+              releaseName = `Release ${newestTag}`;
+            }
+            releaseUrl = `https://github.com/${repo}/releases/tag/${newestTag}`;
+            if (!releaseNotes) {
+              releaseNotes = `Uma nova versão (${newestTag}) foi publicada no GitHub.`;
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn("⚠️ [VersionChecker] Erro ao consultar tags:", e?.message);
+    }
+
+    if (!latestTag) {
+      // Se não encontrou nenhuma release ou tag
+      latestTag = APP_VERSION;
+    }
+
     const hasUpdate = isNewerVersion(APP_VERSION, latestTag);
 
     const result: VersionCheckResult = {
       currentVersion: APP_VERSION,
-      latestVersion: latestTag || null,
+      latestVersion: latestTag,
       hasUpdate,
-      releaseName: data.name || latestTag,
-      releaseUrl: data.html_url || `https://github.com/${repo}/releases`,
-      releaseNotes: data.body || "",
-      publishedAt: data.published_at || null,
+      releaseName: releaseName || `Release ${latestTag}`,
+      releaseUrl,
+      releaseNotes,
+      publishedAt,
       checkedAt: new Date().toISOString(),
       repository: repo,
     };
@@ -135,9 +184,8 @@ export async function checkGitHubRelease(force = false): Promise<VersionCheckRes
     cachedResult = { timestamp: now, data: result };
     return result;
   } catch (error: any) {
-    console.warn("⚠️ [VersionChecker] Falha ao verificar versão no GitHub:", error?.message);
+    console.warn("⚠️ [VersionChecker] Falha geral ao verificar versão no GitHub:", error?.message);
 
-    // Se já tínhamos cache anterior, use-o
     if (cachedResult) {
       return {
         ...cachedResult.data,

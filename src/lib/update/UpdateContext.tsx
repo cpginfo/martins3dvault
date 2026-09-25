@@ -27,8 +27,16 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   const checkUpdates = useCallback(async (force = false) => {
     try {
       setChecking(true);
-      const url = force ? "/api/version/check?force=true" : "/api/version/check";
-      const res = await fetch(url, { cache: "no-store" });
+      const url = force
+        ? `/api/version/check?force=true&_t=${Date.now()}`
+        : `/api/version/check?_t=${Date.now()}`;
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       if (res.ok) {
         const data: VersionCheckResult = await res.json();
         setUpdateInfo(data);
