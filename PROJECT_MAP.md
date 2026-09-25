@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.9.1)
+# Mapa do Projeto - Martins3DVault (v1.11.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.9.1                                  │
+│                           MARTINS3DVAULT v1.11.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -201,6 +201,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
     ├── proxy.ts                   # Next.js 16 Proxy layer: proteção de rotas públicas e autenticação de API com ADMIN
     │
     └── lib/                       # Módulos de Lógica de Negócio e Serviços
+        ├── security/
+        │   ├── concurrency-limiter.ts # Limites globais (15) e por usuário (3), lock single-flight de malha e circuit breaker
+        │   ├── stream-throttler.ts    # Limitação de taxa de transferência de downloads via DOWNLOAD_THROTTLE_MBPS
+        │   └── download-logger.ts     # Auditoria de eventos de download e ring-buffer em memória para telemetria
         ├── theme/
         │   └── ThemeContext.tsx   # Contexto global de tema, sincronização localStorage e anti-FOUC
         ├── auth/
@@ -230,11 +234,11 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container e banco, versão (`v1.9.0`) e uptime. |
+| `GET` | `/api/health` | Status de saúde do container, banco, versão (`v1.11.0`), uptime e telemetria de concorrência. |
 | `GET` | `/api/cache` | Retorna o tamanho total em bytes e contagem de arquivos em `/data/cache`. |
 | `DELETE` | `/api/cache` | Limpa com segurança o cache de malhas 3D liberando espaço em disco. |
 | `GET` | `/api/collections?tree=true` | Retorna a árvore hierárquica completa de coleções e contadores recursivos. |
-| `GET` | `/api/assets/file` | Streaming e download direto de arquivos 3D/PDF com resolução resiliente (fallback) e RFC 6266. |
+| `GET` | `/api/assets/file` | Streaming e download de arquivos com controle de concorrência (máx 3/user), throttling de banda e logging. |
 | `POST` | `/api/collections/[id]/scan` | Varredura diferencial e incremental estrita à subpasta física da coleção no disco. |
 | `GET` / `PUT` | `/api/pricing/settings` | Obtém ou atualiza configurações persistentes da impressora, potência e taxas horárias. |
 | `GET` / `POST` | `/api/pricing/materials` | Lista filamentos ou cadastra novo material com custo por kg e densidade. |
@@ -248,7 +252,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 | `GET` | `/api/users/[id]` | Retorna detalhes cadastrais de um usuário específico. |
 | `PUT` | `/api/users/[id]` | Edita os 5 campos do usuário (`name, email, password, role, avatar`) com validação de e-mail e senha. |
 | `DELETE` | `/api/users/[id]` | Remove um usuário do sistema (com proteção contra auto-exclusão). |
-| `GET` | `/api/assets/mesh` | Serve a malha 3D em STL Binário de alta performance (com cache em disco). |
+| `GET` | `/api/assets/mesh` | Serve a malha 3D em STL Binário com lock single-flight de conversão, limite de concorrência e cache em disco. |
 | `GET` | `/api/assets/file` | Download do arquivo original completo (`.3mf`, `.stl`, `.obj`). |
 | `POST` | `/api/models/move` | Move modelos e seus arquivos complementares (imagem e PDF) fisicamente entre pastas de coleção no disco. |
 | `POST` | `/api/upload/url` | Baixa arquivo 3D ou pacote ZIP de uma URL diretamente para a pasta/coleção `download`. |

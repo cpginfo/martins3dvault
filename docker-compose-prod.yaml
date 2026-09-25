@@ -14,6 +14,15 @@ services:
       - ADMIN_PASSWORD=${vault3d_ADMIN_PASSWORD:-admin123}
       - STORAGE_DATA_PATH=${vault3d_STORAGE_DATA_PATH:-/data}
       - STORAGE_LIBRARIES_PATH=${vault3d_STORAGE_LIBRARIES_PATH:-/libraries}
+      - DOWNLOAD_THROTTLE_MBPS=${vault3d_DOWNLOAD_THROTTLE_MBPS:-10}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     volumes:
       - ./data:/data # Armazenamento de thumbnails extraídas e uploads
       - ./stls:/libraries # Montagem dos diretórios de arquivos 3D

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { APP_VERSION } from "@/lib/version";
+import { getConcurrencyStats } from "@/lib/security/concurrency-limiter";
 
 export async function GET() {
   try {
@@ -12,6 +13,7 @@ export async function GET() {
         status: "healthy",
         version: APP_VERSION,
         uptime: process.uptime(),
+        concurrency: getConcurrencyStats(),
         timestamp: new Date().toISOString(),
       },
       { status: 200 }

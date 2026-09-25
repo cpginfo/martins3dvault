@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.9.1)
+# Martins3DVault 🖨️✨ (v1.11.0)
 
 <div align="center">
 
@@ -76,6 +76,14 @@
 
 - 🔒 **Login Seguro & Autenticação (`/login`)**:
   - Proteção integral de todas as rotas e endpoints de API exigindo perfil `ADMIN`.
+
+- 🛡️ **Controle de Concorrência, Throttling & Proteção de Recursos**:
+  - Proteção robusta contra scripts automatizados e exaustão de CPU: limite estrito de 3 downloads/conversões simultâneas por usuário e teto global de 15 slots.
+  - Bloqueio imediato `HTTP 429 Too Many Requests` no 4º download concorrente com cabeçalho `Retry-After`.
+  - Lock Single-Flight em conversões `.3mf` para STL (`getOrConvertMesh`), unificando solicitações paralelas para evitar uso desnecessário de CPU.
+  - Throttling de banda configurável via `DOWNLOAD_THROTTLE_MBPS` (padrão 10 MB/s por stream).
+  - Quarentena automática temporária por Circuit Breaker para clientes que excedem repetidamente os limites.
+  - Painel de telemetria em tempo real na tela de Métricas (`/metrics`) com histórico de downloads e contadores ativos.
 
 ---
 
@@ -167,3 +175,4 @@ Abra o navegador em: **[http://localhost:3000](http://localhost:3000)**
 | `ADMIN_FORCE_RESET` | `false` | Se `true`, força a redefinição de senha do admin para `ADMIN_PASSWORD` ao iniciar o container |
 | `STORAGE_DATA_PATH` | `/data` | Diretório de thumbnails, caches e uploads |
 | `STORAGE_LIBRARIES_PATH` | `/libraries` | Ponto de montagem de pastas de arquivos 3D |
+| `DOWNLOAD_THROTTLE_MBPS` | `10` | Limite de vazão de streaming de download por conexão em MB/s |

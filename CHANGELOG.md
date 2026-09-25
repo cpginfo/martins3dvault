@@ -5,6 +5,26 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.11.0] - 2026-09-25
+
+### Adicionado
+- **Controle de Concorrência de Downloads & Proteção contra Exaustão de Recursos**:
+  - Implementado limitador de concorrência robusto (`src/lib/security/concurrency-limiter.ts`) para proteger o servidor contra automações e downloads em massa não autorizados.
+  - **Limite por Usuário**: Máximo de 3 downloads/conversões simultâneas por usuário autenticado. O 4º download simultâneo recebe `HTTP 429 Too Many Requests` imediatamente com cabeçalho `Retry-After: 5` e mensagem clara ao cliente.
+  - **Limite Global de Processo**: Teto de 15 slots simultâneos globais de streaming pesado no backend.
+  - **Lock Single-Flight por Arquivo (`getOrConvertMesh`)**: Requisições paralelas solicitando a conversão de um mesmo arquivo `.3mf` para STL compartilham a mesma Promise, eliminando execuções redundantes e picos de CPU.
+  - **Throttling de Banda de Streaming (`src/lib/security/stream-throttler.ts`)**: Suporte a limitação de vazão de transferência configurável via variável de ambiente `DOWNLOAD_THROTTLE_MBPS` (padrão 10 MB/s por stream).
+  - **Circuit Breaker Automático**: Usuários que acumularem 10 rejeições 429 em uma janela de 5 minutos entram automaticamente em quarentena temporária de 15 minutos com bloqueio preventivo de novos downloads.
+  - **Isolamento de Rotas Leves**: O limitador atua exclusivamente nas rotas pesadas (`/api/assets/file` e `/api/assets/mesh`), mantendo rotas de catálogo, metadados, miniaturas e autenticação com tempo de resposta inalterado.
+- **Auditoria Estruturada & Observabilidade em Tempo Real**:
+  - Logger estruturado com identificação de `userId`, `fileId`, `durationMs`, `bytesTransferred`, `status` (`COMPLETED`, `ABORTED`, `LIMITED`, `ERROR`).
+  - Painel de telemetria de concorrência adicionado à tela de Métricas (`/metrics`), com cards de slots ativos, histórico recente de downloads e rejeições por limite.
+  - Integração dos contadores de concorrência no endpoint `/api/health` e `/api/stats`.
+- **Limites de Recursos no Docker Compose**:
+  - Configuração de limites de hardware em `docker-compose.yaml` (`cpus: '2.0'`, `memory: 2G`, reservas `0.5` CPU / `512M` RAM).
+
+---
+
 ## [1.10.1] - 2026-09-25
 
 ### Corrigido

@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       tags:
         - "martins3dvault:latest"
-        - "martins3dvault:1.10.1"
-    image: martins3dvault:1.10.1
+        - "martins3dvault:1.11.0"
+    image: martins3dvault:1.11.0
     container_name: 3d-vault-web
     restart: unless-stopped
     ports:
@@ -21,6 +21,15 @@ services:
       - ADMIN_FORCE_RESET=false # true apenas se precisar forçar reset da senha
       - STORAGE_DATA_PATH=${STORAGE_DATA_PATH:-/data}
       - STORAGE_LIBRARIES_PATH=${STORAGE_LIBRARIES_PATH:-/libraries}
+      - DOWNLOAD_THROTTLE_MBPS=${DOWNLOAD_THROTTLE_MBPS:-10} # Limite de banda de streaming por conexão em MB/s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0' # Limite máximo de CPU (ajustável conforme hardware do host)
+          memory: 2G  # Limite máximo de memória RAM
+        reservations:
+          cpus: '0.5' # Reserva mínima garantida
+          memory: 512M
     volumes:
       - ./data:/data # Armazenamento de thumbnails extraídas e uploads
       - ./libraries:/libraries # Montagem dos diretórios de arquivos 3D

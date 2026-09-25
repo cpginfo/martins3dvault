@@ -5,16 +5,45 @@ import { Readable } from "stream";
 import prisma from "@/lib/prisma";
 import { convert3mfToBinaryStl } from "@/lib/scanner/extractors/threemf-converter";
 import { requireAuth, handleAuthError } from "@/lib/auth/session";
+import { acquireDownloadSlot, getOrConvertMesh } from "@/lib/security/concurrency-limiter";
+import { createBandwidthThrottler } from "@/lib/security/stream-throttler";
+import { logDownloadEvent } from "@/lib/security/download-logger";
 
 export async function GET(request: Request) {
+  let slot: ReturnType<typeof acquireDownloadSlot> | null = null;
+  let streamStarted = false;
+  let currentUserId = "anonymous";
+  let currentUserEmail: string | undefined;
+
   try {
-    await requireAuth(undefined, request);
+    const user = await requireAuth(undefined, request);
+    currentUserId = user.id;
+    currentUserEmail = user.email;
+
     const { searchParams } = new URL(request.url);
     const libraryId = searchParams.get("libraryId");
     const relPath = searchParams.get("relPath");
 
     if (!libraryId || !relPath) {
       return new NextResponse("Parâmetros inválidos", { status: 400 });
+    }
+
+    // 1. Controle de concorrência por usuário (máx. 3) e global (máx. 15)
+    slot = acquireDownloadSlot(user.id, user.role);
+    if (!slot.allowed) {
+      logDownloadEvent({
+        userId: user.id,
+        userEmail: user.email,
+        filePath: relPath,
+        result: "RATE_LIMITED_429",
+        statusCode: slot.statusCode || 429,
+        message: slot.message,
+      });
+
+      return NextResponse.json(
+        { error: slot.message },
+        { status: slot.statusCode || 429, headers: { "Retry-After": "5" } }
+      );
     }
 
     const library = await prisma.library.findUnique({
@@ -65,7 +94,21 @@ export async function GET(request: Request) {
     // Se já for STL ou OBJ, serve diretamente em alta velocidade
     if (ext === ".stl" || ext === ".obj") {
       const fileStream = fs.createReadStream(fullPath, { highWaterMark: 1024 * 1024 });
-      const readable = Readable.toWeb(fileStream) as ReadableStream;
+      const throttler = createBandwidthThrottler();
+      const outputStream = throttler ? fileStream.pipe(throttler) : fileStream;
+
+      slot.bindToStream(outputStream, request.signal);
+      streamStarted = true;
+
+      logDownloadEvent({
+        userId: user.id,
+        userEmail: user.email,
+        filePath: safeRelPath,
+        result: "SUCCESS",
+        statusCode: 200,
+      });
+
+      const readable = Readable.toWeb(outputStream as Readable) as ReadableStream;
 
       const headers = new Headers();
       headers.set("Content-Type", ext === ".stl" ? "model/stl" : "model/obj");
@@ -86,16 +129,41 @@ export async function GET(request: Request) {
       const fileHash = `mesh_${stat.mtimeMs}_${stat.size}`;
       const cachedStlPath = path.join(cacheDir, `${fileHash}.stl`);
 
-      // Se ainda não estiver em cache, converte e salva
+      // 2. Lock por fileHash: se já houver conversão do mesmo arquivo em andamento,
+      // requisições concorrentes aguardam a MESMA Promise em vez de duplicar carga na CPU
+      let finalFilePath = cachedStlPath;
+
       if (!fs.existsSync(cachedStlPath)) {
         try {
-          const stlBuffer = await convert3mfToBinaryStl(fullPath);
-          await fs.promises.writeFile(cachedStlPath, stlBuffer);
+          const { path: convertedPath } = await getOrConvertMesh(fileHash, async () => {
+            // Se entre o início e a aquisição o arquivo foi gerado
+            if (fs.existsSync(cachedStlPath)) {
+              return cachedStlPath;
+            }
+            const stlBuffer = await convert3mfToBinaryStl(fullPath);
+            await fs.promises.writeFile(cachedStlPath, stlBuffer);
+            return cachedStlPath;
+          });
+          finalFilePath = convertedPath;
         } catch (convErr) {
           console.warn("Falha na conversão para cache STL, enviando arquivo original 3MF:", convErr);
           // Fallback para o arquivo original se a conversão falhar
           const fileStream = fs.createReadStream(fullPath, { highWaterMark: 1024 * 1024 });
-          const readable = Readable.toWeb(fileStream) as ReadableStream;
+          const throttler = createBandwidthThrottler();
+          const outputStream = throttler ? fileStream.pipe(throttler) : fileStream;
+
+          slot.bindToStream(outputStream, request.signal);
+          streamStarted = true;
+
+          logDownloadEvent({
+            userId: user.id,
+            userEmail: user.email,
+            filePath: safeRelPath,
+            result: "SUCCESS",
+            statusCode: 200,
+          });
+
+          const readable = Readable.toWeb(outputStream as Readable) as ReadableStream;
           const headers = new Headers();
           headers.set("Content-Type", "application/vnd.ms-package.3dmanufacturing-3dmodel+xml");
           headers.set("Content-Length", stat.size.toString());
@@ -104,9 +172,23 @@ export async function GET(request: Request) {
         }
       }
 
-      const cachedStat = await fs.promises.stat(cachedStlPath);
-      const fileStream = fs.createReadStream(cachedStlPath, { highWaterMark: 1024 * 1024 });
-      const readable = Readable.toWeb(fileStream) as ReadableStream;
+      const cachedStat = await fs.promises.stat(finalFilePath);
+      const fileStream = fs.createReadStream(finalFilePath, { highWaterMark: 1024 * 1024 });
+      const throttler = createBandwidthThrottler();
+      const outputStream = throttler ? fileStream.pipe(throttler) : fileStream;
+
+      slot.bindToStream(outputStream, request.signal);
+      streamStarted = true;
+
+      logDownloadEvent({
+        userId: user.id,
+        userEmail: user.email,
+        filePath: safeRelPath,
+        result: "SUCCESS",
+        statusCode: 200,
+      });
+
+      const readable = Readable.toWeb(outputStream as Readable) as ReadableStream;
 
       const headers = new Headers();
       headers.set("Content-Type", "model/stl");
@@ -120,9 +202,26 @@ export async function GET(request: Request) {
 
     return new NextResponse("Formato não suportado para streaming de malha 3D", { status: 400 });
   } catch (err: any) {
+    if (slot && !streamStarted) {
+      slot.release();
+    }
+
     const authRes = handleAuthError(err);
     if (authRes) return authRes;
+
+    logDownloadEvent({
+      userId: currentUserId,
+      userEmail: currentUserEmail,
+      result: "ERROR",
+      statusCode: 500,
+      message: err?.message,
+    });
+
     console.error("Erro no endpoint /api/assets/mesh:", err);
     return new NextResponse("Erro interno ao processar malha", { status: 500 });
+  } finally {
+    if (slot && !streamStarted) {
+      slot.release();
+    }
   }
 }

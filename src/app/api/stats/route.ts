@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth, handleAuthError } from "@/lib/auth/session";
 import { getCacheStats } from "@/lib/storage/cache-ops";
+import { getConcurrencyStats } from "@/lib/security/concurrency-limiter";
+import { getRecentDownloadLogs } from "@/lib/security/download-logger";
 
 export async function GET(request: Request) {
   try {
@@ -50,6 +52,8 @@ export async function GET(request: Request) {
         sizeBytes: cacheStats.sizeBytes,
         fileCount: cacheStats.fileCount,
       },
+      concurrency: getConcurrencyStats(),
+      downloadLogs: getRecentDownloadLogs(20),
     });
   } catch (err: any) {
     const authRes = handleAuthError(err);

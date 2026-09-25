@@ -22,6 +22,26 @@ interface StatsData {
     sizeBytes: number;
     fileCount: number;
   };
+  concurrency?: {
+    globalActiveSlots: number;
+    maxGlobalSlots: number;
+    maxUserSlots: number;
+    activeUsersCount: number;
+    activeUsers: Array<{ userId: string; activeSlots: number }>;
+    inFlightConversionsCount: number;
+    blockedUsersCount: number;
+    activeBlocks: Array<{ userId: string; remainingSeconds: number; reason?: string }>;
+  };
+  downloadLogs?: Array<{
+    id: string;
+    userId: string;
+    userEmail?: string;
+    filePath?: string;
+    timestamp: string;
+    result: string;
+    statusCode: number;
+    message?: string;
+  }>;
 }
 
 export default function MetricsPage() {
@@ -331,6 +351,170 @@ export default function MetricsPage() {
                       >
                         <span className="material-symbols-outlined text-[16px]">close</span>
                       </button>
+                    </div>
+                  )}
+                </section>
+
+                {/* Seção de Segurança, Concorrência e Observabilidade de Downloads */}
+                <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-6 rounded bg-primary"></div>
+                      <div>
+                        <h2 className="text-base font-bold text-on-surface tracking-tight flex items-center gap-2">
+                          <span>Segurança de Downloads & Concorrência</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 uppercase">
+                            Proteção Ativa
+                          </span>
+                        </h2>
+                        <p className="text-xs text-on-surface-variant">
+                          Controle de exaustão de CPU com limites por usuário, fila global e locks single-flight
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 Cards de Métricas de Concorrência */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl bg-surface-container flex flex-col justify-between border border-white/5">
+                      <div className="flex items-center justify-between text-on-surface-variant mb-2">
+                        <span className="text-xs font-semibold">Slots Globais</span>
+                        <span className="material-symbols-outlined text-[20px] text-primary">hub</span>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-mono font-bold text-on-surface">
+                          {stats.concurrency?.globalActiveSlots ?? 0}
+                          <span className="text-sm font-normal text-outline"> / {stats.concurrency?.maxGlobalSlots ?? 15}</span>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant mt-1">Capacidade total do servidor</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-surface-container flex flex-col justify-between border border-white/5">
+                      <div className="flex items-center justify-between text-on-surface-variant mb-2">
+                        <span className="text-xs font-semibold">Limite por Usuário</span>
+                        <span className="material-symbols-outlined text-[20px] text-secondary">person_cancel</span>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-mono font-bold text-on-surface">
+                          {stats.concurrency?.maxUserSlots ?? 3}
+                          <span className="text-sm font-normal text-outline"> máx</span>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant mt-1">429 automático no 4º download</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-surface-container flex flex-col justify-between border border-white/5">
+                      <div className="flex items-center justify-between text-on-surface-variant mb-2">
+                        <span className="text-xs font-semibold">Lock Single-Flight</span>
+                        <span className="material-symbols-outlined text-[20px] text-tertiary">lock_clock</span>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-mono font-bold text-on-surface">
+                          {stats.concurrency?.inFlightConversionsCount ?? 0}
+                          <span className="text-sm font-normal text-outline"> ativas</span>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant mt-1">Deduplicação de CPU em .3MF</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-surface-container flex flex-col justify-between border border-white/5">
+                      <div className="flex items-center justify-between text-on-surface-variant mb-2">
+                        <span className="text-xs font-semibold">Circuit Breaker</span>
+                        <span className="material-symbols-outlined text-[20px] text-error">gavel</span>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-mono font-bold text-on-surface">
+                          {stats.concurrency?.blockedUsersCount ?? 0}
+                          <span className="text-sm font-normal text-outline"> bloqueados</span>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant mt-1">Quarentena de 15m para abusos</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Usuários com downloads ativos no momento */}
+                  {stats.concurrency && stats.concurrency.activeUsers && stats.concurrency.activeUsers.length > 0 && (
+                    <div className="p-3.5 rounded-lg bg-surface-container border border-primary/20 flex flex-col gap-2">
+                      <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                        Usuários com Downloads Ativos em Andamento
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {stats.concurrency.activeUsers.map((u) => (
+                          <span
+                            key={u.userId}
+                            className="px-2.5 py-1 rounded bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface flex items-center gap-2"
+                          >
+                            <span>ID: {u.userId.slice(0, 8)}...</span>
+                            <span className="font-bold text-primary bg-primary/20 px-1.5 py-0.2 rounded">
+                              {u.activeSlots} {u.activeSlots === 1 ? "slot" : "slots"}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tabela de Observabilidade de Downloads Recentes */}
+                  {stats.downloadLogs && stats.downloadLogs.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-on-surface-variant">
+                        <span>Histórico de Requisições de Download & Conversão</span>
+                        <span className="font-mono text-[11px] text-outline">Últimos {stats.downloadLogs.length} eventos</span>
+                      </div>
+                      <div className="overflow-x-auto rounded-lg border border-white/5">
+                        <table className="w-full text-left text-xs font-sans">
+                          <thead className="bg-surface-container text-on-surface-variant font-mono text-[11px] uppercase border-b border-white/5">
+                            <tr>
+                              <th className="px-3 py-2">Data/Hora</th>
+                              <th className="px-3 py-2">Usuário</th>
+                              <th className="px-3 py-2">Arquivo</th>
+                              <th className="px-3 py-2">Status</th>
+                              <th className="px-3 py-2">Resultado</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 bg-surface-container-lowest/50">
+                            {stats.downloadLogs.map((log) => (
+                              <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="px-3 py-2 font-mono text-outline text-[11px]">
+                                  {new Date(log.timestamp).toLocaleTimeString("pt-BR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                  })}
+                                </td>
+                                <td className="px-3 py-2 font-mono text-on-surface-variant">
+                                  {log.userEmail || (log.userId ? log.userId.slice(0, 8) + "..." : "anônimo")}
+                                </td>
+                                <td className="px-3 py-2 text-on-surface truncate max-w-xs" title={log.filePath}>
+                                  {log.filePath || "Arquivo 3D"}
+                                </td>
+                                <td className="px-3 py-2 font-mono">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      log.statusCode === 200
+                                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                        : log.statusCode === 429
+                                        ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                                        : "bg-error/15 text-error border border-error/30"
+                                    }`}
+                                  >
+                                    {log.statusCode}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span className="text-[11px] text-on-surface-variant truncate block max-w-xs" title={log.message}>
+                                    {log.result === "SUCCESS"
+                                      ? "Download liberado"
+                                      : log.message || log.result}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </section>

@@ -4,6 +4,9 @@ import fs from "fs";
 import { Readable } from "stream";
 import prisma from "@/lib/prisma";
 import { requireAuth, handleAuthError } from "@/lib/auth/session";
+import { acquireDownloadSlot } from "@/lib/security/concurrency-limiter";
+import { createBandwidthThrottler } from "@/lib/security/stream-throttler";
+import { logDownloadEvent } from "@/lib/security/download-logger";
 
 const MIME_TYPES: Record<string, string> = {
   ".stl": "model/stl",
@@ -18,8 +21,16 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
+  let slot: ReturnType<typeof acquireDownloadSlot> | null = null;
+  let streamStarted = false;
+  let currentUserId = "anonymous";
+  let currentUserEmail: string | undefined;
+
   try {
-    await requireAuth(undefined, request);
+    const user = await requireAuth(undefined, request);
+    currentUserId = user.id;
+    currentUserEmail = user.email;
+
     const { searchParams } = new URL(request.url);
     const libraryId = searchParams.get("libraryId");
     const relPath = searchParams.get("relPath");
@@ -27,6 +38,24 @@ export async function GET(request: Request) {
 
     if (!libraryId || !relPath) {
       return new NextResponse("Parâmetros inválidos", { status: 400 });
+    }
+
+    // 1. Controle de concorrência por usuário (máx. 3) e global (máx. 15)
+    slot = acquireDownloadSlot(user.id, user.role);
+    if (!slot.allowed) {
+      logDownloadEvent({
+        userId: user.id,
+        userEmail: user.email,
+        filePath: relPath,
+        result: "RATE_LIMITED_429",
+        statusCode: slot.statusCode || 429,
+        message: slot.message,
+      });
+
+      return NextResponse.json(
+        { error: slot.message },
+        { status: slot.statusCode || 429, headers: { "Retry-After": "5" } }
+      );
     }
 
     const library = await prisma.library.findUnique({
@@ -79,8 +108,24 @@ export async function GET(request: Request) {
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
     const fileName = path.basename(fullPath);
 
+    // Cria stream com throttling opcional de banda
     const fileStream = fs.createReadStream(fullPath, { highWaterMark: 1024 * 1024 });
-    const readable = Readable.toWeb(fileStream) as ReadableStream;
+    const throttler = createBandwidthThrottler();
+    const outputStream = throttler ? fileStream.pipe(throttler) : fileStream;
+
+    // Vincula a liberação do slot ao encerramento ou aborto da conexão
+    slot.bindToStream(outputStream, request.signal);
+    streamStarted = true;
+
+    logDownloadEvent({
+      userId: user.id,
+      userEmail: user.email,
+      filePath: safeRelPath,
+      result: "SUCCESS",
+      statusCode: 200,
+    });
+
+    const readable = Readable.toWeb(outputStream as Readable) as ReadableStream;
 
     const headers = new Headers();
     headers.set("Content-Type", contentType);
@@ -108,9 +153,27 @@ export async function GET(request: Request) {
       headers,
     });
   } catch (err: any) {
+    if (slot && !streamStarted) {
+      slot.release();
+    }
+
     const authRes = handleAuthError(err);
     if (authRes) return authRes;
+
+    logDownloadEvent({
+      userId: currentUserId,
+      userEmail: currentUserEmail,
+      result: "ERROR",
+      statusCode: 500,
+      message: err?.message,
+    });
+
     console.error("Erro ao servir asset:", err);
     return new NextResponse("Erro interno ao servir arquivo", { status: 500 });
+  } finally {
+    // Se ocorreu retorno antecipado sem início de streaming, libera o slot
+    if (slot && !streamStarted) {
+      slot.release();
+    }
   }
 }

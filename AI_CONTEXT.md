@@ -266,6 +266,15 @@ O container executa como usuário não-root `nextjs` (UID 1001). Ao montar o vol
 ### N. Redefinição Administrativa com `ADMIN_FORCE_RESET`
 Se a senha do administrador padrão for alterada ou esquecida, o script `docker-entrypoint.sh` permite forçar o reset definindo a variável de ambiente `ADMIN_FORCE_RESET=true`. Nesse modo, a senha é sobrescrita com `ADMIN_PASSWORD` (criptografada via bcrypt) durante a inicialização do container.
 
+### O. Controle de Concorrência de Downloads & Proteção contra Exaustão de Recursos
+Endpoints que realizam entrega de arquivos pesados e conversões intensivas no CPU (`/api/assets/file` e `/api/assets/mesh`) possuem limites rígidos de concorrência gerenciados em `src/lib/security/concurrency-limiter.ts`:
+1. **Limite por Usuário**: Máximo de **3 downloads/conversões simultâneas** por `userId`. O 4º download simultâneo recebe `HTTP 429` imediatamente com a mensagem `"Limite de downloads simultâneos atingido (máx. 3). Aguarde um dos downloads em andamento finalizar."`.
+2. **Limite Global**: Teto máximo de **15 downloads/conversões simultâneas** em todo o processo para impedir que múltiplos usuários saturem a CPU do host.
+3. **Lock Single-Flight por Arquivo (`getOrConvertMesh`)**: Se mais de uma requisição simultânea solicitar a conversão de um mesmo arquivo `.3mf` para STL binário, todas aguardam a MESMA Promise em vez de duplicar carga na CPU.
+4. **Isolamento de Rotas Críticas**: O limitador aplica-se **exclusivamente** às rotas pesadas `/api/assets/file` e `/api/assets/mesh`. Rotas de navegação, catálogo (`/api/models`), coleções (`/api/collections/*`), miniaturas (`/api/assets/thumbnails/*`) e autenticação permanecem 100% livres de bloqueio concorrente para não degradar a experiência do usuário.
+5. **Throttling de Banda e Circuit Breaker**: O streaming suporta limitação de vazão via `DOWNLOAD_THROTTLE_MBPS` (padrão 10 MB/s), e usuários que atingirem o limite 429 repetidamente (10 vezes em 5 minutos) são colocados em quarentena temporária de 15 minutos via Circuit Breaker.
+**Regra**: Nunca remova ou desative esses limites em `/api/assets/file` ou `/api/assets/mesh` sem implementar proteção equivalente a nível de infraestrutura (ex: rate limiting no reverse proxy).
+
 ---
 
 ## 4. Como Executar e Testar o Projeto
