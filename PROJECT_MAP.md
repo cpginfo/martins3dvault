@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.11.0)
+# Mapa do Projeto - Martins3DVault (v1.11.1)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.11.0                                  │
+│                           MARTINS3DVAULT v1.11.1                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
@@ -217,10 +217,11 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         │   └── __tests__/
         │       └── calculator.test.ts # Suíte com 5 testes unitários determinísticos
         ├── storage/
+        │   ├── health.ts          # Diagnóstico ativo de montagem, I/O e detecção de timeout de NFS/CIFS
         │   ├── cache-ops.ts       # Estatísticas e limpeza da pasta /data/cache (STL binários de malha)
         │   └── file-ops.ts        # Movimentação física em árvore, renomeação em cascata e criação de subpastas
         └── scanner/
-            ├── crawler.ts         # Motor de varredura diferencial incremental com suporte recursivo a subpastas
+            ├── crawler.ts         # Motor de varredura diferencial com pre-flight probe e trava de segurança NAS
             └── extractors/
                 ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos com prioridade para mesmo nome base (.png, .jpg, .webp, .avif)
                 ├── stl-parser.ts  # Leitor e validor de geometria STL binário/ASCII
@@ -234,7 +235,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container, banco, versão (`v1.11.0`), uptime e telemetria de concorrência. |
+| `GET` | `/api/health` | Status de saúde do container, banco, storage/NAS, versão (`v1.11.1`), uptime e concorrência. |
 | `GET` | `/api/cache` | Retorna o tamanho total em bytes e contagem de arquivos em `/data/cache`. |
 | `DELETE` | `/api/cache` | Limpa com segurança o cache de malhas 3D liberando espaço em disco. |
 | `GET` | `/api/collections?tree=true` | Retorna a árvore hierárquica completa de coleções e contadores recursivos. |

@@ -186,6 +186,34 @@ export async function scanLibrary(
     });
     const dbModelByPath = new Map(existingDbModels.map((m) => [m.folderPath, m]));
 
+    // 0. Prova de I/O com timeout de segurança para prevenir travamento por queda de NFS/CIFS
+    let rootEntries: fs.Dirent[];
+    try {
+      rootEntries = await Promise.race([
+        fs.promises.readdir(scanStartDir, { withFileTypes: true }),
+        new Promise<fs.Dirent[]>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `Timeout de I/O (5000ms) ao tentar listar '${scanStartDir}'. O ponto de montagem NAS (NFS/CIFS) pode estar travado ou desconectado.`
+                )
+              ),
+            5000
+          )
+        ),
+      ]);
+    } catch (ioErr: any) {
+      throw new Error(`Falha crítica de comunicação com o armazenamento em '${scanStartDir}': ${ioErr.message}`);
+    }
+
+    // Trava de segurança NAS: Se o diretório base estiver vazio mas houver modelos no banco, aborta
+    if (!options?.subFolder && rootEntries.length === 0 && existingDbModels.length > 0) {
+      throw new Error(
+        `[TRAVA DE SEGURANÇA NAS] O diretório '${scanStartDir}' está completamente vazio no disco, mas a biblioteca possui ${existingDbModels.length} modelos cadastrados no banco de dados. Varredura abortada para impedir exclusão acidental em massa (possível perda de montagem NFS/CIFS).`
+      );
+    }
+
     const discoveredTargets: DiscoveredModelTarget[] = [];
     const discoveredFolderPaths = new Set<string>();
 
@@ -706,6 +734,14 @@ export async function scanLibrary(
         }
       }
     } else {
+      // Varredura de biblioteca inteira:
+      // Trava de segurança NAS: Se nenhum arquivo foi descoberto mas a biblioteca tinha modelos no banco, aborta!
+      if (discoveredFolderPaths.size === 0 && existingDbModels.length > 0) {
+        throw new Error(
+          `[TRAVA DE SEGURANÇA NAS] Nenhum arquivo foi descoberto durante a varredura da biblioteca '${library.name}', mas existem ${existingDbModels.length} modelos cadastrados no banco. Limpeza de órfãos cancelada para evitar perda de dados.`
+        );
+      }
+
       // Varredura de biblioteca inteira: remove órfãos de toda a biblioteca
       for (const dbModel of existingDbModels) {
         if (!discoveredFolderPaths.has(dbModel.folderPath) && !migratedModelIds.has(dbModel.id)) {
@@ -721,8 +757,8 @@ export async function scanLibrary(
       }
     }
 
-    // 3. Remoção e espelhamento de coleções excluídas fisicamente (apenas em scan completo)
-    if (!options?.subFolder) {
+    // 3. Remoção e espelhamento de coleções excluídas fisicamente (apenas em scan completo e se houver itens válidos no disco)
+    if (!options?.subFolder && (discoveredFolderPaths.size > 0 || existingDbModels.length === 0)) {
       const allLibraries = await prisma.library.findMany({ where: { enabled: true } });
       const allDbCollections = await prisma.collection.findMany();
 
@@ -732,11 +768,16 @@ export async function scanLibrary(
 
         const colFolderPath = col.folderPath || col.name;
 
-        // Verifica se a pasta desta coleção existe no disco em pelo menos uma biblioteca ativa
+        // Verifica se a pasta desta coleção existe no disco em pelo menos uma biblioteca ativa e acessível
         const folderExists = allLibraries.some((lib) => {
           const libRoot = path.resolve(lib.path);
-          const fullPath = path.join(libRoot, colFolderPath);
-          return fs.existsSync(fullPath);
+          try {
+            if (!fs.existsSync(libRoot)) return false;
+            const fullPath = path.join(libRoot, colFolderPath);
+            return fs.existsSync(fullPath);
+          } catch {
+            return false;
+          }
         });
 
         if (!folderExists) {

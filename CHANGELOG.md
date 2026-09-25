@@ -5,6 +5,21 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.11.1] - 2026-09-25
+
+### Corrigido / Resiliência
+- **Validação Ativa de Storage no Healthcheck (`/api/health`)**:
+  - Implementado módulo de probing profundo (`src/lib/storage/health.ts`) com timeout de segurança (2000ms via `Promise.race`) contra congelamento de thread em caso de queda de NFS (`ESTALE`) ou CIFS/SMB.
+  - Validação ativa de escrita e leitura em `STORAGE_DATA_PATH` (cache, thumbnails, uploads).
+  - Validação ativa de existência e leitura em `STORAGE_LIBRARIES_PATH` e em todas as bibliotecas ativas cadastradas no banco.
+  - Retorno de status `HTTP 503 Unhealthy` caso o banco ou qualquer ponto de montagem de storage esteja inacessível, alertando o Docker Healthcheck imediatamente.
+- **Travas de Segurança Antidesastre no Scanner (`src/lib/scanner/crawler.ts`)**:
+  - Pre-flight check com timeout de 5 segundos antes de iniciar a varredura da biblioteca.
+  - **Trava de Montagem Vazia**: Aborta imediatamente a varredura se a pasta física estiver 100% vazia no disco mas a biblioteca contiver modelos cadastrados no banco de dados, eliminando o risco de exclusão acidental em massa por perda de montagem NAS (NFS/CIFS).
+  - **Proteção de Órfãos e Coleções**: Bloqueio de exclusão em massa caso nenhum arquivo seja descoberto no disco e salvaguarda verificando a acessibilidade das bibliotecas antes de remover coleções órfãs.
+
+---
+
 ## [1.11.0] - 2026-09-25
 
 ### Adicionado
