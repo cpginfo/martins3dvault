@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { APP_VERSION } from "@/lib/version";
 import { useTheme } from "@/lib/theme/ThemeContext";
+import { useUpdate } from "@/lib/update/UpdateContext";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -129,6 +130,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { hasUpdate, updateInfo, openModal } = useUpdate();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; email: string; avatar?: string | null } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -572,7 +574,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {!isCollapsed && (
+        {!isCollapsed ? (
           <div className="flex items-center justify-between px-1 pt-1 border-t border-white/5 text-[10px] font-mono text-outline">
             <div className="flex items-center gap-1">
               <span>Tema:</span>
@@ -588,8 +590,34 @@ export default function Sidebar({
                 <span>{theme === "dark" ? "Escuro" : "Claro"}</span>
               </button>
             </div>
-            <span className="text-secondary font-medium">{APP_VERSION}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-secondary font-medium">{APP_VERSION}</span>
+              {hasUpdate && (
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-primary-container/20 text-primary border border-primary-container/40 hover:bg-primary-container/30 transition-all animate-pulse"
+                  title={`Nova versão ${updateInfo?.latestVersion} disponível no GitHub! Clique para ver novidades.`}
+                >
+                  <span>UP</span>
+                  <span className="material-symbols-outlined text-[10px]">arrow_upward</span>
+                </button>
+              )}
+            </div>
           </div>
+        ) : (
+          hasUpdate && (
+            <div className="flex justify-center pt-1 border-t border-white/5">
+              <button
+                type="button"
+                onClick={openModal}
+                className="p-1 rounded bg-primary-container/20 text-primary border border-primary-container/40 hover:bg-primary-container/30 transition-all animate-pulse"
+                title={`Nova versão ${updateInfo?.latestVersion} disponível!`}
+              >
+                <span className="material-symbols-outlined text-[12px]">arrow_upward</span>
+              </button>
+            </div>
+          )
         )}
       </div>
     </aside>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UploadModal from "@/components/upload/UploadModal";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import NotificationMenu from "@/components/layout/NotificationMenu";
 
 interface NavbarProps {
   searchQuery?: string;
@@ -202,13 +203,7 @@ export default function Navbar({
             <span className="hidden sm:inline">Upload</span>
           </button>
 
-          <button
-            className="relative p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-            title="Notificações do sistema"
-          >
-            <span className="material-symbols-outlined text-[20px]">notifications</span>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container"></span>
-          </button>
+          <NotificationMenu />
 
           <ThemeToggle />
 

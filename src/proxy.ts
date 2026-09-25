@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 
 // Rotas públicas que não exigem autenticação prévia
-const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/logout", "/api/health"];
+const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/logout", "/api/health", "/api/version"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

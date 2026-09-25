@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
+import { UpdateProvider } from "@/lib/update/UpdateContext";
+import UpdateBanner from "@/components/update/UpdateBanner";
+import UpdateModal from "@/components/update/UpdateModal";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -65,7 +68,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-surface text-on-surface font-sans antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary transition-colors duration-200">
         <ThemeProvider>
-          {children}
+          <UpdateProvider>
+            {children}
+            <UpdateBanner />
+            <UpdateModal />
+          </UpdateProvider>
         </ThemeProvider>
       </body>
     </html>
