@@ -5,6 +5,28 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.10.1] - 2026-09-25
+
+### Corrigido
+- **Verificação Imediata de Versões do GitHub**:
+  - Remoção de regras de cache interno do Next.js Data Cache (`cache: "no-store"`), assegurando consulta em tempo real à API do GitHub sem retenção de respostas obsoletas.
+  - Implementação de cabeçalhos anti-cache e parâmetros de invalidação imediata (`_t=...`) no cliente e no servidor.
+  - Consulta combinada entre `/releases/latest` e `/tags`, garantindo a detecção instantânea de novas versões recém-publicadas.
+
+---
+
+## [1.10.0] - 2026-09-25
+
+### Adicionado
+- **Sistema de Notificação Automática de Versões (GitHub Releases)**:
+  - Verificação periódica automática e manual de novas versões disponíveis no GitHub via `UpdateProvider` e `UpdateContext`.
+  - **Menu de Notificações na Navbar**: sino interativo com animação de pulso (*ping* laranja) quando há nova versão disponível, central de notificações com status do sistema e botão para forçar checagem.
+  - **Card Flutuante (Toast)**: alerta elegante no canto inferior direito com suporte a dispensar e salvar preferência no `localStorage`.
+  - **Badge na Sidebar**: indicador de nova versão disponível (`UP`) no rodapé ao lado da versão atual instalada.
+  - **Modal Completo de Atualização**: comparativo de versões, visualizador de changelog e comando de atualização Docker copiado com 1 clique (`docker compose pull && docker compose up -d`).
+
+---
+
 ## [1.9.1] - 2026-09-25
 
 ### Corrigido
