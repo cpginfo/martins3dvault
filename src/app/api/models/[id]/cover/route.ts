@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireOperator, handleAuthError } from "@/lib/auth/session";
 
 const ALLOWED_IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
 
@@ -11,7 +11,7 @@ export async function POST(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const { id } = await props.params;
 

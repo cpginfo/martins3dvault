@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, requireOperator, handleAuthError } from "@/lib/auth/session";
 import { renameCollectionFolder } from "@/lib/storage/file-ops";
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const { id } = await props.params;
 
     const collection = await prisma.collection.findFirst({
@@ -99,7 +99,7 @@ export async function PUT(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const { id } = await props.params;
     const body = await request.json();
@@ -140,7 +140,7 @@ export async function DELETE(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const { id } = await props.params;
 

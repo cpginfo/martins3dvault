@@ -8,10 +8,13 @@ interface UserItem {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "USER" | "VIEWER";
+  role: "ADMIN" | "OPERATOR" | "USER" | "EDITOR" | "VIEWER";
   avatar: string | null;
   createdAt: string;
 }
+
+export const isOperatorRole = (r: string) =>
+  r === "OPERATOR" || r === "USER" || r === "EDITOR";
 
 export default function UsersPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -24,7 +27,7 @@ export default function UsersPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "USER" | "VIEWER">("USER");
+  const [role, setRole] = useState<"ADMIN" | "OPERATOR" | "VIEWER">("OPERATOR");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export default function UsersPage() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPassword, setEditPassword] = useState("");
-  const [editRole, setEditRole] = useState<"ADMIN" | "USER" | "VIEWER">("USER");
+  const [editRole, setEditRole] = useState<"ADMIN" | "OPERATOR" | "VIEWER">("OPERATOR");
   const [editAvatar, setEditAvatar] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -127,7 +130,7 @@ export default function UsersPage() {
       setName("");
       setEmail("");
       setPassword("");
-      setRole("USER");
+      setRole("OPERATOR");
       setAvatar(null);
       if (createFileInputRef.current) createFileInputRef.current.value = "";
       setShowCreateModal(false);
@@ -143,7 +146,7 @@ export default function UsersPage() {
     setEditingUser(u);
     setEditName(u.name);
     setEditEmail(u.email);
-    setEditRole(u.role);
+    setEditRole(isOperatorRole(u.role) ? "OPERATOR" : (u.role as "ADMIN" | "VIEWER"));
     setEditPassword("");
     setEditAvatar(u.avatar || null);
     setFormError(null);
@@ -222,7 +225,7 @@ export default function UsersPage() {
     : users;
 
   const adminCount = users.filter((u) => u.role === "ADMIN").length;
-  const operatorCount = users.filter((u) => u.role === "USER").length;
+  const operatorCount = users.filter((u) => isOperatorRole(u.role)).length;
   const viewerCount = users.filter((u) => u.role === "VIEWER").length;
 
   return (
@@ -263,7 +266,7 @@ export default function UsersPage() {
                   setName("");
                   setEmail("");
                   setPassword("");
-                  setRole("USER");
+                  setRole("OPERATOR");
                   setAvatar(null);
                   setFormError(null);
                   if (createFileInputRef.current) createFileInputRef.current.value = "";
@@ -376,14 +379,14 @@ export default function UsersPage() {
                               className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
                                 u.role === "ADMIN"
                                   ? "bg-primary-container/20 text-primary border border-primary-container/30"
-                                  : u.role === "USER"
+                                  : isOperatorRole(u.role)
                                   ? "bg-secondary/20 text-secondary border border-secondary/30"
                                   : "bg-surface-container-highest text-on-surface-variant border border-white/5"
                               }`}
                             >
                               {u.role === "ADMIN"
                                 ? "ADMIN"
-                                : u.role === "USER"
+                                : isOperatorRole(u.role)
                                 ? "OPERADOR"
                                 : "VISITANTE"}
                             </span>
@@ -543,7 +546,7 @@ export default function UsersPage() {
                   onChange={(e) => setRole(e.target.value as any)}
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
-                  <option value="USER">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
+                  <option value="OPERATOR">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
                   <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
                   <option value="VIEWER">Visualizador (Somente Leitura e Visualização 3D)</option>
                 </select>
@@ -680,7 +683,7 @@ export default function UsersPage() {
                   onChange={(e) => setEditRole(e.target.value as any)}
                   className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
-                  <option value="USER">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
+                  <option value="OPERATOR">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
                   <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
                   <option value="VIEWER">Visualizador (Somente Leitura e Visualização 3D)</option>
                 </select>

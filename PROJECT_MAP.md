@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.9.0)
+# Mapa do Projeto - Martins3DVault (v1.9.1)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,7 +8,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.9.0                                  │
+│                           MARTINS3DVAULT v1.9.1                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │

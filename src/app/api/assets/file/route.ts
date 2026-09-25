@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import { Readable } from "stream";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, handleAuthError } from "@/lib/auth/session";
 
 const MIME_TYPES: Record<string, string> = {
   ".stl": "model/stl",
@@ -19,7 +19,7 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const { searchParams } = new URL(request.url);
     const libraryId = searchParams.get("libraryId");
     const relPath = searchParams.get("relPath");

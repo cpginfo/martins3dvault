@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireOperator, handleAuthError } from "@/lib/auth/session";
 import {
   ensureCollectionFolder,
   moveModelToCollection,
@@ -19,7 +19,7 @@ function slugify(text: string): string {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const body = await request.json();
     const { modelIds, targetCollectionId, newCollectionName, newCollectionDesc } = body;

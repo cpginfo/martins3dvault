@@ -78,6 +78,12 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Configurações Persistentes da Oficina (`SettingsTab.tsx`)**:
     - Configurações da máquina (valor de compra, consumo W, vida útil h, kWh, taxa horária manual e markup padrão) salvas em `PrinterSettings`.
     - Catálogo persistente e reutilizável de filamentos em `PrintMaterial` (nome, custo por kg, densidade).
+- **Autenticação, Proxy e Controle de Acesso Baseado em Papéis (RBAC - `v1.9.1`)**:
+  - Matriz de perfis unificada: `ADMIN`, `OPERATOR`, `VIEWER`.
+  - **Somente Administrador**: Acesso restrito a `/users` e `/api/users/*`, criação e gerenciamento de contas, mapeamento de pastas físicas do NAS (`/libraries`) e limpeza do cache de malhas do disco do servidor.
+  - **Operador & Administrador**: Upload de arquivos STL/3MF/ZIP, movimentação de peças entre coleções no disco, edição de parâmetros técnicos, envio de manuais PDF, marcação de peças impressas e escaneamento.
+  - **Todos Autenticados**: Visualização 3D Three.js, streaming de malhas e arquivos originais, catálogo de coleções e calculadora de precificação.
+  - **Next.js 16 Proxy (`proxy.ts`)**: Validação de sessão JWT sem loop de redirecionamento para não-administradores e bloqueio pontual em rotas administrativas.
 - **Reorganização Estrutural da Barra Lateral (`Sidebar.tsx`)**:
   - Nova categoria **Calculadora** apontando para `/pricing`.
   - Nova categoria **Métricas** agrupando *Métricas dos Arquivos* (`/metrics`) e *Métricas de Vendas* (`/pricing?tab=dashboard`).

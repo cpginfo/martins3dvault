@@ -53,12 +53,20 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(password);
     const avatarUrl = await processAvatar(avatar, cleanEmail.replace(/[^a-z0-9]/g, "_"));
 
+    let targetRole = (role || "VIEWER").toUpperCase().trim();
+    if (targetRole === "USER" || targetRole === "EDITOR") {
+      targetRole = "OPERATOR";
+    }
+    if (!["ADMIN", "OPERATOR", "VIEWER"].includes(targetRole)) {
+      targetRole = "VIEWER";
+    }
+
     const user = await prisma.user.create({
       data: {
         name: name.trim(),
         email: cleanEmail,
         passwordHash,
-        role: role || "VIEWER",
+        role: targetRole,
         avatar: avatarUrl,
       },
       select: {
@@ -102,7 +110,12 @@ export async function PUT(request: Request) {
     }
 
     const data: any = {};
-    if (role !== undefined) data.role = role;
+    if (role !== undefined) {
+      let targetRole = String(role).toUpperCase().trim();
+      if (targetRole === "USER" || targetRole === "EDITOR") targetRole = "OPERATOR";
+      if (!["ADMIN", "OPERATOR", "VIEWER"].includes(targetRole)) targetRole = "VIEWER";
+      data.role = targetRole;
+    }
     if (name !== undefined) data.name = name.trim();
 
     if (email !== undefined && email.trim()) {

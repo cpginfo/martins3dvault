@@ -1,7 +1,7 @@
 import path from "path";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, requireOperator, handleAuthError } from "@/lib/auth/session";
 import {
   ensureCollectionFolder,
   sanitizeFileName,
@@ -11,7 +11,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const { searchParams } = new URL(request.url);
     const isTree = searchParams.get("tree") === "true";
 
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const { name, description, coverImage, parentId } = await request.json();
 

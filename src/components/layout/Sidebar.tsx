@@ -26,6 +26,7 @@ interface NavItem {
   activeColor: string;
   hasPing?: boolean;
   isCollections?: boolean;
+  adminOnly?: boolean;
 }
 
 interface NavSection {
@@ -268,12 +269,14 @@ export default function Sidebar({
           icon: "sync_saved_locally",
           activeColor: "text-tertiary",
           hasPing: true,
+          adminOnly: true,
         },
         {
           name: "Gestão de Usuários",
           href: "/users",
           icon: "admin_panel_settings",
           activeColor: "text-primary-container",
+          adminOnly: true,
         },
       ],
     },
@@ -318,7 +321,13 @@ export default function Sidebar({
 
         {/* Navigation Sections */}
         <div className="py-3 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
-          {navItems.map((section, idx) => (
+          {navItems
+            .map((section) => ({
+              ...section,
+              items: section.items.filter((item) => !item.adminOnly || currentUser?.role === "ADMIN"),
+            }))
+            .filter((section) => section.items.length > 0)
+            .map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {!isCollapsed && (
                 <div className="px-5 py-1 flex items-center justify-between">
@@ -501,7 +510,13 @@ export default function Sidebar({
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
                     <span className="text-[10px] text-primary-container uppercase font-mono font-medium">
-                      {currentUser?.role || "Admin"}
+                      {currentUser?.role === "ADMIN"
+                        ? "Admin"
+                        : currentUser?.role === "OPERATOR" || currentUser?.role === "USER"
+                        ? "Operador"
+                        : currentUser?.role === "VIEWER"
+                        ? "Visitante"
+                        : currentUser?.role || "Usuário"}
                     </span>
                   </div>
                 </div>
@@ -521,14 +536,16 @@ export default function Sidebar({
           {/* User Popup Menu */}
           {userMenuOpen && !isCollapsed && (
             <div className="absolute bottom-full left-0 mb-2 w-full bg-surface-container-high border border-white/10 rounded-lg shadow-xl p-1 z-50 flex flex-col gap-0.5 text-xs">
-              <Link
-                href="/users"
-                onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-surface-container-highest text-on-surface transition-colors"
-              >
-                <span className="material-symbols-outlined text-[16px]">settings</span>
-                <span>Configurações</span>
-              </Link>
+              {currentUser?.role === "ADMIN" && (
+                <Link
+                  href="/users"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-surface-container-highest text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">settings</span>
+                  <span>Configurações & Usuários</span>
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => {

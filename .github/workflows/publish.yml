@@ -2,8 +2,8 @@ name: Publicação Automática (CI/CD & Docker)
 
 on:
   push:
-    branches:
-      - main
+ #   branches:
+ #     - main
     tags:
       - 'v*'
   workflow_dispatch:

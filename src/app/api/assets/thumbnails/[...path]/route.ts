@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(
   request: Request,
   props: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const params = await props.params;
     const pathSegments = params.path;
 

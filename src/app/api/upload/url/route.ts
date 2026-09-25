@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireOperator, handleAuthError } from "@/lib/auth/session";
 import { parseStlFile } from "@/lib/scanner/extractors/stl-parser";
 import { extractThreeMfMetadata } from "@/lib/scanner/extractors/threemf";
 import {
@@ -27,7 +27,7 @@ function slugify(text: string): string {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const body = await request.json();
     const { url, name: customName, description, filamentType, libraryId: libraryIdInput } = body;

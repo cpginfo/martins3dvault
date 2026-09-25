@@ -102,6 +102,53 @@ if [ -n "$DATABASE_URL" ]; then
         console.log('👤 Usuário administrador já existe — senha preservada (defina ADMIN_FORCE_RESET=true para resincronizar):', adminEmail);
       }
 
+      // Normalização RBAC: garante que papéis legados ('USER', 'EDITOR') sejam migrados para 'OPERATOR'
+      try {
+        const legacyUpdated = await prisma.user.updateMany({
+          where: { role: { in: ['USER', 'EDITOR'] } },
+          data: { role: 'OPERATOR' }
+        });
+        if (legacyUpdated.count > 0) {
+          console.log(`🔄 Migrados ${legacyUpdated.count} usuário(s) com papéis legados para OPERATOR.`);
+        }
+      } catch (e) {
+        console.warn('Aviso ao normalizar papéis:', e.message);
+      }
+
+      // Validação / Sincronização do usuário clifford@me.com
+      try {
+        const cliffordEmail = 'clifford@me.com';
+        const clifford = await prisma.user.findFirst({
+          where: { email: { equals: cliffordEmail, mode: 'insensitive' } }
+        });
+        if (clifford) {
+          const passValid = await bcrypt.compare('vivo@2026', clifford.passwordHash);
+          if (clifford.role !== 'OPERATOR' || !passValid) {
+            const newHash = !passValid ? await bcrypt.hash('vivo@2026', 10) : clifford.passwordHash;
+            await prisma.user.update({
+              where: { id: clifford.id },
+              data: { role: 'OPERATOR', passwordHash: newHash }
+            });
+            console.log('✅ Usuário clifford@me.com verificado e atualizado para Perfil Operador com senha ativa.');
+          } else {
+            console.log('👤 Usuário clifford@me.com verificado (Perfil: OPERATOR, Senha OK).');
+          }
+        } else {
+          const cliffordHash = await bcrypt.hash('vivo@2026', 10);
+          await prisma.user.create({
+            data: {
+              name: 'Clifford',
+              email: cliffordEmail,
+              passwordHash: cliffordHash,
+              role: 'OPERATOR'
+            }
+          });
+          console.log('👤 Usuário clifford@me.com provisionado com sucesso (Perfil: OPERATOR).');
+        }
+      } catch (e) {
+        console.warn('Aviso ao sincronizar usuário clifford@me.com:', e.message);
+      }
+
       // Garante uma biblioteca inicial se o banco estiver vazio
       const defaultLibPath = process.env.STORAGE_LIBRARIES_PATH || '/libraries';
       const existingLib = await prisma.library.findFirst();
@@ -121,7 +168,7 @@ if [ -n "$DATABASE_URL" ]; then
     main().catch((err) => {
       console.error('❌ Erro ao inicializar dados padrão:', err);
       process.exit(1);
-    }).finally(() => prisma.\$disconnect());
+    }).finally(() => prisma.$disconnect());
   "
 fi
 

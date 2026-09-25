@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAdmin, requireAuth, handleAuthError } from "@/lib/auth/session";
 import { getCacheStats, clearCache } from "@/lib/storage/cache-ops";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const stats = await getCacheStats();
     return NextResponse.json(stats);
   } catch (err: any) {

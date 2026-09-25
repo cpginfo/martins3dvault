@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireOperator, handleAuthError } from "@/lib/auth/session";
 import { moveModelToCollection } from "@/lib/storage/file-ops";
 
 export async function POST(
@@ -8,7 +8,7 @@ export async function POST(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const { id } = await props.params;
     const body = await request.json();
@@ -49,7 +49,7 @@ export async function DELETE(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
     const { id } = await props.params;
     const { searchParams } = new URL(request.url);
     const modelId = searchParams.get("modelId");

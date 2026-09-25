@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, handleAuthError } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q") || "";
     const format = searchParams.get("format"); // STL, 3MF, OBJ

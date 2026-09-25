@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireOperator, handleAuthError } from "@/lib/auth/session";
 import { parseStlFile } from "@/lib/scanner/extractors/stl-parser";
 import { extractThreeMfMetadata } from "@/lib/scanner/extractors/threemf";
 
@@ -21,7 +21,7 @@ function slugify(text: string): string {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireOperator(request);
 
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];

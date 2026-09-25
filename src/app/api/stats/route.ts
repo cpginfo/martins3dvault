@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, handleAuthError } from "@/lib/auth/session";
+import { requireAuth, handleAuthError } from "@/lib/auth/session";
 import { getCacheStats } from "@/lib/storage/cache-ops";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    await requireAuth(undefined, request);
 
     const [
       totalModels,

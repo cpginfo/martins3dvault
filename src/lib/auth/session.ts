@@ -8,12 +8,26 @@ const JWT_SECRET_STRING = process.env.JWT_SECRET || "printvault-super-secure-key
 const SECRET_KEY = new TextEncoder().encode(JWT_SECRET_STRING);
 export const COOKIE_NAME = "pv_session";
 
+export type UserRole = "ADMIN" | "OPERATOR" | "USER" | "EDITOR" | "VIEWER";
+
 export interface UserSession {
   id: string;
   email: string;
   name: string;
-  role: "ADMIN" | "EDITOR" | "VIEWER";
+  role: UserRole;
   avatar?: string | null;
+}
+
+export function isAdmin(userOrRole?: UserSession | string | null): boolean {
+  if (!userOrRole) return false;
+  const role = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  return role === "ADMIN";
+}
+
+export function isOperator(userOrRole?: UserSession | string | null): boolean {
+  if (!userOrRole) return false;
+  const role = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  return role === "ADMIN" || role === "OPERATOR" || role === "USER" || role === "EDITOR";
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -45,7 +59,7 @@ export async function verifySessionToken(token: string): Promise<UserSession | n
       id: payload.id as string,
       email: payload.email as string,
       name: payload.name as string,
-      role: payload.role as "ADMIN" | "EDITOR" | "VIEWER",
+      role: (payload.role as UserRole) || "VIEWER",
       avatar: (payload.avatar as string) || null,
     };
   } catch {
@@ -107,7 +121,7 @@ export async function getCurrentUser(req?: Request): Promise<UserSession | null>
               id: user.id,
               email: user.email,
               name: user.name,
-              role: user.role as "ADMIN" | "EDITOR" | "VIEWER",
+              role: (user.role as UserRole) || "VIEWER",
               avatar: user.avatar,
             };
           }
@@ -122,17 +136,34 @@ export async function getCurrentUser(req?: Request): Promise<UserSession | null>
 }
 
 export async function requireAuth(
-  allowedRoles?: Array<"ADMIN" | "EDITOR" | "VIEWER">,
+  allowedRoles?: UserRole[],
   req?: Request
 ): Promise<UserSession> {
   const user = await getCurrentUser(req);
   if (!user) {
     throw new Error("UNAUTHORIZED");
   }
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    throw new Error("FORBIDDEN");
+  if (allowedRoles && allowedRoles.length > 0) {
+    const isAllowed = allowedRoles.some((allowed) => {
+      if (allowed === user.role) return true;
+      if (
+        (allowed === "OPERATOR" || allowed === "USER" || allowed === "EDITOR") &&
+        (user.role === "OPERATOR" || user.role === "USER" || user.role === "EDITOR")
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (!isAllowed) {
+      throw new Error("FORBIDDEN");
+    }
   }
   return user;
+}
+
+export async function requireOperator(req?: Request): Promise<UserSession> {
+  return requireAuth(["ADMIN", "OPERATOR", "USER", "EDITOR"], req);
 }
 
 export async function requireAdmin(req?: Request): Promise<UserSession> {
@@ -148,7 +179,7 @@ export function handleAuthError(err: any): NextResponse | null {
   }
   if (err?.message === "FORBIDDEN") {
     return NextResponse.json(
-      { error: "Acesso restrito. Perfil de Administrador obrigatório." },
+      { error: "Acesso restrito. Permissão insuficiente para realizar esta operação." },
       { status: 403 }
     );
   }

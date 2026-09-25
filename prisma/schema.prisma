@@ -13,7 +13,7 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  role         String   @default("VIEWER") // ADMIN, EDITOR, VIEWER
+  role         String   @default("VIEWER") // ADMIN, OPERATOR, VIEWER
   avatar       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

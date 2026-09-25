@@ -5,6 +5,22 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.9.1] - 2026-09-25
+
+### Corrigido
+- **Autenticação e Controle de Acesso RBAC (Proxy & Sessão)**:
+  - Corrigido loop de redirecionamento no Next.js Proxy (`src/proxy.ts`) que impedia usuários autenticados com perfil não-administrador (Operador e Visualizador) de acessar a plataforma.
+  - Desbloqueadas as rotas de API do sistema (`/api/models`, `/api/collections`, `/api/assets/mesh`, `/api/assets/file`, `/api/assets/thumbnails`, `/api/upload`), permitindo visualização de malhas 3D no Three.js, listagem de modelos e downloads.
+  - Implementada restrição estrita garantindo que **somente administradores** (`ADMIN`) tenham permissão para acessar a interface de usuários (`/users`) e executar ações em `/api/users/*`.
+- **Padronização de Papéis e Interface Dinâmica**:
+  - Unificação do tipo `UserRole` (`ADMIN`, `OPERATOR`, `USER`, `EDITOR`, `VIEWER`) em `src/lib/auth/session.ts` com validação hierárquica `requireOperator()`.
+  - Ajuste na tela de usuários (`/users`) com seleção padrão `OPERATOR`, badges corretos e filtros de contagem condizentes.
+  - Atualização do `Sidebar.tsx` para ocultar itens administrativos ("Gestão de Usuários" e "Mapear Pastas & Scan") para perfis de Operador e Visitante.
+- **Provisionamento e Migração no Boot (`docker-entrypoint.sh`)**:
+  - Migração transparente de papéis legados para `OPERATOR` e verificação ativa do usuário de oficina no boot.
+
+---
+
 ## [1.9.0] - 2026-09-23
 
 ### Adicionado

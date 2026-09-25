@@ -22,27 +22,43 @@ export async function proxy(request: NextRequest) {
         { status: 401 }
       );
     }
-    if (user.role !== "ADMIN") {
+
+    // Regra estrita: Somente usuários admin podem criar e gerenciar outros usuários
+    if (pathname.startsWith("/api/users") && user.role !== "ADMIN") {
       return NextResponse.json(
-        { error: "Acesso restrito. Perfil de Administrador obrigatório." },
+        { error: "Acesso restrito. Somente administradores podem criar e gerenciar usuários." },
         { status: 403 }
       );
     }
+
     return NextResponse.next();
   }
 
   // 3. Tela de Login (/login)
   if (pathname === "/login") {
     const user = await getCurrentUser(request);
-    if (user && user.role === "ADMIN") {
+    if (user) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  // 4. Páginas Web do Sistema (todas as outras)
+  // 4. Páginas exclusivas de Administrador (/users)
+  if (pathname.startsWith("/users")) {
+    const user = await getCurrentUser(request);
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (user.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 5. Demais páginas web do sistema (exigem login)
   const user = await getCurrentUser(request);
-  if (!user || user.role !== "ADMIN") {
+  if (!user) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }

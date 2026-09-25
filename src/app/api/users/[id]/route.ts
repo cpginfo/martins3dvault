@@ -55,7 +55,12 @@ export async function PUT(
     }
 
     const data: any = {};
-    if (role !== undefined) data.role = role;
+    if (role !== undefined) {
+      let targetRole = String(role).toUpperCase().trim();
+      if (targetRole === "USER" || targetRole === "EDITOR") targetRole = "OPERATOR";
+      if (!["ADMIN", "OPERATOR", "VIEWER"].includes(targetRole)) targetRole = "VIEWER";
+      data.role = targetRole;
+    }
     if (name !== undefined) data.name = name.trim();
 
     if (email !== undefined && email.trim()) {
