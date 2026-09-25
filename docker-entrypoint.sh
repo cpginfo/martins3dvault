@@ -54,7 +54,7 @@ if [ -n "$DATABASE_URL" ]; then
   prisma db push --skip-generate
 
   echo "🌱 Verificando/Criando usuário administrador configurado no Compose..."
-  node -e "
+  node << 'EOF'
     const { PrismaClient } = require('@prisma/client');
     const bcrypt = require('bcryptjs');
     const prisma = new PrismaClient();
@@ -169,7 +169,7 @@ if [ -n "$DATABASE_URL" ]; then
       console.error('❌ Erro ao inicializar dados padrão:', err);
       process.exit(1);
     }).finally(() => prisma.$disconnect());
-  "
+EOF
 fi
 
 # Cria diretórios de dados se não existirem
