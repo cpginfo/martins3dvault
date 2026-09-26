@@ -50,8 +50,47 @@ if [ -n "$DATABASE_URL" ]; then
     console.log('🎯 Conectando ao banco de dados: \'' + dbName + '\' com usuário: \'' + url.username + '\'');
   "
 
-  echo "📦 Sincronizando tabelas do banco de dados (Prisma)..."
-  prisma db push --skip-generate
+  echo "📦 Executando migrações versionadas do banco de dados (Prisma Migrate)..."
+  node << 'EOF'
+    const { PrismaClient } = require('@prisma/client');
+    const { execSync } = require('child_process');
+    const prisma = new PrismaClient();
+
+    async function ensureMigrationBaseline() {
+      try {
+        const migrationsTable = await prisma.$queryRawUnsafe(`
+          SELECT table_name FROM information_schema.tables 
+          WHERE table_schema = 'public' AND table_name = '_prisma_migrations'
+        `);
+
+        if (migrationsTable.length === 0) {
+          const userTable = await prisma.$queryRawUnsafe(`
+            SELECT table_name FROM information_schema.tables 
+            WHERE table_schema = 'public' AND table_name = 'User'
+          `);
+
+          if (userTable.length > 0) {
+            console.log("ℹ️  Banco existente detectado sem histórico formal. Registrando baseline '0_init'...");
+            execSync('prisma migrate resolve --applied 0_init', { stdio: 'inherit' });
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️  Aviso ao verificar baseline de migrações:", err.message);
+      } finally {
+        await prisma.$disconnect();
+      }
+    }
+
+    ensureMigrationBaseline()
+      .then(() => {
+        console.log("🚀 Aplicando migrações pendentes...");
+        execSync('prisma migrate deploy', { stdio: 'inherit' });
+      })
+      .catch((err) => {
+        console.error("❌ Erro ao executar migrações:", err.message);
+        process.exit(1);
+      });
+EOF
 
   echo "🌱 Verificando/Criando usuário administrador configurado no Compose..."
   node << 'EOF'

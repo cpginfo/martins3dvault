@@ -5,6 +5,20 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.11.2] - 2026-09-25
+
+### Adicionado / Otimização & Segurança
+- **Migrações Versionadas com Prisma Migrate & Auto-Baseline (`0_init`)**:
+  - Transição de `prisma db push` dinâmico para migrações formais e versionadas via `prisma migrate deploy`.
+  - Criação da migração inicial baseline ([`prisma/migrations/0_init/migration.sql`](file:///swarm/stl/prisma/migrations/0_init/migration.sql)).
+  - Auto-baseline transparente no [`docker-entrypoint.sh`](file:///swarm/stl/docker-entrypoint.sh): detecta automaticamente bancos pré-existentes sem histórico formal e registra `0_init` via `prisma migrate resolve --applied 0_init`, garantindo zero downtime e sem erro de colisão de tabelas.
+- **Otimização do Dockerfile & Hardening de Runtime**:
+  - Criação do estágio intermediário isolado `prisma-cli` com resolução dinâmica da versão do Prisma, eliminando execuções de `npm install` durante o estágio `runner`.
+  - Fixação da dependência `deepmerge-ts: 8.0.0` no `package.json` para resolução global de CVE-2026-40345.
+  - Redução da superfície de ataque com remoção completa de `npm`, `npx` e `corepack` da imagem final em produção.
+
+---
+
 ## [1.11.1] - 2026-09-25
 
 ### Corrigido / Resiliência

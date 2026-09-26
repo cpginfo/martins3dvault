@@ -26,6 +26,15 @@ ENV NODE_ENV=production
 RUN npm run build && \
     rm -rf /root/.npm /root/.cache
 
+# Estágio Isolado do Prisma CLI para migrações (com override de segurança CVE-2026-40345)
+FROM base AS prisma-cli
+WORKDIR /opt/prisma-cli
+COPY package.json ./
+RUN node -e "const p = require('./package.json'); const ver = (p.dependencies && p.dependencies['prisma']) || '6.19.3'; require('fs').writeFileSync('package.json', JSON.stringify({name:'prisma-cli',private:true,dependencies:{prisma:ver},overrides:{'deepmerge-ts':'8.0.0'}}));" && \
+    npm install && \
+    npm cache clean --force && \
+    rm -rf /root/.npm /root/.cache
+
 # Estágio de Execução (Runner)
 FROM base AS runner
 WORKDIR /app
@@ -43,17 +52,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 RUN mkdir -p /data/thumbnails /data/uploads /data/cache /libraries && \
     chown -R nextjs:nodejs /data /libraries
 
-# Instala o Prisma CLI de forma isolada (não global), forçando a versão
-# corrigida do deepmerge-ts via "overrides" do npm — resolve CVE-2026-40345
-# sem depender de patch oficial do Prisma. Em seguida remove o npm/npx/corepack
-# embutidos na imagem base, já que não são usados em runtime pela aplicação
-# (apenas "node" e o binário "prisma" são necessários).
-RUN mkdir -p /opt/prisma-cli && cd /opt/prisma-cli && \
-    printf '{"name":"prisma-cli","private":true,"dependencies":{"prisma":"6.19.3"},"overrides":{"deepmerge-ts":"8.0.0"}}' > package.json && \
-    npm install && \
-    ln -s /opt/prisma-cli/node_modules/.bin/prisma /usr/local/bin/prisma && \
-    chown -R nextjs:nodejs /opt/prisma-cli && \
-    npm cache clean --force && \
+# Copiar Prisma CLI isolado do estágio de build (elimina npm install no runner)
+COPY --from=prisma-cli --chown=nextjs:nodejs /opt/prisma-cli /opt/prisma-cli
+RUN ln -s /opt/prisma-cli/node_modules/.bin/prisma /usr/local/bin/prisma && \
     rm -rf /root/.npm /root/.cache /tmp/* \
     /usr/local/lib/node_modules/npm \
     /usr/local/lib/node_modules/corepack \

@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.11.1)
+# Martins3DVault 🖨️✨ (v1.11.2)
 
 <div align="center">
 

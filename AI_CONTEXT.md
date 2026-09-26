@@ -251,9 +251,9 @@ O *Material Symbols* do Google depende de ligaturas de texto para renderizar íc
 Nunca use `fs.promises.rename` direto sem tratamento para operações entre diretórios montados por volumes diferentes (como `./data` e `./libraries`), pois isso pode disparar o erro do sistema operacional `EXDEV: cross-device link not permitted`.
 **Regra**: Utilize sempre a função `safeMove` de [file-ops.ts](file:///swarm/stl/src/lib/storage/file-ops.ts), que realiza fallback automático de cópia recursiva e exclusão do original. Além disso, sempre consulte `getAvailablePath` antes de mover ou renomear para garantir a política de preservação de arquivos duplicados através de sufixos numéricos (`(1)`).
 
-### K. Inicialização Automática de Banco e Tabelas no Docker
+### K. Inicialização Automática de Banco, Migrações e Tabelas no Docker
 O container PostgreSQL (`postgres:16-alpine`) só executa `initdb` com usuário e banco quando o volume `postgres_data` estiver vazio. Se o volume já existir com credenciais antigas, o Postgres não recria o usuário/database.
-No container `web`, a diretiva `depends_on: db: condition: service_healthy` garante que a aplicação só sobe após o `pg_isready` responder com sucesso. O script `docker-entrypoint.sh` então extrai os parâmetros dinâmicos de `DATABASE_URL` e executa `prisma db push --skip-generate` seguido da inserção do usuário `ADMIN_EMAIL` com senha `ADMIN_PASSWORD` (criptografada via bcrypt).
+No container `web`, a diretiva `depends_on: db: condition: service_healthy` garante que a aplicação só sobe após o `pg_isready` responder com sucesso. O script `docker-entrypoint.sh` então extrai os parâmetros dinâmicos de `DATABASE_URL` e executa migrações formais versionadas através de `prisma migrate deploy`, contando com auto-baseline inteligente (`0_init`) caso detecte bancos legados populados anteriormente via `db push`. Em seguida, realiza a inserção/validação do usuário `ADMIN_EMAIL` com senha `ADMIN_PASSWORD` (criptografada via bcrypt).
 
 ### L. Carregamento sob Demanda no Three.js & Gestão de Memória GPU
 Em versões anteriores, a malha 3D começava o download imediatamente ao abrir qualquer modelo, consumindo banda e GPU mesmo quando o usuário só desejava checar notas ou alterar metadados.
