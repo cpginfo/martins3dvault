@@ -154,39 +154,6 @@ EOF
         console.warn('Aviso ao normalizar papéis:', e.message);
       }
 
-      // Validação / Sincronização do usuário clifford@me.com
-      try {
-        const cliffordEmail = 'clifford@me.com';
-        const clifford = await prisma.user.findFirst({
-          where: { email: { equals: cliffordEmail, mode: 'insensitive' } }
-        });
-        if (clifford) {
-          const passValid = await bcrypt.compare('vivo@2026', clifford.passwordHash);
-          if (clifford.role !== 'OPERATOR' || !passValid) {
-            const newHash = !passValid ? await bcrypt.hash('vivo@2026', 10) : clifford.passwordHash;
-            await prisma.user.update({
-              where: { id: clifford.id },
-              data: { role: 'OPERATOR', passwordHash: newHash }
-            });
-            console.log('✅ Usuário clifford@me.com verificado e atualizado para Perfil Operador com senha ativa.');
-          } else {
-            console.log('👤 Usuário clifford@me.com verificado (Perfil: OPERATOR, Senha OK).');
-          }
-        } else {
-          const cliffordHash = await bcrypt.hash('vivo@2026', 10);
-          await prisma.user.create({
-            data: {
-              name: 'Clifford',
-              email: cliffordEmail,
-              passwordHash: cliffordHash,
-              role: 'OPERATOR'
-            }
-          });
-          console.log('👤 Usuário clifford@me.com provisionado com sucesso (Perfil: OPERATOR).');
-        }
-      } catch (e) {
-        console.warn('Aviso ao sincronizar usuário clifford@me.com:', e.message);
-      }
 
       // Garante uma biblioteca inicial se o banco estiver vazio
       const defaultLibPath = process.env.STORAGE_LIBRARIES_PATH || '/libraries';
