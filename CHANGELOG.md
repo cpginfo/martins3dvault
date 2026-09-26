@@ -16,6 +16,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Criação do estágio intermediário isolado `prisma-cli` com resolução dinâmica da versão do Prisma, eliminando execuções de `npm install` durante o estágio `runner`.
   - Fixação da dependência `deepmerge-ts: 8.0.0` no `package.json` para resolução global de CVE-2026-40345.
   - Redução da superfície de ataque com remoção completa de `npm`, `npx` e `corepack` da imagem final em produção.
+- **Ciclo de Vida Limpo de Usuários no Entrypoint (`docker-entrypoint.sh`)**:
+  - Remoção de verificação e sincronização hardcoded de usuários específicos no boot. Usuários criados via interface gráfica mantêm seu ciclo de vida 100% preservado pelo banco de dados, sem sobrescrita de senha ou perfil na inicialização do container.
 
 ---
 
