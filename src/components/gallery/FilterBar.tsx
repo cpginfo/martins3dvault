@@ -134,11 +134,11 @@ export default function FilterBar({
         )}
 
         {/* Print Status Segmented Tabs */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-container-lowest border border-white/5 overflow-x-auto">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-container-lowest border border-white/5 overflow-x-auto no-scrollbar shrink-0 max-w-full">
           <button
             type="button"
             onClick={() => onPrintedFilterChange("all")}
-            className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-all shrink-0 min-h-[32px] ${
               printedFilter === "all"
                 ? "bg-surface-container-high text-on-surface font-semibold shadow-sm"
                 : "text-on-surface-variant hover:text-on-surface"
@@ -149,7 +149,7 @@ export default function FilterBar({
           <button
             type="button"
             onClick={() => onPrintedFilterChange("unprinted")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all shrink-0 min-h-[32px] ${
               printedFilter === "unprinted"
                 ? "bg-primary-container/20 text-primary font-semibold border border-primary-container/30 shadow-sm"
                 : "text-on-surface-variant hover:text-primary"
@@ -162,7 +162,7 @@ export default function FilterBar({
           <button
             type="button"
             onClick={() => onPrintedFilterChange("printed")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all shrink-0 min-h-[32px] ${
               printedFilter === "printed"
                 ? "bg-tertiary/20 text-tertiary font-semibold border border-tertiary/30 shadow-sm"
                 : "text-on-surface-variant hover:text-tertiary"
@@ -178,7 +178,7 @@ export default function FilterBar({
         <button
           type="button"
           onClick={onToggleFavorites}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border min-h-[36px] ${
             favoritesOnly
               ? "bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-sm"
               : "bg-surface-container-lowest text-on-surface-variant border-white/5 hover:text-on-surface hover:bg-surface-container-high"
@@ -202,7 +202,7 @@ export default function FilterBar({
           <select
             value={sort}
             onChange={(e) => onSortChange(e.target.value)}
-            className="bg-surface-container-lowest text-on-surface text-xs font-medium px-3 py-1.5 rounded-lg border border-white/5 focus:outline-none focus:border-primary-container cursor-pointer"
+            className="bg-surface-container-lowest text-on-surface text-base sm:text-xs font-medium px-3 py-1.5 rounded-lg border border-white/5 focus:outline-none focus:border-primary-container cursor-pointer min-h-[36px]"
           >
             <option value="date_desc">Mais recentes primeiro</option>
             <option value="date_asc">Mais antigos primeiro</option>
@@ -227,7 +227,7 @@ export default function FilterBar({
                 key={fmt.label}
                 type="button"
                 onClick={() => onFormatSelect(fmt.value)}
-                className={`px-2.5 py-0.5 rounded text-xs font-mono transition-all flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded text-xs font-mono transition-all flex items-center gap-1 min-h-[30px] ${
                   isSelected
                     ? "bg-primary-container/25 text-primary border border-primary-container/40 font-semibold"
                     : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface border border-white/5"
@@ -252,7 +252,7 @@ export default function FilterBar({
                   key={poly.value}
                   type="button"
                   onClick={() => onPolymerSelect(isSelected ? "" : poly.value)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border min-h-[30px] ${
                     isSelected
                       ? "bg-surface-container-highest text-on-surface border-primary-container/50 shadow-sm"
                       : "bg-surface-container-lowest text-on-surface-variant border-white/5 hover:bg-surface-container-highest hover:text-on-surface"

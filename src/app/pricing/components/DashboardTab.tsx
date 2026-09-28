@@ -72,7 +72,7 @@ export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Top Header & Period Selector */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-on-surface flex items-center gap-2">
             <span className="material-symbols-outlined text-emerald-500 text-xl">
@@ -85,12 +85,12 @@ export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap max-w-full">
           {/* Filtro de Período */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-container-low border border-outline-variant/20">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-container-low border border-outline-variant/20 overflow-x-auto no-scrollbar max-w-full">
             <button
               onClick={() => setPeriod("month")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 min-h-[32px] ${
                 period === "month"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -100,7 +100,7 @@ export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
             </button>
             <button
               onClick={() => setPeriod("30days")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 min-h-[32px] ${
                 period === "30days"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -110,7 +110,7 @@ export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
             </button>
             <button
               onClick={() => setPeriod("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 min-h-[32px] ${
                 period === "all"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"

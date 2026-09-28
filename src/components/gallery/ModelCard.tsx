@@ -271,7 +271,7 @@ export default function ModelCard({
             <a
               href={`/models/${model.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg backdrop-blur-md bg-surface-container-lowest/70 hover:bg-cyan-950/90 text-white/70 hover:text-cyan-300 transition-all shadow-md opacity-0 group-hover:opacity-100"
+              className="p-1.5 rounded-lg backdrop-blur-md bg-surface-container-lowest/70 hover:bg-cyan-950/90 text-white/70 hover:text-cyan-300 transition-all shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Abrir no Visualizador 3D Studio"
             >
               <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
@@ -279,7 +279,7 @@ export default function ModelCard({
             <button
               type="button"
               onClick={handleFavoriteClick}
-              className={`p-1.5 rounded-lg backdrop-blur-md transition-colors shadow-md ${
+              className={`p-1.5 rounded-lg backdrop-blur-md transition-colors shadow-md min-w-[32px] min-h-[32px] flex items-center justify-center ${
                 favorite
                   ? "bg-surface-container-lowest/80 text-amber-400"
                   : "bg-surface-container-lowest/60 text-white/60 hover:text-amber-400 hover:bg-surface-container-lowest"
@@ -299,11 +299,11 @@ export default function ModelCard({
         {/* Bottom Badges Overlay: Dimensions & Files count */}
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none text-[10px] font-mono">
           {dimsText && (
-            <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface border border-white/5">
+            <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface border border-white/5 truncate max-w-[55%]">
               {dimsText}
             </span>
           )}
-          <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface-variant border border-white/5 ml-auto">
+          <span className="px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md text-on-surface-variant border border-white/5 ml-auto shrink-0">
             {model._count?.files || model.files.length} arqs
           </span>
         </div>
@@ -316,7 +316,7 @@ export default function ModelCard({
         </h3>
 
         <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-mono">
-          <span className="truncate max-w-[65%]" title={model.library?.name}>
+          <span className="truncate max-w-[60%]" title={model.library?.name}>
             {model.library?.name}
           </span>
 
@@ -324,7 +324,7 @@ export default function ModelCard({
           <button
             type="button"
             onClick={handlePrintedClick}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors shrink-0 min-h-[28px] ${
               isPrinted
                 ? "bg-tertiary/15 text-tertiary border border-tertiary/30"
                 : "bg-surface-container-highest text-on-surface-variant hover:text-on-surface"

@@ -150,7 +150,7 @@ export default function SettingsTab({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
       {/* Coluna 1: Configurações da Impressora & Oficina (6 cols) */}
       <div className="lg:col-span-6 space-y-6">
-        <form onSubmit={handleSaveSettings} className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-5">
+        <form onSubmit={handleSaveSettings} className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20">
             <div>
               <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function SettingsTab({
                 type="text"
                 value={printerName}
                 onChange={(e) => setPrinterName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm focus:outline-none focus:border-primary-container"
+                className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm focus:outline-none focus:border-primary-container"
               />
             </div>
 
@@ -196,7 +196,7 @@ export default function SettingsTab({
                   min="0"
                   value={printerCost}
                   onChange={(e) => setPrinterCost(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
 
@@ -209,7 +209,7 @@ export default function SettingsTab({
                   min="1"
                   value={lifespanHours}
                   onChange={(e) => setLifespanHours(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function SettingsTab({
                   min="0"
                   value={powerWatts}
                   onChange={(e) => setPowerWatts(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export default function SettingsTab({
                   min="0"
                   value={electricityKwhCost}
                   onChange={(e) => setElectricityKwhCost(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function SettingsTab({
                   min="0"
                   value={manualHourlyRate}
                   onChange={(e) => setManualHourlyRate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function SettingsTab({
                   min="0"
                   value={defaultMarkup}
                   onChange={(e) => setDefaultMarkup(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
@@ -298,7 +298,7 @@ export default function SettingsTab({
             <button
               type="submit"
               disabled={savingSettings}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity shadow-md disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm sm:text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity shadow-md disabled:opacity-50 min-h-[40px]"
             >
               {savingSettings ? "Salvando..." : "Salvar Configurações"}
             </button>
@@ -308,7 +308,7 @@ export default function SettingsTab({
 
       {/* Coluna 2: Cadastro & Gestão de Materiais (6 cols) */}
       <div className="lg:col-span-6 space-y-6">
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-5">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20">
             <div>
               <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function SettingsTab({
                 <button
                   type="button"
                   onClick={cancelEditMaterial}
-                  className="text-xs text-on-surface-variant hover:text-on-surface"
+                  className="text-xs text-on-surface-variant hover:text-on-surface min-h-[32px] px-2 flex items-center"
                 >
                   Cancelar Edição
                 </button>
@@ -356,7 +356,7 @@ export default function SettingsTab({
                   placeholder="Ex: PLA Silk Bicolor, PETG Carbono..."
                   value={materialName}
                   onChange={(e) => setMaterialName(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 sm:py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
 
@@ -372,7 +372,7 @@ export default function SettingsTab({
                   placeholder="120.00"
                   value={materialCost}
                   onChange={(e) => setMaterialCost(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-xs text-on-surface font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3 py-2 sm:py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-base sm:text-xs text-on-surface font-mono focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function SettingsTab({
               <button
                 type="submit"
                 disabled={savingMaterial}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+                className="px-4 py-2 sm:py-1.5 min-h-[36px] rounded-lg text-sm sm:text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
               >
                 {savingMaterial ? "Salvando..." : editingMaterial ? "Atualizar" : "+ Adicionar"}
               </button>
@@ -394,8 +394,8 @@ export default function SettingsTab({
           </form>
 
           {/* Tabela de Materiais */}
-          <div className="border border-outline-variant/20 rounded-xl overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="border border-outline-variant/20 rounded-xl overflow-x-auto">
+            <table className="w-full text-left text-xs min-w-[340px]">
               <thead className="bg-surface-container-high text-on-surface-variant">
                 <tr>
                   <th className="p-3">Material</th>
@@ -418,14 +418,14 @@ export default function SettingsTab({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => startEditMaterial(m)}
-                          className="p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                          className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
                           title="Editar material"
                         >
                           <span className="material-symbols-outlined text-base">edit</span>
                         </button>
                         <button
                           onClick={() => handleDeleteMaterial(m.id!, m.name)}
-                          className="p-1 rounded-md text-on-surface-variant hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                          className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-red-500 hover:bg-red-500/10 transition-colors"
                           title="Excluir material"
                         >
                           <span className="material-symbols-outlined text-base">delete</span>

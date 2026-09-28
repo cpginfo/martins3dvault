@@ -100,7 +100,7 @@ export default function BudgetsTab({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por peça, cliente ou material..."
-            className="w-full pl-11 pr-4 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm focus:outline-none focus:border-primary-container transition-colors"
+            className="w-full pl-11 pr-4 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm focus:outline-none focus:border-primary-container transition-colors"
           />
           {searchTerm && (
             <button
@@ -285,7 +285,7 @@ export default function BudgetsTab({
                 </div>
 
                 {/* Meio: Valores Financeiros */}
-                <div className="flex items-center gap-6 px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/15 justify-between md:justify-start">
+                <div className="flex items-center gap-3 sm:gap-6 px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/15 justify-between md:justify-start flex-wrap">
                   <div>
                     <span className="text-[11px] text-on-surface-variant block">Custo Total</span>
                     <span className="font-mono text-sm font-semibold text-on-surface">
@@ -315,11 +315,11 @@ export default function BudgetsTab({
                 </div>
 
                 {/* Lado Direito: Ações Rápidas */}
-                <div className="flex items-center gap-2 justify-end">
+                <div className="flex items-center gap-2 justify-end flex-wrap">
                   {/* Duplicar / Reutilizar */}
                   <button
                     onClick={() => onDuplicate(b)}
-                    className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/20"
+                    className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
                     title="Duplicar / Reutilizar parâmetros em novo orçamento"
                   >
                     <span className="material-symbols-outlined text-lg">content_copy</span>
@@ -328,7 +328,7 @@ export default function BudgetsTab({
                   {/* Marcar/Alterar Venda */}
                   <button
                     onClick={() => onOpenSaleModal(b)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border min-h-[36px] ${
                       isSale
                         ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
                         : "bg-surface-container border-outline-variant/25 text-on-surface hover:border-emerald-500/50 hover:text-emerald-500"
@@ -344,7 +344,7 @@ export default function BudgetsTab({
                   {/* Ver Detalhes */}
                   <button
                     onClick={() => onOpenDetailModal(b)}
-                    className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/20"
+                    className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors border border-outline-variant/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
                     title="Ver detalhamento completo"
                   >
                     <span className="material-symbols-outlined text-lg">visibility</span>
@@ -354,7 +354,7 @@ export default function BudgetsTab({
                   <button
                     onClick={() => handleDelete(b.id, b.productName)}
                     disabled={deletingId === b.id}
-                    className="p-2 rounded-xl bg-surface-container hover:bg-red-500/15 text-on-surface-variant hover:text-red-500 transition-colors border border-outline-variant/20 disabled:opacity-50"
+                    className="p-2 rounded-xl bg-surface-container hover:bg-red-500/15 text-on-surface-variant hover:text-red-500 transition-colors border border-outline-variant/20 disabled:opacity-50 min-w-[36px] min-h-[36px] flex items-center justify-center"
                     title="Excluir orçamento"
                   >
                     <span className="material-symbols-outlined text-lg">delete</span>
