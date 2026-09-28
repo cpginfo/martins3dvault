@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
@@ -61,6 +61,7 @@ function PricingContent() {
   const [saleModalBudget, setSaleModalBudget] = useState<BudgetRecord | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [calculatorInitialData, setCalculatorInitialData] = useState<BudgetCalculationInput | null>(null);
+  const paramsAppliedRef = useRef<string | null>(null);
 
   // Carrega configurações
   const fetchSettings = useCallback(async () => {
@@ -116,6 +117,52 @@ function PricingContent() {
       ignore = true;
     };
   }, [fetchSettings, fetchMaterials, fetchBudgets]);
+
+  // Carrega dados iniciais via Query Params (ex: redirecionado do visualizador de arquivos 3D)
+  useEffect(() => {
+    const productNameParam = searchParams.get("productName");
+    if (!productNameParam) return;
+
+    const paramKey = `${productNameParam}-${searchParams.get("weightGrams")}-${searchParams.get("printTimeHours")}-${searchParams.get("printTimeMinutes")}-${searchParams.get("assemblyTimeMinutes")}`;
+    if (paramsAppliedRef.current === paramKey) return;
+    paramsAppliedRef.current = paramKey;
+
+    const weightParam = parseFloat(searchParams.get("weightGrams") || "0") || 0;
+    const printHoursParam = parseInt(searchParams.get("printTimeHours") || "0") || 0;
+    const printMinutesParam = parseInt(searchParams.get("printTimeMinutes") || "0") || 0;
+    const assemblyHoursParam = parseInt(searchParams.get("assemblyTimeHours") || "0") || 0;
+    const assemblyMinutesParam = parseInt(searchParams.get("assemblyTimeMinutes") || searchParams.get("manualTimeMinutes") || "0") || 0;
+    const filamentParam = searchParams.get("filamentType") || "";
+
+    let matchedMaterial = materials.find((m) =>
+      filamentParam && m.name.toLowerCase().includes(filamentParam.toLowerCase())
+    );
+    if (!matchedMaterial && materials.length > 0) {
+      matchedMaterial = materials[0];
+    }
+
+    const initial: BudgetCalculationInput = {
+      productName: productNameParam,
+      customerName: "",
+      printTimeHours: printHoursParam,
+      printTimeMinutes: printMinutesParam,
+      weightGrams: weightParam,
+      materialCostPerKg: matchedMaterial?.costPerKg || 110,
+      materialName: matchedMaterial?.name || filamentParam || "Material",
+      materialId: matchedMaterial?.id || null,
+      modelingTimeHours: 0,
+      modelingTimeMinutes: 0,
+      assemblyTimeHours: assemblyHoursParam,
+      assemblyTimeMinutes: assemblyMinutesParam,
+      markupPercent: printerConfig.defaultMarkup || 100,
+      accessories: [],
+      isSale: false,
+      finalPrice: null,
+    };
+
+    setCalculatorInitialData(initial);
+    setSelectedTab("calculator");
+  }, [searchParams, materials, printerConfig.defaultMarkup]);
 
   // Duplicar orçamento
   const handleDuplicate = (budget: BudgetRecord) => {

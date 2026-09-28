@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   X,
   Download,
@@ -23,8 +24,14 @@ import {
   Sliders,
   Cpu,
   FileCode,
+  Calculator,
+  Clock,
+  Wrench,
+  TrendingUp,
 } from "lucide-react";
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
+import { calculatePrintCost, formatBRL } from "@/lib/pricing/calculator";
+import { PrinterConfig, MaterialConfig, BudgetCalculationInput } from "@/lib/pricing/types";
 
 export interface ModelDetailData {
   id: string;
@@ -41,6 +48,8 @@ export interface ModelDetailData {
   infillDensity?: number | null;
   layerHeight?: number | null;
   printTimeMinutes?: number | null;
+  weightGrams?: number | null;
+  manualTimeMinutes?: number | null;
   notes?: string | null;
   isFavorite: boolean;
   isPrinted?: boolean;
@@ -69,6 +78,7 @@ export default function ModelDetailModal({
   onModelUpdated,
   onUpdate,
 }: ModelDetailModalProps) {
+  const router = useRouter();
   const [model, setModel] = useState<ModelDetailData>(initialModel);
   const [activeTab, setActiveTab] = useState<"files" | "notes" | "manuals">("files");
   const [collectionsList, setCollectionsList] = useState<Array<{ id: string; name: string }>>([]);
@@ -93,7 +103,11 @@ export default function ModelDetailModal({
   const [nozzleSize, setNozzleSize] = useState(model.nozzleSize?.toString() || "0.4");
   const [infillDensity, setInfillDensity] = useState(model.infillDensity?.toString() || "15");
   const [layerHeight, setLayerHeight] = useState(model.layerHeight?.toString() || "0.2");
-  const [printTimeMinutes, setPrintTimeMinutes] = useState(model.printTimeMinutes?.toString() || "");
+  const [printHours, setPrintHours] = useState("");
+  const [printMinutes, setPrintMinutes] = useState("");
+  const [weightGrams, setWeightGrams] = useState(model.weightGrams?.toString() || "");
+  const [manualHours, setManualHours] = useState("");
+  const [manualMinutes, setManualMinutes] = useState("");
   const [notes, setNotes] = useState(model.notes || "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -117,7 +131,26 @@ export default function ModelDetailModal({
     setNozzleSize(initialModel.nozzleSize?.toString() || "0.4");
     setInfillDensity(initialModel.infillDensity?.toString() || "15");
     setLayerHeight(initialModel.layerHeight?.toString() || "0.2");
-    setPrintTimeMinutes(initialModel.printTimeMinutes?.toString() || "");
+    setWeightGrams(initialModel.weightGrams?.toString() || "");
+
+    const totalM = initialModel.printTimeMinutes ?? null;
+    if (totalM !== null && !isNaN(totalM)) {
+      setPrintHours(Math.floor(totalM / 60).toString());
+      setPrintMinutes((totalM % 60).toString());
+    } else {
+      setPrintHours("");
+      setPrintMinutes("");
+    }
+
+    const manualM = initialModel.manualTimeMinutes ?? null;
+    if (manualM !== null && !isNaN(manualM)) {
+      setManualHours(Math.floor(manualM / 60).toString());
+      setManualMinutes((manualM % 60).toString());
+    } else {
+      setManualHours("");
+      setManualMinutes("");
+    }
+
     setNotes(initialModel.notes || "");
   }, [initialModel]);
 
@@ -127,6 +160,76 @@ export default function ModelDetailModal({
       .then((data) => setCollectionsList(data))
       .catch(() => {});
   }, []);
+
+  // Configurações de precificação para estimativa em tempo real
+  const [printerConfig, setPrinterConfig] = useState<PrinterConfig>({
+    printerCost: 2500,
+    powerWatts: 250,
+    lifespanHours: 3000,
+    electricityKwhCost: 0.85,
+    manualHourlyRate: 35,
+    defaultMarkup: 100,
+  });
+  const [materialsList, setMaterialsList] = useState<MaterialConfig[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    Promise.all([
+      fetch("/api/pricing/settings").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/pricing/materials").then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([settings, mats]) => {
+        if (ignore) return;
+        if (settings) setPrinterConfig(settings);
+        if (Array.isArray(mats)) setMaterialsList(mats);
+      })
+      .catch((err) => console.error("Erro ao carregar configurações de precificação:", err));
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const selectedMaterial = useMemo(() => {
+    const fil = (filamentType || "").trim().toLowerCase();
+    if (!fil) return materialsList[0] || null;
+    return (
+      materialsList.find((m) => m.name.toLowerCase() === fil) ||
+      materialsList.find((m) => m.name.toLowerCase().includes(fil)) ||
+      materialsList.find((m) => fil.includes(m.name.toLowerCase())) ||
+      null
+    );
+  }, [filamentType, materialsList]);
+
+  const materialCostPerKg = selectedMaterial?.costPerKg ?? 110;
+
+  const approxBreakdown = useMemo(() => {
+    const totalM = model.printTimeMinutes ?? null;
+    const pH = printHours !== "" ? (Number(printHours) || 0) : (totalM !== null ? Math.floor(totalM / 60) : 0);
+    const pM = printMinutes !== "" ? (Number(printMinutes) || 0) : (totalM !== null ? totalM % 60 : 0);
+    const wG = weightGrams !== "" ? (Number(weightGrams) || 0) : (model.weightGrams ? Number(model.weightGrams) : 0);
+    const manualM = model.manualTimeMinutes ?? null;
+    const mH = manualHours !== "" ? (Number(manualHours) || 0) : (manualM !== null ? Math.floor(manualM / 60) : 0);
+    const mM = manualMinutes !== "" ? (Number(manualMinutes) || 0) : (manualM !== null ? manualM % 60 : 0);
+
+    if (pH === 0 && pM === 0 && wG === 0 && mH === 0 && mM === 0) {
+      return null;
+    }
+
+    const input: BudgetCalculationInput = {
+      productName: model.name || "Modelo",
+      printTimeHours: pH,
+      printTimeMinutes: pM,
+      weightGrams: wG,
+      materialCostPerKg,
+      materialName: selectedMaterial?.name || filamentType || model.filamentType || "PLA",
+      assemblyTimeHours: mH,
+      assemblyTimeMinutes: mM,
+      markupPercent: printerConfig.defaultMarkup ?? 100,
+    };
+
+    return calculatePrintCost(input, printerConfig);
+  }, [printHours, printMinutes, weightGrams, manualHours, manualMinutes, materialCostPerKg, selectedMaterial, filamentType, model, printerConfig]);
 
   // 1. Salvar Renomeação
   const handleSaveName = async () => {
@@ -332,6 +435,17 @@ export default function ModelDetailModal({
 
   const handleSaveNotes = async () => {
     setSavingNotes(true);
+
+    const hasPrintTime = printHours !== "" || printMinutes !== "";
+    const totalPrintMinutes = hasPrintTime
+      ? (parseInt(printHours || "0", 10) * 60) + parseInt(printMinutes || "0", 10)
+      : null;
+
+    const hasManualTime = manualHours !== "" || manualMinutes !== "";
+    const totalManualMinutes = hasManualTime
+      ? (parseInt(manualHours || "0", 10) * 60) + parseInt(manualMinutes || "0", 10)
+      : null;
+
     try {
       const res = await fetch(`/api/models/${model.id}`, {
         method: "PUT",
@@ -341,7 +455,9 @@ export default function ModelDetailModal({
           nozzleSize: parseFloat(nozzleSize) || null,
           infillDensity: parseInt(infillDensity) || null,
           layerHeight: parseFloat(layerHeight) || null,
-          printTimeMinutes: printTimeMinutes ? parseInt(printTimeMinutes) : null,
+          printTimeMinutes: totalPrintMinutes,
+          weightGrams: weightGrams ? parseFloat(weightGrams) : null,
+          manualTimeMinutes: totalManualMinutes,
           notes,
         }),
       });
@@ -358,6 +474,30 @@ export default function ModelDetailModal({
     } finally {
       setSavingNotes(false);
     }
+  };
+
+  const handleGoToPricing = () => {
+    const pHours = printHours !== "" ? printHours : (model.printTimeMinutes ? Math.floor(model.printTimeMinutes / 60).toString() : "0");
+    const pMinutes = printMinutes !== "" ? printMinutes : (model.printTimeMinutes ? (model.printTimeMinutes % 60).toString() : "0");
+    const mHours = manualHours !== "" ? manualHours : (model.manualTimeMinutes ? Math.floor(model.manualTimeMinutes / 60).toString() : "0");
+    const mMinutes = manualMinutes !== "" ? manualMinutes : (model.manualTimeMinutes ? (model.manualTimeMinutes % 60).toString() : "0");
+    const weight = weightGrams !== "" ? weightGrams : (model.weightGrams ? model.weightGrams.toString() : (estimatedGrams ? estimatedGrams.toString() : "0"));
+    const fil = filamentType || model.filamentType || "";
+
+    const params = new URLSearchParams({
+      tab: "calculator",
+      productName: model.name,
+      weightGrams: weight || "0",
+      printTimeHours: pHours || "0",
+      printTimeMinutes: pMinutes || "0",
+      assemblyTimeHours: mHours || "0",
+      assemblyTimeMinutes: mMinutes || "0",
+    });
+    if (fil) {
+      params.set("filamentType", fil);
+    }
+
+    router.push(`/pricing?${params.toString()}`);
   };
 
   const handleSnapshotSaved = (newCover: string) => {
@@ -655,6 +795,17 @@ export default function ModelDetailModal({
                 )}
               </div>
 
+              {/* Orçamento Button */}
+              <button
+                type="button"
+                onClick={handleGoToPricing}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold transition-all shadow-sm hover:shadow-emerald-500/20 cursor-pointer"
+                title="Calcular orçamento e custos deste modelo"
+              >
+                <Calculator className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Orçamento</span>
+              </button>
+
               {/* Studio 3D Shortcut Button */}
               <Link
                 href={`/models/${model.id}`}
@@ -791,8 +942,10 @@ export default function ModelDetailModal({
                         Tempo Estimado
                       </span>
                       <span className="text-xs font-mono font-bold text-orange-400 mt-0.5 block">
-                        {model.printTimeMinutes || printTimeMinutes ? (
-                          `${Math.floor(parseInt(String(model.printTimeMinutes || printTimeMinutes)) / 60)}h ${parseInt(String(model.printTimeMinutes || printTimeMinutes)) % 60}m`
+                        {printHours || printMinutes ? (
+                          `${printHours ? `${printHours}h ` : ""}${printMinutes || 0}m`
+                        ) : model.printTimeMinutes ? (
+                          `${Math.floor(model.printTimeMinutes / 60)}h ${model.printTimeMinutes % 60}m`
                         ) : (
                           <span className="text-slate-500 font-normal text-[11px]" title="Tempo não embutido no arquivo. Você pode definir na aba Notas de Impressão">
                             -- <span className="text-[10px] text-slate-600 block">(na aba Notas)</span>
@@ -802,10 +955,14 @@ export default function ModelDetailModal({
                     </div>
                     <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
                       <span className="text-[10px] font-mono text-slate-400 uppercase block">
-                        Consumo de Filamento
+                        Peso da Peça
                       </span>
                       <span className="text-xs font-mono font-bold text-cyan-300 mt-0.5 block">
-                        {estimatedGrams ? (
+                        {weightGrams ? (
+                          `${weightGrams} g`
+                        ) : model.weightGrams ? (
+                          `${model.weightGrams} g`
+                        ) : estimatedGrams ? (
                           <>
                             {estimatedGrams} g{" "}
                             <span className="text-[10px] font-normal text-slate-400">
@@ -813,8 +970,24 @@ export default function ModelDetailModal({
                             </span>
                           </>
                         ) : (
-                          <span className="text-slate-500 font-normal text-[11px]" title="Calculado automaticamente ao abrir a malha 3D">
-                            -- <span className="text-[10px] text-slate-600 block">(carregue 3D)</span>
+                          <span className="text-slate-500 font-normal text-[11px]" title="Defina na aba Notas ou abra a malha 3D">
+                            -- <span className="text-[10px] text-slate-600 block">(na aba Notas)</span>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                        Trabalho Manual
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-400 mt-0.5 block">
+                        {manualHours || manualMinutes ? (
+                          `${manualHours ? `${manualHours}h ` : ""}${manualMinutes || 0}m`
+                        ) : model.manualTimeMinutes ? (
+                          `${Math.floor(model.manualTimeMinutes / 60)}h ${model.manualTimeMinutes % 60}m`
+                        ) : (
+                          <span className="text-slate-500 font-normal text-[11px]">
+                            -- <span className="text-[10px] text-slate-600 block">(opcional)</span>
                           </span>
                         )}
                       </span>
@@ -913,6 +1086,126 @@ export default function ModelDetailModal({
                     </span>
                   </div>
                 </div>
+
+                {/* Card: Valor de Venda Aproximado com atalho para o menu Notas */}
+                <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-emerald-900/10 to-slate-900/70 p-3.5 shadow-md space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        Valor de Venda Aproximado
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">
+                        Markup: {printerConfig.defaultMarkup ?? 100}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("notes")}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 text-[10px] font-semibold transition cursor-pointer"
+                        title="Ir para a aba Notas de Impressão para editar parâmetros"
+                      >
+                        <Pencil className="w-2.5 h-2.5" />
+                        <span>Editar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {approxBreakdown ? (
+                    <>
+                      <div className="flex items-baseline justify-between pt-0.5">
+                        <div>
+                          <span className="text-2xl font-black font-mono text-emerald-400 tracking-tight">
+                            {formatBRL(approxBreakdown.suggestedPrice)}
+                          </span>
+                          <span className="text-[11px] text-slate-400 ml-2">preço sugerido</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-mono font-semibold text-emerald-300">
+                            +{formatBRL(approxBreakdown.simulatedProfit)}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">lucro estimado</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-emerald-500/20 grid grid-cols-3 gap-2 text-[11px]">
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block">Custo Total</span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.totalCost)}
+                          </span>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block truncate" title={`Material (${selectedMaterial?.name || filamentType || model.filamentType || "PLA"})`}>
+                            Mat. ({selectedMaterial?.name || filamentType || model.filamentType || "PLA"})
+                          </span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.materialCost)}
+                          </span>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block truncate" title="Máquina & Mão de Obra">
+                            Máq. + Mão Obra
+                          </span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.energyCost + approxBreakdown.depreciationCost + approxBreakdown.laborCost)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Aviso indicando que para editar deve acessar o menu NOTAS */}
+                      <div className="pt-1.5 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5">
+                        <span className="flex items-center gap-1.5 text-slate-400">
+                          <span className="text-cyan-400">💡</span>
+                          <span>Para editar peso, tempo ou material:</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("notes")}
+                          className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <span>Acessar menu Notas</span>
+                          <span>→</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-2.5 px-3 rounded-lg bg-black/20 border border-white/5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-slate-400">
+                          Sem peso ou tempo de impressão definidos.
+                        </span>
+                        <span className="text-sm font-mono font-bold text-slate-500">R$ 0,00</span>
+                      </div>
+                      <div className="pt-1 border-t border-white/5 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Deseja calcular o valor aproximado?</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("notes")}
+                          className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Preencher no menu Notas</span>
+                          <span>→</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botão de Orçamento Completo na aba principal */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleGoToPricing}
+                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Calculator className="w-3.5 h-3.5" />
+                    <span>Calcular Orçamento Completo</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -953,17 +1246,8 @@ export default function ModelDetailModal({
                     {model.isPrinted ? "Desmarcar" : "Marcar Impresso"}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Filamento</label>
-                    <input
-                      type="text"
-                      value={filamentType}
-                      onChange={(e) => setFilamentType(e.target.value)}
-                      placeholder="Ex: PLA, PETG, ABS"
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
+                {/* Linha 1: Bico | Infill | Camada */}
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs text-slate-400 mb-1">Bico (mm)</label>
                     <input
@@ -994,22 +1278,124 @@ export default function ModelDetailModal({
                       className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
+                </div>
+
+                {/* Linha 2: Filamento | Peso da Peça */}
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Tempo Estimado (minutos)</label>
+                    <label className="block text-xs text-slate-400 mb-1">Filamento</label>
+                    <input
+                      type="text"
+                      list="modal-filaments-list"
+                      value={filamentType}
+                      onChange={(e) => setFilamentType(e.target.value)}
+                      placeholder="Ex: PLA, PETG, ABS"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                    <datalist id="modal-filaments-list">
+                      {materialsList.map((m) => (
+                        <option key={m.id || m.name} value={m.name}>
+                          {m.name} ({formatBRL(m.costPerKg)}/kg)
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                      <span>Peso da Peça (g)</span>
+                      {estimatedGrams && !weightGrams && (
+                        <button
+                          type="button"
+                          onClick={() => setWeightGrams(estimatedGrams.toString())}
+                          className="text-[10px] text-cyan-400 hover:underline cursor-pointer"
+                          title="Preencher com peso estimado pela malha 3D"
+                        >
+                          Usar {estimatedGrams}g
+                        </button>
+                      )}
+                    </label>
                     <input
                       type="number"
-                      value={printTimeMinutes}
-                      onChange={(e) => setPrintTimeMinutes(e.target.value)}
-                      placeholder="Ex: 180"
+                      step="0.1"
+                      value={weightGrams}
+                      onChange={(e) => setWeightGrams(e.target.value)}
+                      placeholder={estimatedGrams ? `Ex: ${estimatedGrams}` : "Ex: 85"}
                       className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
+                {/* Linha 3: Tempo de Impressão */}
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Notas Técnicas & Dicas</label>
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <Clock className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Tempo de Impressão</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={printHours}
+                        onChange={(e) => setPrintHours(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      />
+                      <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">h</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={printMinutes}
+                        onChange={(e) => setPrintMinutes(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      />
+                      <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">min</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linha 4: Trabalho Manual */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <Wrench className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Trabalho Manual</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={manualHours}
+                        onChange={(e) => setManualHours(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      />
+                      <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">h</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={manualMinutes}
+                        onChange={(e) => setManualMinutes(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      />
+                      <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">min</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linha 5: Notas */}
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Notas</label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ex: Usar suportes em árvore, 3 perímetros de parede, temperatura da mesa a 60°C..."
@@ -1017,23 +1403,103 @@ export default function ModelDetailModal({
                   />
                 </div>
 
-                <button
-                  onClick={handleSaveNotes}
-                  disabled={savingNotes}
-                  className="flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
-                >
-                  {saveSuccess ? (
+                {/* Linha 6: Valor de Venda Aproximado */}
+                <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-emerald-900/10 to-slate-900/70 p-3.5 shadow-md space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        Valor de Venda Aproximado
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">
+                      Markup: {printerConfig.defaultMarkup ?? 100}%
+                    </span>
+                  </div>
+
+                  {approxBreakdown ? (
                     <>
-                      <Check className="w-4 h-4 text-emerald-300" />
-                      <span>Parâmetros Salvos!</span>
+                      <div className="flex items-baseline justify-between pt-0.5">
+                        <div>
+                          <span className="text-2xl font-black font-mono text-emerald-400 tracking-tight">
+                            {formatBRL(approxBreakdown.suggestedPrice)}
+                          </span>
+                          <span className="text-[11px] text-slate-400 ml-2">preço sugerido</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-mono font-semibold text-emerald-300">
+                            +{formatBRL(approxBreakdown.simulatedProfit)}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">lucro estimado</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-emerald-500/20 grid grid-cols-3 gap-2 text-[11px]">
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block">Custo Total</span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.totalCost)}
+                          </span>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block truncate" title={`Material (${selectedMaterial?.name || filamentType || "PLA"})`}>
+                            Mat. ({selectedMaterial?.name || filamentType || "PLA"})
+                          </span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.materialCost)}
+                          </span>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-1.5 border border-white/5">
+                          <span className="text-slate-400 text-[10px] block truncate" title="Máquina & Mão de Obra">
+                            Máq. + Mão Obra
+                          </span>
+                          <span className="font-mono font-medium text-slate-200">
+                            {formatBRL(approxBreakdown.energyCost + approxBreakdown.depreciationCost + approxBreakdown.laborCost)}
+                          </span>
+                        </div>
+                      </div>
                     </>
                   ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>{savingNotes ? "Salvando..." : "Salvar Parâmetros"}</span>
-                    </>
+                    <div className="py-2 px-3 rounded-lg bg-black/20 border border-white/5 flex items-center justify-between">
+                      <div className="text-[11px] text-slate-400">
+                        Preencha o peso e tempo para calcular a estimativa.
+                      </div>
+                      <span className="text-sm font-mono font-bold text-slate-500">R$ 0,00</span>
+                    </div>
                   )}
-                </button>
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="flex flex-col gap-2 pt-1">
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes}
+                    className="flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {saveSuccess ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-300" />
+                        <span>Salvo!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>{savingNotes ? "Salvando..." : "Salvar"}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleGoToPricing}
+                    className="flex items-center justify-center gap-2 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span>Calcular Orçamento Completo</span>
+                  </button>
+                </div>
               </div>
             )}
 

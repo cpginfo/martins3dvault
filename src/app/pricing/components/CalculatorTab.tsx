@@ -103,7 +103,18 @@ export default function CalculatorTab({
         setWeightGrams(initialData.weightGrams || 0);
         setMaterialCostPerKg(initialData.materialCostPerKg || 110);
         setMaterialName(initialData.materialName || "Material");
-        if (initialData.materialId) setSelectedMaterialId(initialData.materialId);
+        if (initialData.materialId) {
+          setSelectedMaterialId(initialData.materialId);
+        } else if (initialData.materialName && materials.length > 0) {
+          const mat = materials.find((m) =>
+            m.name.toLowerCase().includes(initialData.materialName!.toLowerCase())
+          );
+          if (mat) {
+            setSelectedMaterialId(mat.id || "");
+            setMaterialCostPerKg(mat.costPerKg);
+            setMaterialName(mat.name);
+          }
+        }
         setModelingTimeHours(initialData.modelingTimeHours || 0);
         setModelingTimeMinutes(initialData.modelingTimeMinutes || 0);
         setAssemblyTimeHours(initialData.assemblyTimeHours || 0);
@@ -119,7 +130,7 @@ export default function CalculatorTab({
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [initialData]);
+  }, [initialData, materials]);
 
   // Atualiza material selecionado
   const handleMaterialChange = (matId: string) => {

@@ -5,6 +5,27 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.12.0] - 2026-09-28
+
+### Adicionado
+- **Estimativa de Orçamento em Tempo Real & Integração com `/pricing`**:
+  - Implementado card analítico de **Valor de Venda Aproximado** na tela principal de visualização de arquivos e na aba de notas técnicas ([`src/app/models/[id]/page.tsx`](file:///swarm/stl/src/app/models/[id]/page.tsx) e [`ModelDetailModal.tsx`](file:///swarm/stl/src/components/model/ModelDetailModal.tsx)).
+  - Cálculo determinístico e reativo em tempo real de preço de venda sugerido, lucro estimado, custo total de produção, custo de material e tempo de máquina/mão de obra baseado nas configurações reais da oficina (potência, kWh, depreciação, taxa horária manual e markup padrão).
+  - Indicador e atalho interativo no card da tela principal direcionando o operador para o menu de **Notas**, com transição automática de abas ao clicar.
+  - Ação **Calcular Orçamento Completo** exportando os parâmetros técnicos preenchidos (nome, filamento, peso, tempo de máquina e pós-processamento manual) diretamente para a calculadora de orçamentos.
+- **Novos Campos Técnicos e Reorganização do Fluxo de Bancada (Fatiamento)**:
+  - Adição dos campos `weightGrams` (Float) e `manualTimeMinutes` (Int) ao modelo Prisma de `Model` e criação da migração versionada [`prisma/migrations/20260928082400_add_model_weight_and_manual_time`](file:///swarm/stl/prisma/migrations/20260928082400_add_model_weight_and_manual_time/migration.sql).
+  - Reorganização intuitiva dos campos da aba **Notas de Impressão**:
+    1. Linha 1 (3 colunas): Bico (mm), Infill (%), Camada (mm)
+    2. Linha 2 (2 colunas): Filamento (com autocompletar inteligente a partir do catálogo de materiais cadastrados e custo/kg), Peso da Peça (g) com atalho para peso estimado pela malha 3D
+    3. Linha 3: Tempo de Impressão (Horas e Minutos)
+    4. Linha 4: Trabalho Manual (Horas e Minutos)
+    5. Linha 5: Notas Técnicas de Bancada
+    6. Linha 6: Card de Valor de Venda Aproximado
+    7. Ações: Botão "Salvar" e "Calcular Orçamento Completo".
+
+---
+
 ## [1.11.2] - 2026-09-25
 
 ### Adicionado / Otimização & Segurança

@@ -75,8 +75,10 @@ model Model {
   nozzleSize       Float?      // 0.4, 0.6, etc.
   infillDensity    Int?        // porcentagem
   layerHeight      Float?      // mm
-  printTimeMinutes Int?
-  notes            String?
+  printTimeMinutes  Int?
+  weightGrams       Float?      // Peso da peça em gramas
+  manualTimeMinutes Int?        // Tempo de trabalho manual / acabamento em minutos
+  notes             String?
 
   tags             Tag[]
   files            ModelFile[]

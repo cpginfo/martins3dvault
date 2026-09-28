@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.11.2)
+# Martins3DVault 🖨️✨ (v1.12.0)
 
 <div align="center">
 
@@ -36,6 +36,12 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 💰 **Estimativa de Orçamento em Tempo Real & Parâmetros de Fatiamento Integrados**:
+  - Card analítico com exibição instantânea do **Valor de Venda Aproximado** na tela principal de visualização de arquivos e na aba de notas técnicas.
+  - Cálculo determinístico de custos em tempo real (energia, depreciação, custo real do filamento/kg, acabamento manual e markup padrão da oficina).
+  - Campos técnicos completos: Bico, Infill, Camada, Filamento (com autocompletar inteligente do catálogo), Peso da Peça, Tempo de Impressão e Trabalho Manual.
+  - Integração direta em 1 clique para pré-carregar os dados na **Calculadora de Orçamento Completo** (`/pricing`).
 
 - 🗂️ **Gestão Local dos Arquivos de Impressão**:
   - Todo o acervo é gerenciado diretamente a partir dos arquivos físicos no disco, sem depender de upload manual ou duplicação de dados.

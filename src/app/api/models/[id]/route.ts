@@ -68,6 +68,8 @@ export async function PUT(
       infillDensity,
       layerHeight,
       printTimeMinutes,
+      weightGrams,
+      manualTimeMinutes,
       notes,
       isFavorite,
       isPrinted,
@@ -101,7 +103,9 @@ export async function PUT(
     if (nozzleSize !== undefined) data.nozzleSize = nozzleSize ? parseFloat(nozzleSize) : null;
     if (infillDensity !== undefined) data.infillDensity = infillDensity ? parseInt(infillDensity) : null;
     if (layerHeight !== undefined) data.layerHeight = layerHeight ? parseFloat(layerHeight) : null;
-    if (printTimeMinutes !== undefined) data.printTimeMinutes = printTimeMinutes ? parseInt(printTimeMinutes) : null;
+    if (printTimeMinutes !== undefined) data.printTimeMinutes = printTimeMinutes !== null && printTimeMinutes !== "" ? parseInt(printTimeMinutes) : null;
+    if (weightGrams !== undefined) data.weightGrams = weightGrams !== null && weightGrams !== "" ? parseFloat(weightGrams) : null;
+    if (manualTimeMinutes !== undefined) data.manualTimeMinutes = manualTimeMinutes !== null && manualTimeMinutes !== "" ? parseInt(manualTimeMinutes) : null;
     if (notes !== undefined) data.notes = notes;
     if (isFavorite !== undefined) data.isFavorite = Boolean(isFavorite);
     if (isPrinted !== undefined) {
