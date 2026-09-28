@@ -11,6 +11,7 @@ export interface ThreeMfResult {
   triangleCount?: number;
   dimensionsX?: number;
   dimensionsY?: number;
+  dimensionsZ?: number;
 }
 
 const THUMBNAIL_PATTERNS = [
@@ -18,8 +19,12 @@ const THUMBNAIL_PATTERNS = [
   /^metadata\/slice_info\.(png|jpg|jpeg)$/i,
   /^metadata\/plate_\d+\.(png|jpg|jpeg)$/i,
   /^metadata\/.*thumbnail.*\.(png|jpg|jpeg)$/i,
+  /^metadata\/.*cover.*\.(png|jpg|jpeg)$/i,
   /^thumbnail\.(png|jpg|jpeg)$/i,
   /^thumbnail\/.*\.(png|jpg|jpeg)$/i,
+  /^auxiliaries\/.*thumbnail.*\.(png|jpg|jpeg)$/i,
+  /^auxiliaries\/.*picture.*\.(png|jpg|jpeg)$/i,
+  /^auxiliaries\/.*cover.*\.(png|jpg|jpeg)$/i,
 ];
 
 /**
@@ -42,6 +47,7 @@ export async function extractThreeMfMetadata(
     let triangleCount: number | undefined;
     let dimensionsX: number | undefined;
     let dimensionsY: number | undefined;
+    let dimensionsZ: number | undefined;
 
     // 1. Procura por thumbnail
     for (const entry of entries) {
@@ -122,6 +128,26 @@ export async function extractThreeMfMetadata(
       }
     }
 
+    // Fallback: se não encontrou triângulos no model_settings.config, procura nós <triangle> em modelos 3D
+    if (!triangleCount) {
+      let totalTriangles = 0;
+      for (const entry of entries) {
+        const entryPath = entry.entryName.replace(/\\/g, "/").toLowerCase();
+        if (entryPath.startsWith("3d/") && entryPath.endsWith(".model")) {
+          try {
+            const xml = entry.getData().toString("utf8");
+            const matches = xml.match(/<triangle\b/gi);
+            if (matches) {
+              totalTriangles += matches.length;
+            }
+          } catch {}
+        }
+      }
+      if (totalTriangles > 0) {
+        triangleCount = totalTriangles;
+      }
+    }
+
     // 4. Extrai dimensões X e Y da bounding box pré-calculada do fatiador (plate_1.json ou plate_*.json)
     const plateEntry = entries.find((e) =>
       /metadata\/plate_\d+\.json$/i.test(e.entryName.replace(/\\/g, "/"))
@@ -129,13 +155,25 @@ export async function extractThreeMfMetadata(
     if (plateEntry) {
       try {
         const pData = JSON.parse(plateEntry.getData().toString("utf8"));
-        if (Array.isArray(pData.bbox_all) && pData.bbox_all.length >= 4) {
-          const [minX, minY, maxX, maxY] = pData.bbox_all;
-          const diffX = Math.round(Math.abs(maxX - minX));
-          const diffY = Math.round(Math.abs(maxY - minY));
-          if (diffX > 0 && diffY > 0) {
-            dimensionsX = diffX;
-            dimensionsY = diffY;
+        if (Array.isArray(pData.bbox_all)) {
+          if (pData.bbox_all.length >= 6) {
+            const [minX, minY, minZ, maxX, maxY, maxZ] = pData.bbox_all;
+            const diffX = Math.round(Math.abs(maxX - minX));
+            const diffY = Math.round(Math.abs(maxY - minY));
+            const diffZ = Math.round(Math.abs(maxZ - minZ));
+            if (diffX > 0 && diffY > 0) {
+              dimensionsX = diffX;
+              dimensionsY = diffY;
+              if (diffZ > 0) dimensionsZ = diffZ;
+            }
+          } else if (pData.bbox_all.length >= 4) {
+            const [minX, minY, maxX, maxY] = pData.bbox_all;
+            const diffX = Math.round(Math.abs(maxX - minX));
+            const diffY = Math.round(Math.abs(maxY - minY));
+            if (diffX > 0 && diffY > 0) {
+              dimensionsX = diffX;
+              dimensionsY = diffY;
+            }
           }
         }
         // Se ainda não encontrou layerHeight ou nozzleSize, pode estar no plate.json
@@ -150,7 +188,79 @@ export async function extractThreeMfMetadata(
       }
     }
 
-    // 5. Fallback legado para slice_info.config (chave = valor)
+    // Fallback para dimensões: calcula bounding box através dos vértices de 3D/*.model se necessário
+    if (dimensionsX === undefined || dimensionsY === undefined) {
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      let hasVertices = false;
+
+      for (const entry of entries) {
+        const entryPath = entry.entryName.replace(/\\/g, "/");
+        if (entryPath.startsWith("3D/") && entryPath.endsWith(".model")) {
+          try {
+            const content = entry.getData().toString("utf8");
+            const regex = /<vertex\s+x="([^"]+)"\s+y="([^"]+)"\s+z="([^"]+)"/g;
+            let match;
+            while ((match = regex.exec(content)) !== null) {
+              hasVertices = true;
+              const x = parseFloat(match[1]);
+              const y = parseFloat(match[2]);
+              const z = parseFloat(match[3]);
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+              if (z < minZ) minZ = z;
+              if (z > maxZ) maxZ = z;
+            }
+          } catch {}
+        }
+      }
+
+      if (hasVertices && isFinite(minX) && isFinite(maxX)) {
+        const diffX = Math.round(Math.abs(maxX - minX));
+        const diffY = Math.round(Math.abs(maxY - minY));
+        const diffZ = Math.round(Math.abs(maxZ - minZ));
+        if (diffX > 0 && diffY > 0) {
+          dimensionsX = diffX;
+          dimensionsY = diffY;
+          if (diffZ > 0) dimensionsZ = diffZ;
+        }
+      }
+    }
+
+    // 5. Fallback para 3D/3dmodel.model (ProfileTitle e capas de designer)
+    const modelEntry = entries.find((e) =>
+      e.entryName.replace(/\\/g, "/").toLowerCase() === "3d/3dmodel.model"
+    );
+    if (modelEntry) {
+      try {
+        const xml = modelEntry.getData().toString("utf8");
+        if (layerHeight === undefined || infillDensity === undefined) {
+          const profileMatch = xml.match(/<metadata name="ProfileTitle">([^<]+)<\/metadata>/i);
+          if (profileMatch) {
+            const title = profileMatch[1];
+            if (layerHeight === undefined) {
+              const lhMatch = title.match(/([0-9.]+)mm\s*layer/i);
+              if (lhMatch) {
+                const parsedLh = parseFloat(lhMatch[1]);
+                if (!isNaN(parsedLh) && parsedLh > 0) layerHeight = parsedLh;
+              }
+            }
+            if (infillDensity === undefined) {
+              const infillMatch = title.match(/(\d+)%\s*infill/i);
+              if (infillMatch) {
+                const parsedInfill = parseInt(infillMatch[1], 10);
+                if (!isNaN(parsedInfill) && parsedInfill >= 0) infillDensity = parsedInfill;
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // 6. Fallback legado para slice_info.config (chave = valor)
     if (!filamentType || !layerHeight) {
       const sliceInfoEntry = entries.find((e) =>
         e.entryName.replace(/\\/g, "/").toLowerCase().includes("slice_info.config")
@@ -179,6 +289,7 @@ export async function extractThreeMfMetadata(
       triangleCount,
       dimensionsX,
       dimensionsY,
+      dimensionsZ,
     };
   } catch (err) {
     console.warn(`Aviso ao inspecionar .3mf: ${filePath}`, err);

@@ -15,6 +15,7 @@ const IGNORED_DIRS = new Set([
   "__macosx",
   ".ds_store",
   "thumbs.db",
+  "cache",
 ]);
 
 export interface ScanStats {
@@ -101,6 +102,12 @@ export async function scanLibrary(
     // Define o ponto de partida do walk (toda a biblioteca ou uma subpasta específica)
     let scanStartDir = rootPath;
     if (options?.subFolder) {
+      const normalizedSub = options.subFolder.replace(/\\/g, "/");
+      const subParts = normalizedSub.split("/").filter((p) => p && p !== ".");
+      if (subParts.some((p) => IGNORED_DIRS.has(p.toLowerCase()))) {
+        // Se a subpasta requisitada for um diretório ignorado (ex: cache), aborta sem escanear
+        return stats;
+      }
       scanStartDir = path.resolve(rootPath, options.subFolder);
       if (!fs.existsSync(scanStartDir)) {
         throw new Error(`Subpasta não encontrada: ${options.subFolder}`);
@@ -121,6 +128,9 @@ export async function scanLibrary(
     async function ensureHierarchyForPath(relColPath: string) {
       const parts = relColPath.split(/[/\\]+/).filter((p) => p && p !== ".");
       if (parts.length === 0) return null;
+      if (parts.some((p) => IGNORED_DIRS.has(p.toLowerCase()))) {
+        return null;
+      }
 
       let currentParentId: string | null = null;
       let accumulatedPath = "";
@@ -474,6 +484,27 @@ export async function scanLibrary(
             }
           }
 
+          // E. Arquivos .3mf com informações pendentes de extração?
+          if (!hasChanges) {
+            const threeMfFiles = target.threeDFiles.filter(
+              (f) => path.extname(f).toLowerCase() === ".3mf"
+            );
+            if (threeMfFiles.length > 0) {
+              const hasUnprocessed3mfFile = threeMfFiles.some((fileName) => {
+                const fileRec = existingModel!.files.find((f) => f.fileName === fileName);
+                if (!fileRec) return true;
+                return (
+                  fileRec.mimeType !== "model/3mf" ||
+                  (!existingModel!.coverImage && !target.primaryCoverImage)
+                );
+              });
+
+              if (hasUnprocessed3mfFile) {
+                hasChanges = true;
+              }
+            }
+          }
+
           // Se nada mudou: pula imediatamente o processamento pesado!
           if (!hasChanges) {
             stats.unchangedModels++;
@@ -536,7 +567,20 @@ export async function scanLibrary(
           const existingFile = existingModel.files.find((f) => f.fileName === fileName);
 
           // Se o arquivo 3D específico está inalterado, não precisa re-parsear STL/3MF
-          if (existingFile && existingFile.fileHash === fileHash && !options?.forceFullScan) {
+          // EXCETO se for .3mf e estiver com informações pendentes de extração
+          const fileNeeds3mfExtraction =
+            ext === ".3mf" &&
+            (
+              existingFile?.mimeType !== "model/3mf" ||
+              (!existingModel.coverImage && !target.primaryCoverImage)
+            );
+
+          if (
+            existingFile &&
+            existingFile.fileHash === fileHash &&
+            !options?.forceFullScan &&
+            !fileNeeds3mfExtraction
+          ) {
             continue;
           }
 
@@ -593,10 +637,20 @@ export async function scanLibrary(
               dimensionsX = threeMfMeta.dimensionsX;
               dimensionsY = threeMfMeta.dimensionsY;
             }
+            if (threeMfMeta.dimensionsZ) {
+              dimensionsZ = threeMfMeta.dimensionsZ;
+            }
           }
 
           const relDir = path.relative(rootPath, target.absDir);
           const fileRelPath = relDir === "." ? fileName : path.join(relDir, fileName);
+
+          const fileMimeType =
+            ext === ".3mf"
+              ? "model/3mf"
+              : ext === ".stl"
+              ? "model/stl"
+              : existingFile?.mimeType || null;
 
           if (existingFile) {
             await prisma.modelFile.update({
@@ -605,6 +659,7 @@ export async function scanLibrary(
                 relativePath: fileRelPath,
                 fileSize: BigInt(stat.size),
                 fileHash,
+                mimeType: fileMimeType,
                 dimensionsX,
                 dimensionsY,
                 dimensionsZ,
@@ -620,6 +675,7 @@ export async function scanLibrary(
                 fileSize: BigInt(stat.size),
                 fileHash,
                 format,
+                mimeType: fileMimeType,
                 dimensionsX,
                 dimensionsY,
                 dimensionsZ,
@@ -767,18 +823,22 @@ export async function scanLibrary(
         if (col.slug === "download") continue;
 
         const colFolderPath = col.folderPath || col.name;
+        const colParts = colFolderPath.split(/[/\\]+/).filter(Boolean);
+        const isIgnoredCol = colParts.some((p) => IGNORED_DIRS.has(p.toLowerCase()));
 
         // Verifica se a pasta desta coleção existe no disco em pelo menos uma biblioteca ativa e acessível
-        const folderExists = allLibraries.some((lib) => {
-          const libRoot = path.resolve(lib.path);
-          try {
-            if (!fs.existsSync(libRoot)) return false;
-            const fullPath = path.join(libRoot, colFolderPath);
-            return fs.existsSync(fullPath);
-          } catch {
-            return false;
-          }
-        });
+        const folderExists =
+          !isIgnoredCol &&
+          allLibraries.some((lib) => {
+            const libRoot = path.resolve(lib.path);
+            try {
+              if (!fs.existsSync(libRoot)) return false;
+              const fullPath = path.join(libRoot, colFolderPath);
+              return fs.existsSync(fullPath);
+            } catch {
+              return false;
+            }
+          });
 
         if (!folderExists) {
           try {

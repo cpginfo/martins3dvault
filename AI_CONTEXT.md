@@ -275,6 +275,13 @@ Endpoints que realizam entrega de arquivos pesados e conversões intensivas no C
 5. **Throttling de Banda e Circuit Breaker**: O streaming suporta limitação de vazão via `DOWNLOAD_THROTTLE_MBPS` (padrão 10 MB/s), e usuários que atingirem o limite 429 repetidamente (10 vezes em 5 minutos) são colocados em quarentena temporária de 15 minutos via Circuit Breaker.
 **Regra**: Nunca remova ou desative esses limites em `/api/assets/file` ou `/api/assets/mesh` sem implementar proteção equivalente a nível de infraestrutura (ex: rate limiting no reverse proxy).
 
+### P. Varredura Diferencial de Inicialização & Extração Profunda de .3mf (`v1.13.0`)
+Quando o container é iniciado ou reiniciado, o sistema dispara automaticamente uma varredura diferencial de todas as bibliotecas ativas:
+1. **Hook Nativo Next.js (`src/instrumentation.ts`)**: Utiliza `register()` no runtime Node.js, executado de forma desacoplada após 2 segundos de inicialização. Isso garante que a porta 3000 abra imediatamente e o Docker Healthcheck passe sem nenhum atraso.
+2. **Scan Estritamente Diferencial (`src/lib/scanner/crawler.ts`)**: Modificações e novos arquivos são processados. Arquivos `.3mf` antigos sem metadados extraídos são identificados e re-parseados, gravando `mimeType: "model/3mf"`. Nas reinicializações seguintes, arquivos já inspecionados são pulados em milissegundos (`=38 inalterados`).
+3. **Extração Profunda de .3mf (`src/lib/scanner/extractors/threemf.ts`)**: Extrai parâmetros de fatiamento (`filamentType`, `layerHeight`, `nozzleSize`, `infillDensity`), contagem de triângulos, miniaturas em `Auxiliaries/` e dimensões tridimensionais milimétricas (X, Y, Z via `plate_*.json` ou cálculo de bounding box nos vértices).
+4. **Exclusão de Diretórios CACHE/cache**: Pastas de cache (`IGNORED_DIRS`) são terminantemente ignoradas para evitar criação de coleções espúrias.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto

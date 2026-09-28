@@ -13,6 +13,7 @@ const IGNORED_DIRS = new Set([
   "__macosx",
   ".ds_store",
   "thumbs.db",
+  "cache",
 ]);
 
 async function main() {

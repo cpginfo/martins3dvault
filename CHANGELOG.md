@@ -5,6 +5,26 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.13.0] - 2026-09-28
+
+### Adicionado
+- **Re-scan Diferencial Automático no Boot do Contêiner (`src/instrumentation.ts` e `src/lib/scanner/startup-scan.ts`)**:
+  - Implementado hook nativo de servidor do Next.js via [`src/instrumentation.ts`](file:///swarm/stl/src/instrumentation.ts) (`register()`), acionado automaticamente sempre que o contêiner Docker inicia ou reinicia.
+  - Execução desacoplada e assíncrona em segundo plano, liberando imediatamente a porta HTTP 3000 para que o Docker Healthcheck (`/api/health`) passe sem bloqueio.
+  - Limpeza automática de status `SCANNING` legados ou órfãos decorrentes de reinicializações abruptas anteriores, restaurando-os para `IDLE`.
+  - Suporte a desativação da varredura de boot caso desejado através da variável `STARTUP_SCAN_ENABLED=false`.
+- **Extração Aprofundada & Diferencial de Metadados de `.3mf` (`src/lib/scanner/crawler.ts` e `threemf.ts`)**:
+  - Identificação diferencial de arquivos `.3mf` com metadados pendentes: arquivos existentes no banco cujas informações técnicas ainda não haviam sido extraídas são detectados e processados sem necessidade de scan forçado.
+  - Registro de inspeção com `mimeType: "model/3mf"`, permitindo que reinicializações futuras verifiquem e pulem arquivos inalterados em milissegundos.
+  - Extração completa de dimensões tridimensionais milimétricas (**X**, **Y** e **Z**) através do `plate_*.json` ou via cálculo dinâmico de *bounding box* a partir dos vértices dos modelos `3D/*.model`.
+  - Contagem de triângulos da malha geométrica (`triangleCount`) a partir de `model_settings.config` ou inspeção direta de nós `<triangle>`.
+  - Extração completa de especificações técnicas de fatiamento (`filamentType`, `layerHeight`, `nozzleSize`, `infillDensity`) a partir de `project_settings.config`, `plate_*.json`, `slice_info.config` e `ProfileTitle`.
+  - Suporte expandido a miniaturas e capas embutidas em `Auxiliaries/.thumbnails/`, `Auxiliaries/Model Pictures/` e metadados de capa de designer.
+- **Exclusão de Diretórios CACHE/cache no Scanner e Migrações**:
+  - Adicionado `cache` à lista `IGNORED_DIRS` no crawler ([`src/lib/scanner/crawler.ts`](file:///swarm/stl/src/lib/scanner/crawler.ts)) e na migração ([`src/scripts/migrate-hierarchy.ts`](file:///swarm/stl/src/scripts/migrate-hierarchy.ts)), impedindo criação de coleções e modelos a partir de diretórios de cache.
+
+---
+
 ## [1.12.0] - 2026-09-28
 
 ### Adicionado

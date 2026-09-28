@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.12.0)
+# Martins3DVault 🖨️✨ (v1.13.0)
 
 <div align="center">
 
@@ -36,6 +36,11 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 🔄 **Re-scan Diferencial Automático no Boot & Extração Profunda (.3mf)**:
+  - Sincronização automática não-bloqueante executada em segundo plano na inicialização ou reinicialização do contêiner Docker via hook nativo Next.js (`src/instrumentation.ts`).
+  - Scan estritamente diferencial: processa novos arquivos, arquivos modificados ou modelos `.3mf` com informações pendentes (parâmetros de fatiamento, dimensões XYZ milimétricas, triângulos e thumbnails em subpastas auxiliares), pulando arquivos inalterados em milissegundos.
+  - Exclusão absoluta de pastas de cache (`CACHE`/`cache`), mantendo o acervo limpo e íntegro.
 
 - 💰 **Estimativa de Orçamento em Tempo Real & Parâmetros de Fatiamento Integrados**:
   - Card analítico com exibição instantânea do **Valor de Venda Aproximado** na tela principal de visualização de arquivos e na aba de notas técnicas.
