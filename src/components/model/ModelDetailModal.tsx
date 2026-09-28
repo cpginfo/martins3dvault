@@ -546,18 +546,18 @@ export default function ModelDetailModal({
   const isVoronCompatible = maxDim !== null ? maxDim <= 300 : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-surface-container-low border border-white/10 shadow-2xl overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="w-full max-w-6xl h-[100dvh] sm:h-[92dvh] flex flex-col md:flex-row rounded-none sm:rounded-3xl bg-surface-container-low border-0 sm:border sm:border-white/10 shadow-2xl overflow-hidden relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-black/40 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-all backdrop-blur-md"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 rounded-xl bg-black/60 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all backdrop-blur-md min-w-[38px] min-h-[38px] flex items-center justify-center"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Left: 3D Canvas Viewer */}
-        <div className="flex-1 h-[45vh] md:h-full bg-black relative">
+        <div className="flex-1 h-[42dvh] md:h-full bg-black relative">
           <ModelViewer3D
             libraryId={model.libraryId}
             files={model.files}
@@ -602,7 +602,7 @@ export default function ModelDetailModal({
         </div>
 
         {/* Right: Sidebar Tabs & Details */}
-        <div className="w-full md:w-[40%] h-[55vh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest">
+        <div className="w-full md:w-[40%] h-[58dvh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest">
           {/* Header */}
           <div className="p-5 border-b border-white/10">
             {/* Full File / Folder Path Container */}
@@ -708,7 +708,7 @@ export default function ModelDetailModal({
                 <select
                   value={model.collection?.id || model.collectionId || ""}
                   onChange={(e) => handleChangeCollection(e.target.value)}
-                  className="bg-transparent border-none text-[11px] text-indigo-300 font-medium focus:outline-none cursor-pointer"
+                  className="bg-transparent border-none text-base sm:text-[11px] text-indigo-300 font-medium focus:outline-none cursor-pointer"
                 >
                   <option value="" className="bg-[#0f121d] text-white">Nenhuma (Avulso)</option>
                   {collectionsList.map((c) => (
@@ -819,10 +819,10 @@ export default function ModelDetailModal({
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 px-5 pt-3 border-b border-white/5 text-xs font-medium">
+          <div className="flex items-center gap-2 px-5 pt-3 border-b border-white/5 text-xs font-medium overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab("files")}
-              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all shrink-0 min-h-[38px] ${
                 activeTab === "files"
                   ? "border-indigo-500 text-indigo-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -833,7 +833,7 @@ export default function ModelDetailModal({
             </button>
             <button
               onClick={() => setActiveTab("notes")}
-              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all shrink-0 min-h-[38px] ${
                 activeTab === "notes"
                   ? "border-indigo-500 text-indigo-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -844,7 +844,7 @@ export default function ModelDetailModal({
             </button>
             <button
               onClick={() => setActiveTab("manuals")}
-              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all shrink-0 min-h-[38px] ${
                 activeTab === "manuals"
                   ? "border-indigo-500 text-indigo-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -1255,7 +1255,7 @@ export default function ModelDetailModal({
                       value={nozzleSize}
                       onChange={(e) => setNozzleSize(e.target.value)}
                       placeholder="0.4"
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div>
@@ -1265,7 +1265,7 @@ export default function ModelDetailModal({
                       value={infillDensity}
                       onChange={(e) => setInfillDensity(e.target.value)}
                       placeholder="15"
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div>
@@ -1275,7 +1275,7 @@ export default function ModelDetailModal({
                       value={layerHeight}
                       onChange={(e) => setLayerHeight(e.target.value)}
                       placeholder="0.2"
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
@@ -1290,7 +1290,7 @@ export default function ModelDetailModal({
                       value={filamentType}
                       onChange={(e) => setFilamentType(e.target.value)}
                       placeholder="Ex: PLA, PETG, ABS"
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                     <datalist id="modal-filaments-list">
                       {materialsList.map((m) => (
@@ -1320,7 +1320,7 @@ export default function ModelDetailModal({
                       value={weightGrams}
                       onChange={(e) => setWeightGrams(e.target.value)}
                       placeholder={estimatedGrams ? `Ex: ${estimatedGrams}` : "Ex: 85"}
-                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
@@ -1339,7 +1339,7 @@ export default function ModelDetailModal({
                         value={printHours}
                         onChange={(e) => setPrintHours(e.target.value)}
                         placeholder="0"
-                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">h</span>
                     </div>
@@ -1351,7 +1351,7 @@ export default function ModelDetailModal({
                         value={printMinutes}
                         onChange={(e) => setPrintMinutes(e.target.value)}
                         placeholder="0"
-                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">min</span>
                     </div>
@@ -1372,7 +1372,7 @@ export default function ModelDetailModal({
                         value={manualHours}
                         onChange={(e) => setManualHours(e.target.value)}
                         placeholder="0"
-                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 pr-7 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">h</span>
                     </div>
@@ -1384,7 +1384,7 @@ export default function ModelDetailModal({
                         value={manualMinutes}
                         onChange={(e) => setManualMinutes(e.target.value)}
                         placeholder="0"
-                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 pr-9 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <span className="absolute right-2.5 top-1.5 text-slate-500 text-xs pointer-events-none">min</span>
                     </div>
@@ -1399,7 +1399,7 @@ export default function ModelDetailModal({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ex: Usar suportes em árvore, 3 perímetros de parede, temperatura da mesa a 60°C..."
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -1476,7 +1476,7 @@ export default function ModelDetailModal({
                   <button
                     onClick={handleSaveNotes}
                     disabled={savingNotes}
-                    className="flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50 cursor-pointer min-h-[40px]"
                   >
                     {saveSuccess ? (
                       <>

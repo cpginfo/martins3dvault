@@ -776,47 +776,47 @@ export default function ModelViewer3D({
           )}
 
           {/* Top Viewport Control Overlay */}
-          <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none gap-2">
+          <div className="absolute top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 z-20 flex items-center justify-between pointer-events-none gap-1.5 sm:gap-2 flex-wrap">
             {/* Technical Dimension Badge Widget */}
             {dimensions ? (
-              <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-lg p-2 px-3 shadow-2xl flex items-center gap-2.5">
-                <div className="flex items-center gap-1.5 text-cyan-400 font-medium text-xs">
-                  <Box className="w-4 h-4" />
-                  <span>Dimensões <span className="text-slate-500 font-mono text-[10px]">(mm)</span></span>
+              <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-lg p-1.5 sm:p-2 px-2.5 sm:px-3 shadow-2xl flex items-center gap-2 max-w-full overflow-x-auto">
+                <div className="flex items-center gap-1.5 text-cyan-400 font-medium text-[11px] sm:text-xs">
+                  <Box className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="hidden xs:inline">Dimensões <span className="text-slate-500 font-mono text-[10px]">(mm)</span></span>
                 </div>
-                <div className="h-4 w-[1px] bg-slate-800"></div>
-                <div className="font-mono text-xs flex items-center gap-2 tracking-tight">
-                  <span className="text-slate-400">X: <strong className="text-rose-400 font-semibold">{dimensions.x}</strong></span>
-                  <span className="text-slate-400">Y: <strong className="text-emerald-400 font-semibold">{dimensions.y}</strong></span>
-                  <span className="text-slate-400">Z: <strong className="text-cyan-400 font-semibold">{dimensions.z}</strong></span>
+                <div className="h-3 sm:h-4 w-[1px] bg-slate-800"></div>
+                <div className="font-mono text-[10px] sm:text-xs flex items-center gap-1.5 sm:gap-2 tracking-tight">
+                  <span className="text-slate-400">X:<strong className="text-rose-400 font-semibold">{dimensions.x}</strong></span>
+                  <span className="text-slate-400">Y:<strong className="text-emerald-400 font-semibold">{dimensions.y}</strong></span>
+                  <span className="text-slate-400">Z:<strong className="text-cyan-400 font-semibold">{dimensions.z}</strong></span>
                 </div>
               </div>
             ) : <div />}
 
             {/* Center Camera Controls Pill */}
-            <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-xl p-1 shadow-2xl flex items-center gap-1">
+            <div className="pointer-events-auto bg-[#0b1017]/90 backdrop-blur-md border border-[#1d2b3a] rounded-xl p-1 shadow-2xl flex items-center gap-0.5 sm:gap-1 overflow-x-auto max-w-full">
               <button
                 onClick={() => setCameraView("iso")}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-200 bg-[#16212e] border border-cyan-500/30 hover:text-white transition"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium rounded-lg text-slate-200 bg-[#16212e] border border-cyan-500/30 hover:text-white transition"
               >
                 Iso
               </button>
               <button
                 onClick={() => setCameraView("front")}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
               >
                 Frente
               </button>
               <button
                 onClick={() => setCameraView("top")}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#131c26] transition"
               >
                 Topo
               </button>
-              <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+              <div className="h-4 w-[1px] bg-slate-800 mx-0.5 sm:mx-1"></div>
               <button
                 onClick={() => setAutoRotate(!autoRotate)}
-                className={`p-1.5 rounded-lg transition ${
+                className={`p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center ${
                   autoRotate ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
                 }`}
                 title={autoRotate ? "Pausar Rotação" : "Iniciar Rotação"}
@@ -825,7 +825,7 @@ export default function ModelViewer3D({
               </button>
               <button
                 onClick={() => setWireframe(!wireframe)}
-                className={`p-1.5 rounded-lg transition ${
+                className={`p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center ${
                   wireframe ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
                 }`}
                 title="Alternar Modo Wireframe / Sólido"
@@ -834,7 +834,7 @@ export default function ModelViewer3D({
               </button>
               <button
                 onClick={() => setShowBoundingBox(!showBoundingBox)}
-                className={`p-1.5 rounded-lg transition ${
+                className={`p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center ${
                   showBoundingBox ? "text-cyan-400 bg-cyan-950/40 border border-cyan-700/50" : "text-slate-300 hover:bg-[#182330] hover:text-cyan-400"
                 }`}
                 title="Alternar Caixa Delimitadora"
@@ -843,15 +843,15 @@ export default function ModelViewer3D({
               </button>
               <button
                 onClick={() => setCameraView("reset")}
-                className="p-1.5 rounded-lg text-slate-300 hover:bg-[#182330] hover:text-cyan-400 transition"
+                className="p-1.5 rounded-lg text-slate-300 hover:bg-[#182330] hover:text-cyan-400 transition min-w-[32px] min-h-[32px] flex items-center justify-center"
                 title="Resetar Câmera"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
-              <div className="h-4 w-[1px] bg-slate-800 mx-1"></div>
+              <div className="h-4 w-[1px] bg-slate-800 mx-0.5 sm:mx-1"></div>
               <button
                 onClick={() => setViewportTheme((prev) => (prev === "studio_light" ? "dark_canvas" : "studio_light"))}
-                className={`p-1.5 rounded-lg transition ${
+                className={`p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center ${
                   viewportTheme === "studio_light"
                     ? "text-amber-400 bg-amber-950/40 border border-amber-700/50"
                     : "text-slate-300 hover:bg-[#182330] hover:text-amber-400"
@@ -865,14 +865,14 @@ export default function ModelViewer3D({
             </div>
 
             {/* Action Buttons: Voltar para Miniatura & Snapshot / 3D Cover */}
-            <div className="pointer-events-auto flex items-center gap-2">
+            <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setMeshLoaded(false);
                   setLoading(false);
                 }}
-                className="bg-[#0b1017]/90 hover:bg-[#182330] text-slate-300 hover:text-white font-medium px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg border border-white/10 transition active:scale-95"
+                className="bg-[#0b1017]/90 hover:bg-[#182330] text-slate-300 hover:text-white font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg border border-white/10 transition active:scale-95 min-h-[36px]"
                 title="Voltar para a visualização da miniatura 2D"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
@@ -882,7 +882,7 @@ export default function ModelViewer3D({
               <button
                 onClick={captureSnapshot}
                 disabled={savingSnapshot}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 border border-indigo-400/40 transition active:scale-95 disabled:opacity-50"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/30 border border-indigo-400/40 transition active:scale-95 disabled:opacity-50 min-h-[36px]"
               >
                 {snapshotSuccess ? (
                   <>
@@ -902,17 +902,17 @@ export default function ModelViewer3D({
           </div>
 
           {/* Bottom Viewport Floating Control Bar (Filament Type & Color Swatches) */}
-          <div className="absolute bottom-4 left-4 z-20 pointer-events-auto max-w-[calc(100%-2rem)]">
-            <div className="bg-[#0b1017]/95 backdrop-blur-md border border-[#1d2b3a] rounded-2xl p-1.5 px-3 shadow-2xl flex items-center gap-3 flex-wrap">
+          <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-20 pointer-events-auto max-w-[calc(100%-1rem)] sm:max-w-[calc(100%-2rem)]">
+            <div className="bg-[#0b1017]/95 backdrop-blur-md border border-[#1d2b3a] rounded-xl sm:rounded-2xl p-1 sm:p-1.5 px-2 sm:px-3 shadow-2xl flex items-center gap-2 sm:gap-3 flex-wrap max-h-28 sm:max-h-none overflow-y-auto no-scrollbar">
               {/* Material Switcher Group */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-400 pl-1 pr-1">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
-                  <span className="font-medium text-[11px]">Material:</span>
+                  <span className="font-medium text-[11px] hidden xs:inline">Material:</span>
                 </div>
                 <button
                   onClick={() => setMaterialType("pla")}
-                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                  className={`px-2 sm:px-2.5 py-1 text-xs rounded-lg transition min-h-[32px] ${
                     materialType === "pla"
                       ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
                       : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
@@ -922,7 +922,7 @@ export default function ModelViewer3D({
                 </button>
                 <button
                   onClick={() => setMaterialType("abs")}
-                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                  className={`px-2 sm:px-2.5 py-1 text-xs rounded-lg transition min-h-[32px] ${
                     materialType === "abs"
                       ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
                       : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
@@ -932,7 +932,7 @@ export default function ModelViewer3D({
                 </button>
                 <button
                   onClick={() => setMaterialType("translucent")}
-                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                  className={`px-2 sm:px-2.5 py-1 text-xs rounded-lg transition min-h-[32px] ${
                     materialType === "translucent"
                       ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
                       : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
@@ -942,7 +942,7 @@ export default function ModelViewer3D({
                 </button>
                 <button
                   onClick={() => setMaterialType("matte")}
-                  className={`px-2.5 py-1 text-xs rounded-lg transition ${
+                  className={`px-2 sm:px-2.5 py-1 text-xs rounded-lg transition min-h-[32px] ${
                     materialType === "matte"
                       ? "bg-indigo-600 font-semibold text-white shadow-sm shadow-indigo-600/40"
                       : "font-medium text-slate-400 hover:text-slate-200 hover:bg-[#141d28]"
@@ -956,7 +956,7 @@ export default function ModelViewer3D({
               <div className="h-5 w-[1px] bg-slate-800 hidden sm:block"></div>
 
               {/* Color Swatches Palette */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
                 {FILAMENT_COLORS.map((c) => {
                   const active = materialColor.toLowerCase() === c.hex.toLowerCase();
                   return (
@@ -964,14 +964,19 @@ export default function ModelViewer3D({
                       key={c.hex}
                       onClick={() => setMaterialColor(c.hex)}
                       title={c.name}
-                      style={{ backgroundColor: c.hex }}
-                      className={`transition-all ${
-                        active
-                          ? "relative w-5 h-5 rounded-full ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0b1017] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.8)]"
-                          : "w-4 h-4 rounded-full border border-slate-700 hover:scale-110"
-                      }`}
+                      aria-label={`Cor de filamento: ${c.name}`}
+                      className="p-1 min-w-[28px] min-h-[28px] sm:min-w-[32px] sm:min-h-[32px] flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
                     >
-                      {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                      <span
+                        style={{ backgroundColor: c.hex }}
+                        className={`transition-all ${
+                          active
+                            ? "relative w-5 h-5 rounded-full ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0b1017] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                            : "w-4 h-4 rounded-full border border-slate-700 hover:scale-110"
+                        }`}
+                      >
+                        {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                      </span>
                     </button>
                   );
                 })}
