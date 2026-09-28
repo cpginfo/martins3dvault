@@ -319,8 +319,23 @@ Abaixo estão detalhados os planos de correção para cada componente afetado, n
 
 ---
 
-> [!IMPORTANT]
-> **Status da Auditoria**:
-> A auditoria diagnóstica detalhada de código está concluída. Nenhum código-fonte de produção foi alterado durante esta fase.
-> 
-> **Aguardando aprovação do usuário para criar a branch `fix/responsividade` e iniciar a aplicação sequencial das correções da Fase 4.**
+## 5. Status de Implementação das Correções (Concluído)
+
+Todas as correções planejadas foram implementadas na branch `fix/responsividade`, validadas com compilação de produção (`npm run build`) e sem erros de TypeScript (`npx tsc --noEmit`):
+
+| Sprint | Commit | Escopo | Arquivos Modificados |
+| :--- | :--- | :--- | :--- |
+| **Auditoria** | `197b6b1` | Relatório completo de auditoria diagnóstica de UX responsivo e acessibilidade | `audit/RELATORIO.md` |
+| **Sprint 1** | `1acdf17` | Implementação de Mobile Drawer na Sidebar, Hamburger na Navbar e layouts sem offset estático | `Sidebar.tsx`, `Navbar.tsx`, `page.tsx`, `collections/page.tsx`, `collections/[id]/page.tsx`, `libraries/page.tsx`, `metrics/page.tsx`, `pricing/page.tsx`, `users/page.tsx` |
+| **Sprint 2** | `386f352` | Alternância responsiva entre Canvas 3D e Ficha Técnica no 3D Studio | `src/app/models/[id]/page.tsx` |
+| **Sprint 3** | `1a9f129` | Prevenção de auto-zoom no iOS Safari (font-size >= 16px) e Viewport com `interactiveWidget: 'resizes-visual'` | `layout.tsx`, `login/page.tsx`, `UploadModal.tsx`, `users/page.tsx`, `CalculatorTab.tsx` |
+| **Sprint 3+** | `2026f2c` | Otimização do `ModelDetailModal` com `100dvh` e touch targets no Three.js / swatches de filamento | `ModelDetailModal.tsx`, `ModelViewer3D.tsx` |
+| **Sprint 4** | `aad39b9` | Otimização de FilterBar, ModelCard, BudgetsTab e SettingsTab para viewports de 320px a 414px | `FilterBar.tsx`, `ModelCard.tsx`, `BudgetsTab.tsx`, `DashboardTab.tsx`, `SettingsTab.tsx` |
+| **Sprint 5** | `c72c7cc` | Padronização de modais com `max-h-[92dvh]`, padding adaptativo e botões acessíveis | `BudgetDetailModal.tsx`, `ImportModal.tsx`, `SaleModal.tsx`, `UpdateModal.tsx` |
+
+> [!NOTE]
+> **Validação de Build**:
+> - `npx tsc --noEmit`: **0 erros**
+> - `npm run build`: **Sucesso (Exit 0)** em todas as 44 rotas estáticas e dinâmicas
+> - Zero regressões na experiência Desktop existente.
+
