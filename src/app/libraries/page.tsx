@@ -26,6 +26,7 @@ interface LibraryItem {
 
 export default function LibrariesPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [libraries, setLibraries] = useState<LibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [scanningId, setScanningId] = useState<string | null>(null);
@@ -148,16 +149,22 @@ export default function LibrariesPage() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
-        <Navbar isSidebarCollapsed={isSidebarCollapsed} onScanTriggered={() => { fetchLibraries(); fetchStats(); }} />
+        <Navbar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onScanTriggered={() => { fetchLibraries(); fetchStats(); }}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        />
 
-        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-3 sm:px-6 pb-12">
           <div className="flex flex-col w-full gap-6 pt-6">
             {/* Top Engine Status HUD Banner */}
             <div className="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl p-6 border border-white/5">

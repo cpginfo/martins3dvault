@@ -11,6 +11,8 @@ import { useUpdate } from "@/lib/update/UpdateContext";
 interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 interface CollectionSimple {
@@ -40,10 +42,12 @@ function SidebarCollectionTreeItem({
   col,
   pathname,
   level = 0,
+  onCloseMobile,
 }: {
   col: CollectionSimple;
   pathname: string;
   level?: number;
+  onCloseMobile?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const isColActive = pathname === `/collections/${col.id}`;
@@ -71,6 +75,7 @@ function SidebarCollectionTreeItem({
       >
         <Link
           href={`/collections/${col.id}`}
+          onClick={() => onCloseMobile?.()}
           className="flex items-center gap-1.5 min-w-0 flex-1 py-0.5"
           title={`${col.name} (${col.modelsCount} modelos)`}
         >
@@ -115,6 +120,7 @@ function SidebarCollectionTreeItem({
               col={child}
               pathname={pathname}
               level={level + 1}
+              onCloseMobile={onCloseMobile}
             />
           ))}
         </div>
@@ -126,6 +132,8 @@ function SidebarCollectionTreeItem({
 export default function Sidebar({
   isCollapsed: controlledCollapsed,
   onToggleCollapse,
+  isMobileOpen = false,
+  onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -285,41 +293,73 @@ export default function Sidebar({
   ];
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-full bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.5)] border-r border-white/5 transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-72"
-      }`}
-    >
-      {/* Top Header & Brand */}
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="h-16 px-4 flex items-center justify-between bg-surface-container-lowest border-b border-white/5 flex-shrink-0">
-          <Link href="/" className="flex items-center gap-2.5 overflow-hidden group">
-            <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-surface-container-high p-1">
-              <Image
-                src="/logo.png"
-                alt="Martins3DVault"
-                width={32}
-                height={32}
-                className="object-contain"
-                priority
-              />
+    <>
+      {/* Mobile Drawer Backdrop */}
+      {isMobileOpen && (
+        <div
+          onClick={onCloseMobile}
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 h-full bg-surface-container-low z-50 flex flex-col justify-between shadow-2xl lg:shadow-[0_1px_8px_rgba(0,0,0,0.5)] border-r border-white/5 transition-transform duration-300 ease-in-out lg:transition-all ${
+          isCollapsed ? "lg:w-20" : "lg:w-72"
+        } w-72 max-w-[85vw] ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        {/* Top Header & Brand */}
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="h-16 px-4 flex items-center justify-between bg-surface-container-lowest border-b border-white/5 flex-shrink-0">
+            <Link
+              href="/"
+              onClick={() => onCloseMobile?.()}
+              className="flex items-center gap-2.5 overflow-hidden group"
+            >
+              <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-surface-container-high p-1">
+                <Image
+                  src="/logo.png"
+                  alt="Martins3DVault"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              {(!isCollapsed || isMobileOpen) && (
+                <span className="font-semibold text-base text-on-surface tracking-tight leading-none truncate">
+                  Martins<span className="text-primary-container font-bold">3D</span>Vault
+                </span>
+              )}
+            </Link>
+
+            <div className="flex items-center gap-1">
+              {/* Botão de Fechar no Mobile */}
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className="lg:hidden text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors p-2 rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center"
+                title="Fechar barra lateral"
+                aria-label="Fechar barra lateral"
+              >
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+
+              {/* Botão de Colapsar no Desktop */}
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                className="hidden lg:flex text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors p-1.5 rounded-lg"
+                title={isCollapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {isCollapsed ? "dock_to_right" : "dock_to_left"}
+                </span>
+              </button>
             </div>
-            {!isCollapsed && (
-              <span className="font-semibold text-base text-on-surface tracking-tight leading-none truncate">
-                Martins<span className="text-primary-container font-bold">3D</span>Vault
-              </span>
-            )}
-          </Link>
-          <button
-            onClick={toggleCollapse}
-            className="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors p-1.5 rounded-lg"
-            title={isCollapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {isCollapsed ? "dock_to_right" : "dock_to_left"}
-            </span>
-          </button>
-        </div>
+          </div>
 
         {/* Navigation Sections */}
         <div className="py-3 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
@@ -370,6 +410,7 @@ export default function Sidebar({
                         >
                           <Link
                             href="/collections"
+                            onClick={() => onCloseMobile?.()}
                             className="flex items-center gap-3 min-w-0 flex-1"
                           >
                             <span
@@ -411,6 +452,7 @@ export default function Sidebar({
                           <div className="flex flex-col gap-0.5 pl-6 pr-1 py-1.5 mt-1 border-l-2 border-white/5 ml-5">
                             <Link
                               href="/collections"
+                              onClick={() => onCloseMobile?.()}
                               className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                                 pathname === "/collections"
                                   ? "text-primary-container bg-surface-container-highest font-bold"
@@ -437,6 +479,7 @@ export default function Sidebar({
                                   col={col}
                                   pathname={pathname}
                                   level={0}
+                                  onCloseMobile={onCloseMobile}
                                 />
                               ))
                             )}
@@ -450,6 +493,7 @@ export default function Sidebar({
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => onCloseMobile?.()}
                       className={`group flex items-center justify-between px-3 py-2 rounded-lg transition-all text-sm font-medium ${
                         isActive
                           ? "bg-surface-container-highest text-on-surface font-semibold shadow-inner border border-white/10"
@@ -621,5 +665,6 @@ export default function Sidebar({
         )}
       </div>
     </aside>
+    </>
   );
 }

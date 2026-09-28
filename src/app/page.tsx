@@ -12,6 +12,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [models, setModels] = useState<ModelCardData[]>([]);
   const [collections, setCollections] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedCollection, setSelectedCollection] = useState("");
@@ -171,12 +172,14 @@ export default function HomePage() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Container offset by sidebar width */}
+      {/* Main Container offset by sidebar width on desktop */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
         {/* Top Navbar */}
@@ -190,10 +193,11 @@ export default function HomePage() {
           selectedFormat={selectedFormat}
           onFormatChange={handleFormatChange}
           isSidebarCollapsed={isSidebarCollapsed}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
         />
 
         {/* Main Content Area */}
-        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-3 sm:px-6 pb-12">
           <div className="flex flex-col w-full gap-5">
             {/* Sub-Header & Breadcrumb Bar from Stitch */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-5">

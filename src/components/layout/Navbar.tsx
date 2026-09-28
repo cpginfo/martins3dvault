@@ -14,6 +14,7 @@ interface NavbarProps {
   selectedFormat?: string;
   onFormatChange?: (format: string) => void;
   isSidebarCollapsed?: boolean;
+  onOpenMobileSidebar?: () => void;
 }
 
 export default function Navbar({
@@ -23,6 +24,7 @@ export default function Navbar({
   selectedFormat,
   onFormatChange,
   isSidebarCollapsed = false,
+  onOpenMobileSidebar,
 }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -88,13 +90,25 @@ export default function Navbar({
   return (
     <>
       <header
-        className={`fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] border-b border-white/5 z-40 flex items-center justify-between px-6 transition-all duration-300 ${
-          isSidebarCollapsed ? "left-20" : "left-72"
+        className={`fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] border-b border-white/5 z-40 flex items-center justify-between px-3 sm:px-6 transition-all duration-300 left-0 ${
+          isSidebarCollapsed ? "lg:left-20" : "lg:left-72"
         }`}
       >
-        {/* Search Input & Format Filter Group */}
-        <div className="flex items-center gap-3 flex-1 max-w-2xl">
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 flex items-center">
+        {/* Mobile Hamburger & Search Input Group */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-2xl min-w-0 mr-2 sm:mr-4">
+          {onOpenMobileSidebar && (
+            <button
+              type="button"
+              onClick={onOpenMobileSidebar}
+              className="lg:hidden p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0 cursor-pointer"
+              title="Abrir menu de navegação"
+              aria-label="Abrir menu de navegação"
+            >
+              <span className="material-symbols-outlined text-[24px]">menu</span>
+            </button>
+          )}
+
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 flex items-center min-w-0">
             <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px]">
               search
             </span>
@@ -103,20 +117,20 @@ export default function Navbar({
               type="text"
               value={search}
               onChange={handleSearch}
-              placeholder="Pesquisar arquivos STL, 3MF, STEP, G-Code... (ex: Voron, Ender, Benchy)"
-              className="w-full bg-surface-container-low pl-9 pr-14 py-1.5 text-xs text-on-surface rounded-lg placeholder:text-outline border border-white/5 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all"
+              placeholder="Pesquisar arquivos STL, 3MF, STEP... (⌘K)"
+              className="w-full bg-surface-container-low pl-9 pr-14 py-2 sm:py-1.5 text-base sm:text-xs text-on-surface rounded-lg placeholder:text-outline border border-white/5 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all"
             />
             {search ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-2.5 p-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors"
+                className="absolute right-2 p-1 rounded min-w-[32px] min-h-[32px] flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
                 title="Limpar pesquisa"
               >
                 <span className="material-symbols-outlined text-[16px]">close</span>
               </button>
             ) : (
-              <div className="absolute right-2.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-highest pointer-events-none">
+              <div className="absolute right-2.5 hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-highest pointer-events-none">
                 <span className="text-[10px] text-on-surface-variant font-mono">⌘K</span>
               </div>
             )}
@@ -174,12 +188,12 @@ export default function Navbar({
         </div>
 
         {/* Right Actions: Scan Button, Upload, Notifications */}
-        <div className="flex items-center gap-3">
-
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <button
+            type="button"
             onClick={handleGlobalScan}
             disabled={scanning}
-            className="flex items-center gap-1.5 bg-primary-container text-on-primary font-medium text-xs px-3.5 py-1.5 rounded-lg hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)] active:scale-[0.98]"
+            className="flex items-center gap-1.5 bg-primary-container text-on-primary font-medium text-xs px-2.5 sm:px-3.5 py-1.5 rounded-lg hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)] active:scale-[0.98] min-h-[36px] cursor-pointer"
             title="Escanear e indexar arquivos agora"
           >
             <span
@@ -189,12 +203,13 @@ export default function Navbar({
             >
               sync
             </span>
-            <span className="font-semibold">{scanning ? "Escaneando..." : "Escanear Agora"}</span>
+            <span className="font-semibold hidden sm:inline">{scanning ? "Escaneando..." : "Escanear Agora"}</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setIsUploadOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors text-xs font-medium border border-white/5"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors text-xs font-medium border border-white/5 min-h-[36px] min-w-[36px] justify-center cursor-pointer"
             title="Adicionar novo modelo ou ZIP"
           >
             <span className="material-symbols-outlined text-[18px] text-secondary">
@@ -209,12 +224,12 @@ export default function Navbar({
 
           <Link
             href="/libraries"
-            className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Configurações de pastas e bibliotecas"
+            aria-label="Configurações"
           >
             <span className="material-symbols-outlined text-[20px]">settings</span>
           </Link>
-
         </div>
       </header>
 

@@ -48,6 +48,7 @@ export default function CollectionDetailPage(props: {
   const { id } = use(props.params);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [collection, setCollection] = useState<CollectionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState<ModelDetailData | null>(null);
@@ -463,11 +464,13 @@ export default function CollectionDetailPage(props: {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
         <Navbar
@@ -476,9 +479,10 @@ export default function CollectionDetailPage(props: {
           selectedFormat={selectedFormat}
           onFormatChange={handleFormatSelect}
           isSidebarCollapsed={isSidebarCollapsed}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
         />
 
-        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-24">
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-3 sm:px-6 pb-24">
           <div className="flex flex-col w-full gap-5 pt-5">
             {/* Breadcrumb Navigation */}
             <div className="flex items-center justify-between gap-3 flex-wrap">

@@ -125,6 +125,7 @@ function CollectionTreeCard({
 
 export default function CollectionsPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [treeCollections, setTreeCollections] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -282,20 +283,23 @@ export default function CollectionsPage() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
         <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           isSidebarCollapsed={isSidebarCollapsed}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
         />
 
-        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-3 sm:px-6 pb-12">
           <div className="flex flex-col w-full gap-6">
             {/* Quick Stats Metric Header Strip from Stitch */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-6">

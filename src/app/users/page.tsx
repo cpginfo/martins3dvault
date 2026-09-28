@@ -18,6 +18,7 @@ export const isOperatorRole = (r: string) =>
 
 export default function UsersPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -233,16 +234,21 @@ export default function UsersPage() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
-        <Navbar isSidebarCollapsed={isSidebarCollapsed} />
+        <Navbar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        />
 
-        <main className="relative pt-16 bg-surface min-h-screen w-full px-6 pb-12">
+        <main className="relative pt-16 bg-surface min-h-screen w-full px-3 sm:px-6 pb-12">
           <div className="flex flex-col w-full gap-6 pt-6">
             {/* Top Header Strip */}
             <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low shadow-sm border border-white/5">

@@ -24,6 +24,7 @@ function PricingContent() {
   const tabParam = searchParams.get("tab");
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<"calculator" | "budgets" | "dashboard" | "settings" | null>(null);
 
   const activeTab: "calculator" | "budgets" | "dashboard" | "settings" =
@@ -244,16 +245,21 @@ function PricingContent() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-72"
+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
-        <Navbar />
+        <Navbar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        />
 
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6 pt-20">
+        <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto space-y-6 pt-20">
           {/* Header Superior com Abas */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 pb-5">
             <div>
