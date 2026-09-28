@@ -80,6 +80,7 @@ export default function ModelStudioPage(props: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"files" | "notes" | "manuals">("files");
+  const [mobileTab, setMobileTab] = useState<"viewer" | "details">("viewer");
   const [collectionsList, setCollectionsList] = useState<Array<{ id: string; name: string }>>([]);
 
   // Dimensões dinâmicas calculadas pela malha 3D
@@ -553,23 +554,23 @@ export default function ModelStudioPage(props: {
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#070a0e] text-slate-200 flex flex-col select-none">
       {/* BEGIN: TopGlobalBar */}
-      <header className="h-10 bg-[#090d13] border-b border-[#182230] px-4 flex items-center justify-between text-xs shrink-0 z-30">
-        <div className="flex items-center space-x-3 min-w-0">
+      <header className="h-11 bg-[#090d13] border-b border-[#182230] px-3 sm:px-4 flex items-center justify-between text-xs shrink-0 z-30">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           <Link href="/" className="flex items-center space-x-2 group shrink-0">
             <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-cyan-500 to-orange-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
             <span className="font-bold tracking-wider text-slate-100 uppercase text-[11px] group-hover:text-white transition">
-              Martins<span className="text-cyan-400">3D</span>Vault
+              Martins<span className="text-cyan-400">3D</span><span className="hidden sm:inline">Vault</span>
             </span>
           </Link>
           <span className="text-slate-600 shrink-0">/</span>
           <span className="px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 font-mono text-[10px] border border-cyan-800/40 shrink-0">
-            VISUALIZADOR 3D STUDIO
+            <span className="hidden sm:inline">VISUALIZADOR </span>3D STUDIO
           </span>
           {model && (
             <>
-              <span className="text-slate-700 hidden lg:inline shrink-0">|</span>
+              <span className="text-slate-700 hidden xl:inline shrink-0">|</span>
               <span
-                className="hidden lg:inline text-slate-400 font-mono text-[11px] truncate max-w-sm xl:max-w-md select-all"
+                className="hidden xl:inline text-slate-400 font-mono text-[11px] truncate max-w-sm select-all"
                 title={`${model.library?.name || 'Arquivos'} / ${primaryFile?.relativePath || model.folderPath}`}
               >
                 <span className="text-slate-500">{model.library?.name || 'Arquivos'} / </span>
@@ -579,15 +580,15 @@ export default function ModelStudioPage(props: {
           )}
         </div>
 
-        <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 text-slate-400 font-mono text-[11px] shrink-0">
           <button
             type="button"
             onClick={handleGoToPricing}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 hover:border-emerald-500/60 font-semibold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 hover:border-emerald-500/60 font-semibold transition cursor-pointer min-h-[32px]"
             title="Calcular orçamento e custos deste modelo"
           >
             <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Orçamento</span>
+            <span className="hidden sm:inline">Orçamento</span>
           </button>
           <button
             type="button"
@@ -598,21 +599,51 @@ export default function ModelStudioPage(props: {
                 router.push("/");
               }
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition min-h-[32px]"
             title="Voltar ao Catálogo"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Catálogo</span>
+            <span className="hidden sm:inline">Catálogo</span>
           </button>
         </div>
       </header>
       {/* END: TopGlobalBar */}
 
+      {/* Mobile Tab Switcher (Visible only below lg) */}
+      <div className="lg:hidden flex items-center bg-[#0a0f16] border-b border-[#182332] p-1 gap-1 shrink-0 z-20">
+        <button
+          type="button"
+          onClick={() => setMobileTab("viewer")}
+          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+            mobileTab === "viewer"
+              ? "bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 shadow-sm"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
+          <span>Visualizador 3D</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("details")}
+          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+            mobileTab === "details"
+              ? "bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 shadow-sm"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">description</span>
+          <span>Ficha Técnica & Notas</span>
+        </button>
+      </div>
+
       {/* BEGIN: WorkspaceContainer */}
-      <main className="flex-1 flex overflow-hidden relative" data-purpose="interactive-workspace">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative" data-purpose="interactive-workspace">
         {/* BEGIN: ViewportSection (Left Area) */}
         <section
-          className="flex-1 relative flex flex-col bg-[#05080c] overflow-hidden border-r border-[#161f2c]"
+          className={`flex-1 relative flex-col bg-[#05080c] overflow-hidden border-r border-[#161f2c] ${
+            mobileTab === "viewer" ? "flex" : "hidden lg:flex"
+          }`}
           data-purpose="3d-viewport"
         >
           {/* Depth Backdrop Ambient Glow */}
@@ -659,7 +690,9 @@ export default function ModelStudioPage(props: {
 
         {/* BEGIN: RightDetailsPanel */}
         <aside
-          className="w-[430px] shrink-0 bg-[#0c1117] flex flex-col border-l border-[#1a2433] h-full overflow-y-auto"
+          className={`w-full lg:w-[430px] shrink-0 bg-[#0c1117] flex-col border-l border-[#1a2433] h-full overflow-y-auto ${
+            mobileTab === "details" ? "flex" : "hidden lg:flex"
+          }`}
           data-purpose="details-drawer"
         >
           {/* Drawer Header with breadcrumb, action buttons and title */}
