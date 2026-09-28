@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-6 relative overflow-hidden">
+    <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-4 sm:p-6 relative overflow-hidden">
       {/* Subtle CAD Isometric Pattern & Ambient Glows from Stitch */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         <svg
@@ -73,11 +73,8 @@ export default function LoginPage() {
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
       </div>
 
-
-
       {/* Central Vault Card from Stitch */}
-      <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
-
+      <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-5 sm:p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
 
         {/* Header Section: Logo & Identity */}
         <div className="flex flex-col items-center text-center gap-2">
@@ -107,7 +104,7 @@ export default function LoginPage() {
           </div>
 
           {/* Format Compatibility Pills */}
-          <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px]">
+          <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] flex-wrap justify-center">
             <span className="px-2 py-0.5 rounded bg-primary-container/15 text-primary-container font-semibold border border-primary-container/20">
               .STL
             </span>
@@ -150,7 +147,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@printvault.local"
-                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
+                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3.5 py-2.5 text-base sm:text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
               />
             </div>
           </div>
@@ -172,12 +169,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg pl-3.5 pr-10 py-2.5 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
+                className="w-full bg-surface-container-lowest border border-white/10 rounded-lg pl-3.5 pr-11 py-2.5 text-base sm:text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+                className="absolute right-1 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                 title={showPassword ? "Ocultar senha" : "Ver senha"}
               >
                 <span className="material-symbols-outlined text-[18px]">
@@ -190,7 +187,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 rounded-lg bg-primary-container text-on-primary font-bold text-xs hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.35)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-2 py-3 rounded-lg bg-primary-container text-on-primary font-bold text-sm sm:text-xs hover:bg-primary transition-all shadow-[0_0_16px_rgba(249,115,22,0.35)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
           >
             <span className="material-symbols-outlined text-[18px]">key</span>
             <span>{loading ? "Desbloqueando Cofre..." : "Acessar Martins3DVault"}</span>

@@ -329,7 +329,7 @@ export default function UsersPage() {
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     placeholder="Filtrar por nome ou e-mail..."
-                    className="w-full bg-surface-container-low border border-white/10 rounded-lg pl-9 pr-4 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                    className="w-full bg-surface-container-low border border-white/10 rounded-lg pl-9 pr-4 py-2 sm:py-1.5 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   />
                 </div>
               </div>
@@ -404,14 +404,14 @@ export default function UsersPage() {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => handleOpenEdit(u)}
-                                className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer"
+                                className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                 title="Editar usuário (nome, foto, senha, e-mail, perfil)"
                               >
                                 <span className="material-symbols-outlined text-[18px]">edit</span>
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(u.id, u.name)}
-                                className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-surface-container-highest transition-colors cursor-pointer"
+                                className="p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-surface-container-highest transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                 title="Excluir usuário"
                               >
                                 <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -431,8 +431,8 @@ export default function UsersPage() {
 
       {/* Modal Criar Usuário: Nome, Foto, Senha, E-mail, Perfil */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-primary-container text-[22px]">person_add</span>
@@ -440,7 +440,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                className="text-on-surface-variant hover:text-on-surface p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
@@ -476,7 +476,7 @@ export default function UsersPage() {
                     <button
                       type="button"
                       onClick={() => createFileInputRef.current?.click()}
-                      className="px-2.5 py-1 rounded bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer min-h-[32px]"
                     >
                       <span className="material-symbols-outlined text-[14px]">photo_camera</span>
                       <span>{avatar ? "Trocar Foto" : "Escolher Foto"}</span>
@@ -488,7 +488,7 @@ export default function UsersPage() {
                           setAvatar(null);
                           if (createFileInputRef.current) createFileInputRef.current.value = "";
                         }}
-                        className="px-2 py-1 rounded bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer min-h-[32px]"
                       >
                         <span className="material-symbols-outlined text-[14px]">delete</span>
                         <span>Remover</span>
@@ -513,7 +513,7 @@ export default function UsersPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ex: João da Silva"
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
               </div>
@@ -526,7 +526,7 @@ export default function UsersPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="joao@exemplo.com"
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
                   required
                 />
               </div>
@@ -539,7 +539,7 @@ export default function UsersPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
               </div>
@@ -550,7 +550,7 @@ export default function UsersPage() {
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as any)}
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
                   <option value="OPERATOR">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
                   <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
@@ -562,14 +562,14 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer min-h-[40px]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer min-h-[40px]"
                 >
                   {creating ? "Criando..." : "Criar Usuário"}
                 </button>
@@ -581,8 +581,8 @@ export default function UsersPage() {
 
       {/* Modal Editar Usuário: Nome, Foto, Senha, E-mail, Perfil */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-surface-container-low border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-primary-container text-[22px]">manage_accounts</span>
@@ -592,7 +592,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => setEditingUser(null)}
-                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                className="text-on-surface-variant hover:text-on-surface p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
@@ -628,7 +628,7 @@ export default function UsersPage() {
                     <button
                       type="button"
                       onClick={() => editFileInputRef.current?.click()}
-                      className="px-2.5 py-1 rounded bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-[11px] font-medium border border-white/5 flex items-center gap-1 transition-colors cursor-pointer min-h-[32px]"
                     >
                       <span className="material-symbols-outlined text-[14px]">photo_camera</span>
                       <span>{editAvatar ? "Trocar Foto" : "Escolher Foto"}</span>
@@ -640,7 +640,7 @@ export default function UsersPage() {
                           setEditAvatar(null);
                           if (editFileInputRef.current) editFileInputRef.current.value = "";
                         }}
-                        className="px-2 py-1 rounded bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg bg-error-container/20 text-error hover:bg-error-container/30 text-[11px] font-medium border border-error/20 flex items-center gap-1 transition-colors cursor-pointer min-h-[32px]"
                       >
                         <span className="material-symbols-outlined text-[14px]">delete</span>
                         <span>Remover</span>
@@ -664,7 +664,7 @@ export default function UsersPage() {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                   required
                 />
               </div>
@@ -676,7 +676,7 @@ export default function UsersPage() {
                   type="email"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
                   required
                 />
               </div>
@@ -687,7 +687,7 @@ export default function UsersPage() {
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value as any)}
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 >
                   <option value="OPERATOR">Operador (Carregar G-Code, Imprimir, Gerenciar Modelos)</option>
                   <option value="ADMIN">Administrador (Acesso Total & Gestão de Usuários)</option>
@@ -710,7 +710,7 @@ export default function UsersPage() {
                   value={editPassword}
                   onChange={(e) => setEditPassword(e.target.value)}
                   placeholder="Deixe em branco para manter a senha atual"
-                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                  className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
 
@@ -718,14 +718,14 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium hover:bg-surface-container-highest transition-colors cursor-pointer min-h-[40px]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingEdit}
-                  className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all disabled:opacity-50 cursor-pointer min-h-[40px]"
                 >
                   {savingEdit ? "Salvando..." : "Salvar Alterações"}
                 </button>

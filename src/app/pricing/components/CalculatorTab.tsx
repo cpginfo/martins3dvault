@@ -298,7 +298,7 @@ export default function CalculatorTab({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
       {/* Coluna 1: Formulário de Entrada (7 colunas) */}
       <div className="lg:col-span-7 space-y-6">
-        <form onSubmit={handleSubmit} className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-5">
+        <form onSubmit={handleSubmit} className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
           {feedback && (
             <div
               className={`p-4 rounded-xl text-xs flex items-center justify-between gap-3 ${
@@ -358,7 +358,7 @@ export default function CalculatorTab({
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="Ex: Suporte de Headset RGB, Vaso Voronoi..."
-                className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm focus:outline-none focus:border-primary-container transition-colors"
+                className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm focus:outline-none focus:border-primary-container transition-colors"
               />
             </div>
             <div>
@@ -374,7 +374,7 @@ export default function CalculatorTab({
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Ex: Studio Tech, Mariana Lima..."
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm focus:outline-none focus:border-primary-container transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm focus:outline-none focus:border-primary-container transition-colors"
                 />
               </div>
             </div>
@@ -400,7 +400,7 @@ export default function CalculatorTab({
                 <select
                   value={selectedMaterialId}
                   onChange={(e) => handleMaterialChange(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm focus:outline-none focus:border-primary-container"
+                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm focus:outline-none focus:border-primary-container"
                 >
                   {materials.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -424,7 +424,7 @@ export default function CalculatorTab({
                   value={weightGrams}
                   onChange={(e) => setWeightGrams(e.target.value)}
                   placeholder="0"
-                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-on-surface-variant">
                   gramas
@@ -445,7 +445,7 @@ export default function CalculatorTab({
                   min="0"
                   value={printTimeHours}
                   onChange={(e) => setPrintTimeHours(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                   placeholder="0"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant">
@@ -459,7 +459,7 @@ export default function CalculatorTab({
                   max="59"
                   value={printTimeMinutes}
                   onChange={(e) => setPrintTimeMinutes(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono focus:outline-none focus:border-primary-container"
+                  className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono focus:outline-none focus:border-primary-container"
                   placeholder="0"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant">
@@ -489,7 +489,7 @@ export default function CalculatorTab({
                     placeholder="0 h"
                     value={modelingTimeHours}
                     onChange={(e) => setModelingTimeHours(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-xs font-mono text-on-surface"
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-base sm:text-xs font-mono text-on-surface"
                   />
                   <input
                     type="number"
@@ -498,7 +498,7 @@ export default function CalculatorTab({
                     placeholder="0 min"
                     value={modelingTimeMinutes}
                     onChange={(e) => setModelingTimeMinutes(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-xs font-mono text-on-surface"
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-base sm:text-xs font-mono text-on-surface"
                   />
                 </div>
               </div>
@@ -514,7 +514,7 @@ export default function CalculatorTab({
                     placeholder="0 h"
                     value={assemblyTimeHours}
                     onChange={(e) => setAssemblyTimeHours(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-xs font-mono text-on-surface"
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-base sm:text-xs font-mono text-on-surface"
                   />
                   <input
                     type="number"
@@ -523,7 +523,7 @@ export default function CalculatorTab({
                     placeholder="0 min"
                     value={assemblyTimeMinutes}
                     onChange={(e) => setAssemblyTimeMinutes(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-xs font-mono text-on-surface"
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-base sm:text-xs font-mono text-on-surface"
                   />
                 </div>
               </div>
@@ -563,7 +563,7 @@ export default function CalculatorTab({
                   min="0"
                   value={markupPercent}
                   onChange={(e) => setMarkupPercent(e.target.value)}
-                  className="w-full pl-3 pr-7 py-1.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm font-mono font-bold text-right focus:outline-none focus:border-primary-container"
+                  className="w-full pl-3 pr-7 py-1.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-sm font-mono font-bold text-right focus:outline-none focus:border-primary-container"
                 />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-on-surface-variant">
                   %
@@ -605,7 +605,7 @@ export default function CalculatorTab({
                       placeholder="Nome do insumo"
                       value={acc.name}
                       onChange={(e) => updateAccessory(idx, "name", e.target.value)}
-                      className="flex-1 px-2.5 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface"
+                      className="flex-1 px-2.5 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface text-base sm:text-xs"
                     />
                     <div className="w-16">
                       <input
@@ -614,7 +614,7 @@ export default function CalculatorTab({
                         placeholder="Qtd"
                         value={acc.quantity}
                         onChange={(e) => updateAccessory(idx, "quantity", Number(e.target.value) || 1)}
-                        className="w-full px-2 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface text-center font-mono"
+                        className="w-full px-2 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface text-center font-mono text-base sm:text-xs"
                       />
                     </div>
                     <div className="w-24 relative">
@@ -628,13 +628,13 @@ export default function CalculatorTab({
                         placeholder="0.00"
                         value={acc.unitPrice}
                         onChange={(e) => updateAccessory(idx, "unitPrice", Number(e.target.value) || 0)}
-                        className="w-full pl-6 pr-2 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface text-right font-mono"
+                        className="w-full pl-6 pr-2 py-1.5 rounded-md bg-surface-container border border-outline-variant/20 text-on-surface text-right font-mono text-base sm:text-xs"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeAccessory(idx)}
-                      className="p-1.5 text-on-surface-variant hover:text-red-500 rounded-md hover:bg-red-500/10 transition-colors"
+                      className="p-2 text-on-surface-variant hover:text-red-500 rounded-md hover:bg-red-500/10 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                       title="Remover acessório"
                     >
                       <span className="material-symbols-outlined text-base">delete</span>
@@ -709,7 +709,7 @@ export default function CalculatorTab({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Fatiado em 0.20mm com 15% gyroid infill. Cliente retirará no local."
-              className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-xs focus:outline-none focus:border-primary-container"
+              className="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface text-base sm:text-xs focus:outline-none focus:border-primary-container"
             />
           </div>
 
@@ -718,14 +718,14 @@ export default function CalculatorTab({
             <button
               type="button"
               onClick={handleClear}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors min-h-[40px]"
             >
               Cancelar / Limpar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-all shadow-md disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-all shadow-md disabled:opacity-50 min-h-[40px]"
             >
               {saving ? (
                 <>

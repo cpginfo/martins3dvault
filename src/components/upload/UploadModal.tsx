@@ -219,22 +219,22 @@ export default function UploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-xl rounded-2xl bg-surface-container-low border border-white/10 shadow-2xl p-6 relative max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-xl rounded-2xl bg-surface-container-low border border-white/10 shadow-2xl p-4 sm:p-6 relative max-h-[92dvh] flex flex-col">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/30 text-primary">
+        <div className="flex items-center gap-3 mb-4 pr-8">
+          <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/30 text-primary shrink-0">
             <Upload className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface">Adicionar Modelos 3D</h2>
+            <h2 className="text-base sm:text-lg font-bold text-on-surface">Adicionar Modelos 3D</h2>
             <p className="text-xs text-on-surface-variant">
               Faça upload de arquivos locais ou baixe diretamente de um link da internet.
             </p>
@@ -243,21 +243,21 @@ export default function UploadModal({
 
         {/* Tab Switcher */}
         {!successModel && (
-          <div className="flex items-center p-1 rounded-xl bg-surface-container-lowest border border-white/5 mb-4">
+          <div className="flex items-center p-1 rounded-xl bg-surface-container-lowest border border-white/5 mb-4 gap-1">
             <button
               type="button"
               onClick={() => {
                 setActiveTab("file");
                 setErrorMsg("");
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all min-h-[38px] ${
                 activeTab === "file"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              <Upload className="w-4 h-4" />
-              <span>Arquivo do Computador</span>
+              <Upload className="w-4 h-4 shrink-0" />
+              <span className="truncate">Arquivo Local</span>
             </button>
             <button
               type="button"
@@ -265,14 +265,14 @@ export default function UploadModal({
                 setActiveTab("url");
                 setErrorMsg("");
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all min-h-[38px] ${
                 activeTab === "url"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              <Globe className="w-4 h-4" />
-              <span>Download via Link (URL)</span>
+              <Globe className="w-4 h-4 shrink-0" />
+              <span className="truncate">Download Link (URL)</span>
             </button>
           </div>
         )}
@@ -392,7 +392,7 @@ export default function UploadModal({
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
                 placeholder="Ex: Suporte de Headset Articulado"
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
                 required
               />
             </div>
@@ -418,13 +418,13 @@ export default function UploadModal({
                     value={newCollectionName}
                     onChange={(e) => setNewCollectionName(e.target.value)}
                     placeholder="Nome da nova coleção..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
                   />
                 ) : (
                   <select
                     value={collectionId}
                     onChange={(e) => setCollectionId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
                   >
                     <option value="">Nenhuma coleção</option>
                     {collections.map((c) => (
@@ -444,7 +444,7 @@ export default function UploadModal({
                 <select
                   value={libraryId}
                   onChange={(e) => setLibraryId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
                 >
                   {libraries.map((l) => (
                     <option key={l.id} value={l.id}>
@@ -463,7 +463,7 @@ export default function UploadModal({
               <select
                 value={filamentType}
                 onChange={(e) => setFilamentType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
               >
                 <option value="PLA">PLA</option>
                 <option value="PETG">PETG</option>
@@ -484,17 +484,23 @@ export default function UploadModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Detalhes ou instruções de impressão..."
                 rows={2}
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
               />
             </div>
 
             {/* Progress Bar */}
             {uploading && (
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-indigo-500 h-1.5 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-slate-400">
+                  <span>Enviando arquivo...</span>
+                  <span className="font-semibold text-indigo-400">{progress}%</span>
+                </div>
+                <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-indigo-500 h-2 transition-all duration-300 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
             )}
 
@@ -503,17 +509,17 @@ export default function UploadModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors min-h-[40px]"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={files.length === 0 || uploading}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40 min-h-[40px]"
               >
                 <Upload className="w-4 h-4" />
-                <span>{uploading ? "Enviando e Processando..." : "Enviar Modelo"}</span>
+                <span>{uploading ? "Enviando..." : "Enviar Modelo"}</span>
               </button>
             </div>
           </form>
@@ -532,7 +538,7 @@ export default function UploadModal({
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://exemplo.com/modelos/peca.stl ou .3mf, .zip"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
                   required
                 />
               </div>
@@ -562,7 +568,7 @@ export default function UploadModal({
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
                 placeholder="Deixe em branco para usar o nome do arquivo original"
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
               />
             </div>
 
@@ -574,7 +580,7 @@ export default function UploadModal({
               <select
                 value={libraryId}
                 onChange={(e) => setLibraryId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
               >
                 {libraries.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -592,7 +598,7 @@ export default function UploadModal({
               <select
                 value={filamentType}
                 onChange={(e) => setFilamentType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                className="w-full px-3 py-2 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
               >
                 <option value="PLA">PLA</option>
                 <option value="PETG">PETG</option>
@@ -613,17 +619,23 @@ export default function UploadModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Observações adicionais ou notas de impressão..."
                 rows={2}
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
               />
             </div>
 
             {/* Progress Bar */}
             {uploading && (
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-indigo-500 h-1.5 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-slate-400">
+                  <span>Baixando arquivo...</span>
+                  <span className="font-semibold text-indigo-400">{progress}%</span>
+                </div>
+                <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-indigo-500 h-2 transition-all duration-300 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
             )}
 
@@ -632,19 +644,19 @@ export default function UploadModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors min-h-[40px]"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={!urlInput.trim() || uploading}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40 min-h-[40px]"
               >
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Baixando e Processando...</span>
+                    <span>Baixando...</span>
                   </>
                 ) : (
                   <>
