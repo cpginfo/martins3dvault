@@ -42,16 +42,16 @@ export default function UpdateModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-all animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md transition-all animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) closeModal();
       }}
     >
-      <div className="relative w-full max-w-xl bg-surface-container-high border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-xl bg-surface-container-high border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh]">
         {/* Header com gradiente */}
-        <div className="relative px-6 py-5 bg-gradient-to-r from-primary-container/20 via-primary-container/10 to-transparent border-b border-white/10 flex items-center justify-between">
+        <div className="relative px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-primary-container/20 via-primary-container/10 to-transparent border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/40 text-primary flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.25)]">
+            <div className="p-2.5 rounded-xl bg-primary-container/20 border border-primary-container/40 text-primary flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.25)] shrink-0">
               <Sparkles className="w-5 h-5 text-primary animate-pulse" />
             </div>
             <div>
@@ -69,7 +69,7 @@ export default function UpdateModal() {
 
           <button
             onClick={closeModal}
-            className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors"
+            className="p-1 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors"
             title="Fechar"
           >
             <X className="w-5 h-5" />
@@ -77,7 +77,7 @@ export default function UpdateModal() {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-5 text-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 text-sm">
           {/* Version Diff Banner */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-surface-container-low border border-white/5">
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -132,12 +132,12 @@ export default function UpdateModal() {
               <Terminal className="w-3.5 h-3.5 text-primary" />
               <span>Instruções para Atualizar (Docker)</span>
             </h4>
-            <div className="relative group p-3 rounded-xl bg-black/60 border border-white/10 font-mono text-xs text-emerald-400 flex items-center justify-between">
+            <div className="relative group p-3 rounded-xl bg-black/60 border border-white/10 font-mono text-xs text-emerald-400 flex items-center justify-between gap-2">
               <span className="overflow-x-auto select-all">{dockerCommand}</span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-on-surface text-[11px] font-sans font-medium transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-on-surface text-xs font-sans font-medium transition-colors shrink-0 min-h-[32px]"
                 title="Copiar comando"
               >
                 {copied ? (
@@ -160,11 +160,11 @@ export default function UpdateModal() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-surface-container-low border-t border-white/10 flex items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-surface-container-low border-t border-white/10 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={closeModal}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors"
+            className="px-4 py-2 min-h-[40px] rounded-xl text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors flex items-center justify-center"
           >
             Fechar
           </button>
@@ -174,7 +174,7 @@ export default function UpdateModal() {
               href={updateInfo.releaseUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)] active:scale-95"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-primary-container text-on-primary text-xs font-semibold hover:bg-primary transition-all shadow-[0_0_12px_rgba(249,115,22,0.3)] active:scale-95"
             >
               <span>Ver Release no GitHub</span>
               <ExternalLink className="w-3.5 h-3.5" />

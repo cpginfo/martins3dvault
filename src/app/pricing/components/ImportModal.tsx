@@ -102,12 +102,12 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
     .slice(0, 5);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20 bg-surface-container-low">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-outline-variant/20 bg-surface-container-low">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-container/20 text-primary-container flex items-center justify-center">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-primary-container/20 text-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-2xl">table_view</span>
             </div>
             <div>
@@ -121,14 +121,14 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+            className="p-1 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5 overflow-y-auto text-sm">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto text-sm">
           {/* Instrução e Formato Suportado */}
           <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/25 text-xs text-on-surface-variant space-y-2">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -139,7 +139,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
               <button
                 type="button"
                 onClick={handleDownloadTemplate}
-                className="inline-flex items-center gap-1 text-primary-container hover:underline font-medium text-xs"
+                className="inline-flex items-center gap-1 text-primary-container hover:underline font-medium text-xs min-h-[32px] py-1"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 Baixar Planilha Modelo (.csv)
@@ -157,7 +157,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
           <div className="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
             <button
               onClick={() => setActiveTab("file")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] ${
                 activeTab === "file"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
@@ -168,7 +168,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
             </button>
             <button
               onClick={() => setActiveTab("paste")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] ${
                 activeTab === "paste"
                   ? "bg-primary-container text-on-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
@@ -226,7 +226,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-outline-variant/40 hover:border-primary-container/60 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-surface-container-low hover:bg-surface-container"
+                className="border-2 border-dashed border-outline-variant/40 hover:border-primary-container/60 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-surface-container-low hover:bg-surface-container"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary-container/10 text-primary-container flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined text-3xl">cloud_upload</span>
@@ -256,7 +256,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
                   setResult(null);
                 }}
                 placeholder="Cole aqui os dados copiados do Excel (com o cabeçalho)..."
-                className="w-full p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-xs font-mono text-on-surface focus:outline-none focus:border-primary-container resize-y"
+                className="w-full p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-base sm:text-xs font-mono text-on-surface focus:outline-none focus:border-primary-container resize-y"
               />
             </div>
           )}
@@ -277,11 +277,11 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-outline-variant/20 bg-surface-container-low flex items-center justify-end gap-3">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-outline-variant/20 bg-surface-container-low flex items-center justify-end gap-3">
           <button
             onClick={onClose}
             disabled={uploading}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
+            className="px-4 py-2 min-h-[40px] rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center"
           >
             {result ? "Fechar" : "Cancelar"}
           </button>
@@ -289,7 +289,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
             <button
               onClick={handleImport}
               disabled={uploading || !csvContent.trim()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2 min-h-[40px] rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md"
             >
               {uploading ? (
                 <>

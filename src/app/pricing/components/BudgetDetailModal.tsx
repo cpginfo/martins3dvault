@@ -21,16 +21,16 @@ export default function BudgetDetailModal({
   const accessories: AccessoryItem[] = budget.accessories || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20 bg-surface-container-low">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-outline-variant/20 bg-surface-container-low">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-container/20 text-primary-container flex items-center justify-center">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-primary-container/20 text-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-2xl">description</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-on-surface">
+              <h3 className="text-base sm:text-lg font-bold text-on-surface">
                 {budget.productName}
               </h3>
               <p className="text-xs text-on-surface-variant">
@@ -40,19 +40,20 @@ export default function BudgetDetailModal({
           </div>
           <div className="flex items-center gap-2">
             {isSale ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
                 <span className="material-symbols-outlined text-sm">check_circle</span>
-                Venda Concretizada
+                <span className="hidden xs:inline">Venda Concretizada</span>
+                <span className="xs:hidden">Venda</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
                 <span className="material-symbols-outlined text-sm">schedule</span>
                 Orçamento
               </span>
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              className="p-1 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
@@ -60,9 +61,9 @@ export default function BudgetDetailModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-6 text-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6 text-sm">
           {/* Card Resumo de Valores */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
               <span className="text-xs text-on-surface-variant block mb-1">Custo de Produção</span>
               <span className="text-base font-bold text-on-surface font-mono">
@@ -95,7 +96,7 @@ export default function BudgetDetailModal({
 
           {/* Se foi venda com diferença de preço */}
           {isSale && budget.priceDifference !== null && budget.priceDifference !== undefined && (
-            <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
+            <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
               budget.priceDifference >= 0
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
                 : "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300"
@@ -163,42 +164,42 @@ export default function BudgetDetailModal({
               Composição Analítica de Custos
             </h4>
             <div className="space-y-2 border border-outline-variant/20 rounded-xl p-4 bg-surface-container-low">
-              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10">
+              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10 text-xs sm:text-sm">
                 <span className="text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-base text-amber-500">bolt</span>
                   Energia Elétrica ({budget.powerWatts}W @ {formatBRL(budget.electricityKwhCost)}/kWh)
                 </span>
                 <span className="font-mono font-medium text-on-surface">{formatBRL(budget.energyCost)}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10">
+              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10 text-xs sm:text-sm">
                 <span className="text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-base text-blue-500">settings</span>
                   Desgaste & Depreciação da Máquina
                 </span>
                 <span className="font-mono font-medium text-on-surface">{formatBRL(budget.depreciationCost)}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10">
+              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10 text-xs sm:text-sm">
                 <span className="text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-base text-emerald-500">category</span>
                   Matéria Prima ({budget.materialName} - {budget.weightGrams}g)
                 </span>
                 <span className="font-mono font-medium text-on-surface">{formatBRL(budget.materialCost)}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10">
+              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10 text-xs sm:text-sm">
                 <span className="text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-base text-purple-500">handyman</span>
                   Mão de Obra ({formatBRL(budget.manualHourlyRate)}/h)
                 </span>
                 <span className="font-mono font-medium text-on-surface">{formatBRL(budget.laborCost)}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10">
+              <div className="flex justify-between items-center py-1 border-b border-outline-variant/10 text-xs sm:text-sm">
                 <span className="text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-base text-rose-500">extension</span>
                   Acessórios & Insumos Extras
                 </span>
                 <span className="font-mono font-medium text-on-surface">{formatBRL(budget.accessoriesCost)}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 font-bold text-base">
+              <div className="flex justify-between items-center pt-2 font-bold text-sm sm:text-base">
                 <span className="text-on-surface">Custo Total de Produção</span>
                 <span className="font-mono text-primary-container">{formatBRL(budget.totalCost)}</span>
               </div>
@@ -211,8 +212,8 @@ export default function BudgetDetailModal({
               <h4 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
                 Acessórios & Adicionais ({accessories.length})
               </h4>
-              <div className="border border-outline-variant/20 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs">
+              <div className="border border-outline-variant/20 rounded-xl overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[320px]">
                   <thead className="bg-surface-container-high text-on-surface-variant">
                     <tr>
                       <th className="p-2.5">Item</th>
@@ -252,20 +253,20 @@ export default function BudgetDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-outline-variant/20 bg-surface-container-low flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-outline-variant/20 bg-surface-container-low flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <button
             onClick={() => {
               onDuplicate(budget);
               onClose();
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest text-on-surface border border-outline-variant/30 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest text-on-surface border border-outline-variant/30 transition-colors"
           >
             <span className="material-symbols-outlined text-base">content_copy</span>
             Duplicar / Reutilizar Orçamento
           </button>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center px-5 py-2 min-h-[40px] rounded-xl text-xs font-semibold bg-primary-container text-on-primary hover:opacity-90 transition-opacity"
           >
             Fechar
           </button>
