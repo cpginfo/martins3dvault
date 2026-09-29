@@ -5,6 +5,23 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.13.1] - 2026-09-29
+
+### Corrigido / UX & Mobile
+- **Experiência e Rolagem Fluida no Visualizador de Modelos Mobile (`ModelDetailModal.tsx`)**:
+  - Implementado seletor de visualização mobile dedicado (`Visualizador 3D` vs `Ficha & Arquivos`), eliminando o aperto vertical em telas pequenas e garantindo altura total em ambas as visualizações.
+  - Implementado travamento de rolagem do `document.body` (`overflow: hidden`) durante a exibição do modal, eliminando conflito onde o toque no mobile rolava a galeria de fundo em vez do modal.
+  - Unificação da rolagem da Ficha Técnica no mobile em contêiner contínuo (`overflow-y-auto overscroll-contain`) com abas de navegação fixas (`sticky top-0 backdrop-blur-md`), acabando com armadilhas de rolagem (*scroll traps*) e áreas mortas de toque.
+  - Adicionado banner rápido com miniatura na visualização de detalhes e botão flutuante de atalho na visualização 3D para troca rápida de contexto com 1 toque.
+- **Visualizador 3D Responsivo (`ModelViewer3D.tsx`)**:
+  - Substituição da altura mínima fixa `min-h-[420px]` por valores responsivos adaptados a smartphones (`min-h-[260px] sm:min-h-[350px] md:min-h-[420px] touch-none`).
+  - Otimização do padding e altura máxima da capa 2D de pré-visualização, impedindo que o botão "Carregar Malha 3D" seja empurrado para fora da tela em dispositivos móveis ou modo paisagem (*landscape*).
+- **Configuração do Editor & Linter CSS para Tailwind v4 (`.vscode/settings.json`)**:
+  - Adicionada regra `"css.lint.unknownAtRules": "ignore"` para silenciar avisos incorretos do analisador de CSS nativo sobre a diretiva `@theme` e at-rules do Tailwind v4.
+  - Ajustada exceção no [`.gitignore`](file:///swarm/stl/.gitignore) para rastrear o arquivo de configurações do VS Code.
+
+---
+
 ## [1.13.0] - 2026-09-28
 
 ### Adicionado

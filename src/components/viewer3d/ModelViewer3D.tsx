@@ -673,9 +673,9 @@ export default function ModelViewer3D({
           </div>
 
           {/* Área Central: Imagem de Capa (Thumb) ou Placeholder */}
-          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center py-6 px-4">
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center py-3 sm:py-6 px-3 sm:px-4 overflow-y-auto no-scrollbar">
             {coverImageUrl && !imgError ? (
-              <div className="relative w-full max-w-md max-h-[260px] sm:max-h-[300px] flex items-center justify-center">
+              <div className="relative w-full max-w-md max-h-[190px] sm:max-h-[260px] md:max-h-[300px] flex items-center justify-center">
                 {/* Glow desfocado da capa ao fundo */}
                 <img
                   src={coverImageUrl}
@@ -687,13 +687,13 @@ export default function ModelViewer3D({
                   src={coverImageUrl}
                   alt="Miniatura do Modelo"
                   onError={() => setImgError(true)}
-                  className="relative max-h-[240px] sm:max-h-[280px] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-500"
+                  className="relative max-h-[170px] sm:max-h-[240px] md:max-h-[280px] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-500"
                 />
               </div>
             ) : (
-              <div className="relative flex flex-col items-center justify-center p-8 rounded-3xl bg-surface-container-lowest/60 border border-white/5 backdrop-blur-sm">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center mb-3 shadow-inner shadow-indigo-500/20">
-                  <span className="material-symbols-outlined text-[44px] text-cyan-400 animate-pulse">
+              <div className="relative flex flex-col items-center justify-center p-5 sm:p-8 rounded-3xl bg-surface-container-lowest/60 border border-white/5 backdrop-blur-sm">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center mb-2 sm:mb-3 shadow-inner shadow-indigo-500/20">
+                  <span className="material-symbols-outlined text-[36px] sm:text-[44px] text-cyan-400 animate-pulse">
                     view_in_ar
                   </span>
                 </div>
@@ -707,31 +707,31 @@ export default function ModelViewer3D({
             )}
 
             {/* Botão de Ação: Carregar Malha 3D */}
-            <div className="relative z-20 mt-5 flex flex-col items-center gap-2">
+            <div className="relative z-20 mt-3 sm:mt-5 flex flex-col items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMeshLoaded(true)}
-                className="group/btn relative flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-cyan-500/40 border border-white/20 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
+                className="group/btn relative flex items-center gap-2.5 sm:gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-xs sm:text-sm shadow-xl shadow-indigo-600/30 hover:shadow-cyan-500/40 border border-white/20 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer min-h-[44px]"
               >
-                <div className="p-1.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover/btn:scale-110 transition-transform">
+                <div className="p-1 sm:p-1.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover/btn:scale-110 transition-transform">
                   <Box className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="leading-tight font-bold tracking-wide">
                     Carregar Malha 3D
                   </span>
-                  <span className="text-[10px] text-cyan-100/90 font-normal">
+                  <span className="text-[10px] text-cyan-100/90 font-normal hidden sm:inline">
                     {files.length > 1
                       ? `Renderizar ${files.length} peças interativas`
                       : "Interagir no visualizador 3D"}
                   </span>
                 </div>
-                <span className="material-symbols-outlined text-[20px] text-cyan-200 group-hover/btn:translate-x-1 transition-transform ml-1">
+                <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-cyan-200 group-hover/btn:translate-x-1 transition-transform ml-1">
                   play_arrow
                 </span>
               </button>
 
-              <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <span className="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-ping" />
                 <span>Malha sob demanda • Economia de tráfego e GPU</span>
               </span>
@@ -741,7 +741,7 @@ export default function ModelViewer3D({
       ) : (
         <>
           {/* 3D Viewport Mount */}
-          <div ref={mountRef} className="w-full h-full min-h-[420px] cursor-grab active:cursor-grabbing" />
+          <div ref={mountRef} className="w-full h-full min-h-[260px] sm:min-h-[350px] md:min-h-[420px] cursor-grab active:cursor-grabbing touch-none" />
 
           {/* Loading Indicator with instant cover preview */}
           {loading && (

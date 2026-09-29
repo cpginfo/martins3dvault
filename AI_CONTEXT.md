@@ -282,6 +282,13 @@ Quando o container é iniciado ou reiniciado, o sistema dispara automaticamente 
 3. **Extração Profunda de .3mf (`src/lib/scanner/extractors/threemf.ts`)**: Extrai parâmetros de fatiamento (`filamentType`, `layerHeight`, `nozzleSize`, `infillDensity`), contagem de triângulos, miniaturas em `Auxiliaries/` e dimensões tridimensionais milimétricas (X, Y, Z via `plate_*.json` ou cálculo de bounding box nos vértices).
 4. **Exclusão de Diretórios CACHE/cache**: Pastas de cache (`IGNORED_DIRS`) são terminantemente ignoradas para evitar criação de coleções espúrias.
 
+### Q. Experiência Mobile & Rolagem do Visualizador de Modelos (`v1.13.1`)
+O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/src/components/model/ModelDetailModal.tsx)) e o visualizador 3D Three.js ([`ModelViewer3D.tsx`](file:///swarm/stl/src/components/viewer3d/ModelViewer3D.tsx)) foram adaptados para dispositivos móveis e telas de toque:
+1. **Seletor de Abas Mobile Dedicado**: Em telas `< md` (abaixo de 768px), o layout elimina a partição 42%/58% vertical (que espremia o visualizador e a barra de rolagem) e introduz alternância instantânea entre `Visualizador 3D` (tela cheia para OrbitControls, rotação, zoom por pinça e seleção de materiais) e `Ficha & Arquivos` (tela cheia para parâmetros técnicos, arquivos e notas).
+2. **Body Scroll Lock**: Ao abrir o modal, `document.body.style.overflow = "hidden"` previne rolagem indesejada do catálogo ao fundo no iOS/Android.
+3. **Rolagem Fluida sem Scroll Traps**: A Ficha Técnica mobile rola como uma superfície contínua unificada (`overflow-y-auto overscroll-contain`) com abas técnicas fixas (`sticky top-0 backdrop-blur-md`), permitindo rolagem com o polegar a partir de qualquer ponto da tela.
+4. **Altura Mínima Responsiva**: `min-h-[420px]` foi substituído por `min-h-[260px] sm:min-h-[350px] md:min-h-[420px] touch-none` para evitar distorções no mobile landscape e corte do botão de carregamento da malha 3D.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto

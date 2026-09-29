@@ -28,6 +28,7 @@ import {
   Clock,
   Wrench,
   TrendingUp,
+  Box,
 } from "lucide-react";
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
 import { calculatePrintCost, formatBRL } from "@/lib/pricing/calculator";
@@ -81,6 +82,7 @@ export default function ModelDetailModal({
   const router = useRouter();
   const [model, setModel] = useState<ModelDetailData>(initialModel);
   const [activeTab, setActiveTab] = useState<"files" | "notes" | "manuals">("files");
+  const [mobileTab, setMobileTab] = useState<"viewer" | "details">("viewer");
   const [collectionsList, setCollectionsList] = useState<Array<{ id: string; name: string }>>([]);
 
   // Renomear modelo
@@ -170,6 +172,17 @@ export default function ModelDetailModal({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
+  // Trava rolagem da página ao fundo enquanto o modal estiver aberto no mobile e desktop
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+    };
+  }, []);
 
   // Configurações de precificação para estimativa em tempo real
   const [printerConfig, setPrinterConfig] = useState<PrinterConfig>({
@@ -563,10 +576,51 @@ export default function ModelDetailModal({
       }}
     >
       <div className="w-full max-w-6xl h-[100dvh] sm:h-[92dvh] flex flex-col md:flex-row rounded-none sm:rounded-3xl bg-surface-container-low border-0 sm:border sm:border-white/10 shadow-2xl overflow-hidden relative">
-        {/* Close Button */}
+        {/* Mobile View Selector Bar (Visualizador 3D vs Ficha & Arquivos) */}
+        <div className="flex md:hidden items-center justify-between bg-[#0b0f17] border-b border-white/10 px-3 py-2 shrink-0 z-30">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 flex-1 mr-2">
+            <button
+              type="button"
+              onClick={() => setMobileTab("viewer")}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                mobileTab === "viewer"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>Visualizador 3D</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("details")}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                mobileTab === "details"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Ficha & Arquivos</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 font-mono">
+                {model.files.length}
+              </span>
+            </button>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition shrink-0 min-w-[38px] min-h-[38px] flex items-center justify-center border border-white/10"
+            title="Fechar"
+            aria-label="Fechar detalhes do modelo"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Desktop Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 rounded-xl bg-black/60 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all backdrop-blur-md min-w-[38px] min-h-[38px] flex items-center justify-center"
+          className="hidden md:flex absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 rounded-xl bg-black/60 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all backdrop-blur-md min-w-[38px] min-h-[38px] items-center justify-center"
           title="Fechar"
           aria-label="Fechar detalhes do modelo"
         >
@@ -574,7 +628,11 @@ export default function ModelDetailModal({
         </button>
 
         {/* Left: 3D Canvas Viewer */}
-        <div className="flex-1 h-[42dvh] md:h-full bg-black relative">
+        <div
+          className={`flex-1 h-full bg-black relative flex-col ${
+            mobileTab === "viewer" ? "flex" : "hidden md:flex"
+          }`}
+        >
           <ModelViewer3D
             libraryId={model.libraryId}
             files={model.files}
@@ -616,14 +674,61 @@ export default function ModelDetailModal({
               </Link>
             }
           />
+
+          {/* Mobile Quick-Jump to Details Floating Button */}
+          <div className="md:hidden absolute bottom-3 right-3 z-20 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => setMobileTab("details")}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-semibold shadow-lg shadow-indigo-600/40 backdrop-blur-md border border-indigo-400/30 transition active:scale-95"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Ver Ficha Técnica ({model.files.length})</span>
+            </button>
+          </div>
         </div>
 
         {/* Right: Sidebar Tabs & Details */}
-        <div className="w-full md:w-[40%] h-[58dvh] md:h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest">
+        <div
+          className={`w-full md:w-[420px] lg:w-[460px] h-full flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-surface-container-lowest overflow-y-auto overscroll-contain md:overflow-hidden ${
+            mobileTab === "details" ? "flex flex-1" : "hidden md:flex"
+          }`}
+        >
+          {/* Mobile Quick Banner to jump back to 3D */}
+          <div className="md:hidden flex items-center justify-between p-3 bg-white/[0.03] border-b border-white/10 px-4 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              {model.coverImage ? (
+                <img
+                  src={model.coverImage}
+                  alt=""
+                  className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0 bg-black/40"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                  <Box className="w-5 h-5 text-indigo-400" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-white truncate block">{model.name}</span>
+                <span className="text-[11px] text-slate-400 block font-mono">
+                  {model.files.length} {model.files.length === 1 ? "peça 3D" : "peças 3D"}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileTab("viewer")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 text-xs font-semibold shrink-0 transition active:scale-95"
+            >
+              <Box className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Ver no 3D</span>
+            </button>
+          </div>
+
           {/* Header */}
-          <div className="p-5 border-b border-white/10">
+          <div className="p-4 sm:p-5 border-b border-white/10 shrink-0">
             {/* Full File / Folder Path Container */}
-            <div className="pr-12 mb-3">
+            <div className="md:pr-12 pr-0 mb-3">
               <div
                 className="flex items-start gap-2 text-xs font-mono bg-white/[0.04] border border-white/10 rounded-xl p-2.5 leading-relaxed text-slate-300 shadow-sm group hover:border-white/20 transition"
                 title={`${model.library.name} / ${model.folderPath}`}
@@ -836,7 +941,7 @@ export default function ModelDetailModal({
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 px-5 pt-3 border-b border-white/5 text-xs font-medium overflow-x-auto no-scrollbar">
+          <div className="sticky top-0 z-10 flex items-center gap-2 px-4 sm:px-5 pt-3 border-b border-white/10 text-xs font-medium overflow-x-auto no-scrollbar bg-surface-container-lowest/95 backdrop-blur-md shrink-0">
             <button
               onClick={() => setActiveTab("files")}
               className={`pb-3 border-b-2 flex items-center gap-1.5 transition-all shrink-0 min-h-[38px] ${
@@ -873,7 +978,7 @@ export default function ModelDetailModal({
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 p-5 overflow-y-auto">
+          <div className="p-4 sm:p-5 md:flex-1 md:overflow-y-auto md:overscroll-contain">
             {/* TAB 1: Arquivos 3D & Parâmetros Técnicos */}
             {activeTab === "files" && (
               <div className="flex flex-col gap-4">

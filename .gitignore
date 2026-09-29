@@ -69,7 +69,7 @@ ehthumbs.db
 Thumbs.db
 
 # 9. Editores, IDEs e Ferramentas de IA
-.vscode/
+.vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
