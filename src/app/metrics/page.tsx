@@ -179,6 +179,17 @@ export default function MetricsPage() {
     }
   };
 
+  const handleResetCircuitBreaker = async () => {
+    try {
+      const res = await fetch("/api/security/circuit-breaker/reset", { method: "POST" });
+      if (res.ok) {
+        await fetchStats();
+      }
+    } catch (err) {
+      console.error("Erro ao resetar circuit breaker:", err);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, []);
@@ -213,7 +224,7 @@ export default function MetricsPage() {
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
-          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+          isSidebarCollapsed ? "lg:pl-20" : "sidebar-pl-dynamic"
         }`}
       >
         <Navbar
@@ -501,10 +512,10 @@ export default function MetricsPage() {
                       </div>
                       <div>
                         <div className="text-2xl font-mono font-bold text-on-surface">
-                          {stats.concurrency?.maxUserSlots ?? 3}
+                          {stats.concurrency?.maxUserSlots ?? 8}
                           <span className="text-sm font-normal text-outline"> máx</span>
                         </div>
-                        <p className="text-[11px] text-on-surface-variant mt-1">429 automático no 4º download</p>
+                        <p className="text-[11px] text-on-surface-variant mt-1">Downloads simultâneos (Admin 30)</p>
                       </div>
                     </div>
 
@@ -528,9 +539,21 @@ export default function MetricsPage() {
                         <span className="material-symbols-outlined text-[20px] text-error">gavel</span>
                       </div>
                       <div>
-                        <div className="text-2xl font-mono font-bold text-on-surface">
-                          {stats.concurrency?.blockedUsersCount ?? 0}
-                          <span className="text-sm font-normal text-outline"> bloqueados</span>
+                        <div className="flex items-center justify-between">
+                          <div className="text-2xl font-mono font-bold text-on-surface">
+                            {stats.concurrency?.blockedUsersCount ?? 0}
+                            <span className="text-sm font-normal text-outline"> bloqueados</span>
+                          </div>
+                          {(stats.concurrency?.blockedUsersCount ?? 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={handleResetCircuitBreaker}
+                              className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-error/20 hover:bg-error/30 text-error border border-error/30 transition-colors cursor-pointer"
+                              title="Desbloquear todos os usuários da quarentena"
+                            >
+                              Liberar
+                            </button>
+                          )}
                         </div>
                         <p className="text-[11px] text-on-surface-variant mt-1">Quarentena de 15m para abusos</p>
                       </div>

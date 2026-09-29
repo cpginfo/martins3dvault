@@ -147,6 +147,72 @@ export default function Sidebar({
   const collectionsOpen =
     collectionsExpanded !== null ? collectionsExpanded : pathname.startsWith("/collections");
   const [currentSearch, setCurrentSearch] = useState("");
+  const [sidebarWidth, setSidebarWidth] = useState<number>(288);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Carrega largura salva do localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("martins3d_sidebar_width");
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 220 && parsed <= 600) {
+          setSidebarWidth(parsed);
+          document.documentElement.style.setProperty("--sidebar-width", `${parsed}px`);
+        }
+      } else {
+        document.documentElement.style.setProperty("--sidebar-width", "288px");
+      }
+    } catch {}
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  const handleResetWidth = () => {
+    setSidebarWidth(288);
+    document.documentElement.style.setProperty("--sidebar-width", "288px");
+    try {
+      localStorage.setItem("martins3d_sidebar_width", "288");
+    } catch {}
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const newWidth = Math.min(600, Math.max(220, e.clientX));
+      setSidebarWidth(newWidth);
+      document.documentElement.style.setProperty("--sidebar-width", `${newWidth}px`);
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing) {
+        setIsResizing(false);
+        try {
+          localStorage.setItem("martins3d_sidebar_width", sidebarWidth.toString());
+        } catch {}
+      }
+    };
+
+    if (isResizing) {
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    } else {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing, sidebarWidth]);
 
   useEffect(() => {
     const updateSearch = () => {
@@ -304,12 +370,25 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-full bg-surface-container-low z-50 flex flex-col justify-between shadow-2xl lg:shadow-[0_1px_8px_rgba(0,0,0,0.5)] border-r border-white/5 transition-transform duration-300 ease-in-out lg:transition-all ${
-          isCollapsed ? "lg:w-20" : "lg:w-72"
+        className={`fixed left-0 top-0 h-full bg-surface-container-low z-50 flex flex-col justify-between shadow-2xl lg:shadow-[0_1px_8px_rgba(0,0,0,0.5)] border-r border-white/5 transition-transform duration-300 ease-in-out ${
+          isResizing ? "transition-none select-none" : "lg:transition-all"
+        } ${
+          isCollapsed ? "lg:w-20" : "sidebar-width-dynamic"
         } w-72 max-w-[85vw] ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
+        {/* Resizer Handle no Desktop */}
+        {!isCollapsed && (
+          <div
+            onMouseDown={handleMouseDown}
+            onDoubleClick={handleResetWidth}
+            className="hidden lg:flex absolute top-0 -right-1 w-2.5 h-full cursor-col-resize hover:bg-primary-container/30 active:bg-primary-container transition-colors z-50 items-center justify-center group"
+            title="Arraste para redimensionar a barra lateral (Duplo clique para restaurar 288px)"
+          >
+            <div className="w-0.5 h-8 bg-white/20 group-hover:bg-primary-container group-hover:scale-y-125 rounded-full transition-all" />
+          </div>
+        )}
         {/* Top Header & Brand */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="h-16 px-4 flex items-center justify-between bg-surface-container-lowest border-b border-white/5 flex-shrink-0">

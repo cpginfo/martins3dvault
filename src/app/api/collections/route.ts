@@ -33,6 +33,34 @@ export async function GET(request: Request) {
       orderBy: { name: "asc" },
     });
 
+    // Mapeamento de relações para contagem recursiva (incluindo todas as subpastas)
+    const childrenMap = new Map<string, string[]>();
+    const directCountMap = new Map<string, number>();
+
+    collections.forEach((c) => {
+      directCountMap.set(c.id, c._count.models);
+      if (c.parentId) {
+        const list = childrenMap.get(c.parentId) || [];
+        list.push(c.id);
+        childrenMap.set(c.parentId, list);
+      }
+    });
+
+    const recursiveCountMemo = new Map<string, number>();
+    function getRecursiveModelsCount(id: string, visited = new Set<string>()): number {
+      if (recursiveCountMemo.has(id)) return recursiveCountMemo.get(id)!;
+      if (visited.has(id)) return 0;
+      visited.add(id);
+
+      let total = directCountMap.get(id) || 0;
+      const childIds = childrenMap.get(id) || [];
+      for (const childId of childIds) {
+        total += getRecursiveModelsCount(childId, visited);
+      }
+      recursiveCountMemo.set(id, total);
+      return total;
+    }
+
     // Se coverImage da coleção for nula, usa a capa do primeiro modelo com capa
     const enriched = collections.map((col) => {
       let cover = col.coverImage;
@@ -50,7 +78,8 @@ export async function GET(request: Request) {
         parentId: col.parentId,
         description: col.description,
         coverImage: cover,
-        modelsCount: col._count.models,
+        modelsCount: getRecursiveModelsCount(col.id),
+        directModelsCount: col._count.models,
         childrenCount: col._count.children,
         previewThumbnails: col.models.map((m) => m.coverImage).filter(Boolean),
         createdAt: col.createdAt,

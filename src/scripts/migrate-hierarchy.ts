@@ -13,7 +13,6 @@ const IGNORED_DIRS = new Set([
   "__macosx",
   ".ds_store",
   "thumbs.db",
-  "cache",
 ]);
 
 async function main() {
@@ -116,6 +115,25 @@ async function main() {
       return leafCol;
     }
 
+    // Helper para verificar se diretório tem arquivos 3D
+    function has3dFilesInDir(dirPath: string): boolean {
+      try {
+        if (!fs.existsSync(dirPath)) return false;
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name.startsWith(".") || IGNORED_DIRS.has(entry.name.toLowerCase())) continue;
+          if (entry.isDirectory()) {
+            const fullSub = path.join(dirPath, entry.name);
+            if (has3dFilesInDir(fullSub)) return true;
+          } else if (entry.isFile()) {
+            const ext = path.extname(entry.name).toLowerCase();
+            if (SUPPORTED_3D_EXTENSIONS.has(ext)) return true;
+          }
+        }
+      } catch {}
+      return false;
+    }
+
     // Varre todas as pastas da biblioteca
     async function scanDirs(currentDir: string) {
       let entries: fs.Dirent[];
@@ -126,7 +144,7 @@ async function main() {
       }
 
       const relDir = path.relative(libRoot, currentDir) || ".";
-      if (relDir !== ".") {
+      if (relDir !== "." && has3dFilesInDir(currentDir)) {
         await ensureHierarchy(relDir);
       }
 

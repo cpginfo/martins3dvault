@@ -93,8 +93,8 @@ export default function Navbar({
   return (
     <>
       <header
-        className={`fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] border-b border-white/5 z-40 flex items-center justify-between px-3 sm:px-6 transition-all duration-300 left-0 ${
-          isSidebarCollapsed ? "lg:left-20" : "lg:left-72"
+        className={`fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] border-b border-white/5 z-40 flex items-center justify-between px-3 sm:px-6 transition-all duration-150 left-0 ${
+          isSidebarCollapsed ? "lg:left-20" : "sidebar-left-dynamic"
         }`}
       >
         {/* Mobile Hamburger & Search Input Group */}

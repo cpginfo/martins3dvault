@@ -5,6 +5,34 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.15.0] - 2026-09-29
+
+### Adicionado / Coleções, UX & Resiliência
+- **Exibição em Lista & Controles na Árvore de Coleções (`src/app/collections/page.tsx`)**:
+  - Nova opção de visualização **Modo Lista** na tela de Coleções, apresentando tabela tabular detalhada com capas, links diretos, caminho físico da pasta no disco, total consolidado de arquivos 3D, quantidade de subpastas, descrição e ações.
+  - Botões **Recolher Todos** e **Expandir Todos** adicionados na visualização em Árvore, propagando estado recursivo para todos os níveis hierárquicos em cascata.
+- **Barra Lateral (Sidebar) Redimensionável no Desktop (`Sidebar.tsx`, `Navbar.tsx` e `globals.css`)**:
+  - Drag handle interativo na borda direita da Sidebar no PC (`cursor-col-resize`), permitindo redimensionar entre 220px e 600px para visualizar confortavelmente estruturas de pastas profundas.
+  - Duplo clique na alça para restaurar instantaneamente a largura padrão (288px).
+  - Persistência automática da largura no `localStorage` do navegador (`martins3d_sidebar_width`).
+  - Sincronização a 60 FPS com a Navbar e com o padding de todas as páginas através de variável CSS nativa `--sidebar-width` e media query `@media (min-width: 1024px)`, mantendo o comportamento móvel 100% intacto.
+- **Exclusão Física de Pastas ao Deletar Coleção (`file-ops.ts` e `collections/[id]/route.ts`)**:
+  - Implementada a função `deleteCollectionFolder` que remove com segurança e recursivamente a pasta correspondente no disco físico do repositório/biblioteca ao excluir a coleção.
+  - Proteções rigorosas contra Path Traversal e bloqueio de exclusão em pastas raiz ou coleções do sistema (`download`).
+- **Contador Recursivo Consolidado de Arquivos 3D (`collections/route.ts` e `collections/[id]/route.ts`)**:
+  - O contador de modelos da coleção (`modelsCount`) agora calcula de forma recursiva e otimizada (memoização $O(N)$) o total de arquivos somando todos os modelos diretos e de todas as suas subpastas filhas em qualquer profundidade.
+  - Banner de detalhes da coleção exibindo `X arquivos no total` e `Y nesta pasta` quando existem subpastas.
+- **Isolamento Estrito da Pasta de Cache & Filtro de Arquivos 3D (`crawler.ts` e `migrate-hierarchy.ts`)**:
+  - Remoção de `"cache"` da lista de diretórios ignorados genéricos. O crawler ignora única e exclusivamente a pasta interna de cache do sistema resolvida em `STORAGE_DATA_PATH/cache` (ou `./data/cache`).
+  - Coleções e subpastas só são criadas ou mantidas no banco de dados se possuírem arquivos 3D suportados (`.3mf`, `.stl`, `.obj`, `.step`, `.stp`). Pastas vazias ou com outros arquivos soltos são ignoradas e limpas automaticamente.
+- **Resolução de Erro 429 & Otimização do Limitador de Concorrência (`api/assets/file`, `concurrency-limiter.ts` e `metrics`)**:
+  - Isenção de imagens estáticas de preview (`.jpg`, `.png`, `.webp`, `.svg`) do limitador de concorrência de downloads, eliminando o acionamento indevido de erros 429 ao navegar em pastas com dezenas de miniaturas.
+  - Ampliação do limite de downloads concorrentes para **ADMIN (até 30 conexões)** e **OPERATOR (até 16)**, com capacidade global do servidor expandida para **30 slots**.
+  - Isenção de administradores e operadores do bloqueio por Circuit Breaker.
+  - Novo endpoint `POST /api/security/circuit-breaker/reset` e botão **"Liberar"** adicionado ao card do Circuit Breaker na página de Métricas para desbloquear usuários em quarentena imediatamente.
+
+---
+
 ## [1.14.0] - 2026-09-29
 
 ### Adicionado / Monitoramento & Varredura em Tempo Real

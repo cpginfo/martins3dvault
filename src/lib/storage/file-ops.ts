@@ -745,3 +745,60 @@ export async function renameCollectionFolder(collectionId: string, newName: stri
   return updatedCol;
 }
 
+/**
+ * Remove fisicamente a pasta de uma coleção do disco da biblioteca.
+ * Inclui proteções rigorosas contra exclusão da raiz da biblioteca ou da pasta do sistema.
+ */
+export async function deleteCollectionFolder(
+  collectionId: string
+): Promise<{ success: boolean; deletedPaths: string[] }> {
+  const col = await prisma.collection.findUnique({
+    where: { id: collectionId },
+    select: { id: true, name: true, slug: true, folderPath: true, parentId: true },
+  });
+
+  if (!col) {
+    return { success: false, deletedPaths: [] };
+  }
+
+  // Coleções de sistema nunca devem ter suas pastas excluídas fisicamente
+  if (col.slug === "download") {
+    return { success: false, deletedPaths: [] };
+  }
+
+  const relFolderPath = col.folderPath || (await getCollectionFolderPath(col.id));
+
+  // Trava de segurança: impede exclusão da raiz ou caminhos inválidos
+  const normalizedRel = path.normalize(relFolderPath).replace(/^(\.\.[\/\\])+/, "");
+  if (!normalizedRel || normalizedRel === "." || normalizedRel === "/" || normalizedRel === "\\") {
+    console.warn(`[deleteCollectionFolder] Abortando: caminho relativo inválido para exclusão: '${relFolderPath}'`);
+    return { success: false, deletedPaths: [] };
+  }
+
+  const libraries = await prisma.library.findMany({ where: { enabled: true } });
+  const deletedPaths: string[] = [];
+
+  for (const lib of libraries) {
+    const libRoot = path.resolve(lib.path);
+    const targetDir = path.resolve(libRoot, normalizedRel);
+
+    // Validação estrita de Path Traversal: o diretório DEVE estar estritamente dentro da raiz da biblioteca
+    if (!targetDir.startsWith(libRoot + path.sep)) {
+      console.warn(`[deleteCollectionFolder] Abortando: path traversal detectado em '${targetDir}' fora de '${libRoot}'`);
+      continue;
+    }
+
+    try {
+      if (fs.existsSync(targetDir)) {
+        await fs.promises.rm(targetDir, { recursive: true, force: true });
+        deletedPaths.push(targetDir);
+        console.log(`[deleteCollectionFolder] 🗑️ Pasta física excluída com sucesso: ${targetDir}`);
+      }
+    } catch (err: any) {
+      console.error(`[deleteCollectionFolder] ❌ Erro ao remover pasta '${targetDir}':`, err.message);
+    }
+  }
+
+  return { success: deletedPaths.length > 0, deletedPaths };
+}
+

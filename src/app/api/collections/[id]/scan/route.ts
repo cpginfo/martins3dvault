@@ -82,6 +82,14 @@ export async function POST(
       targetLibraryId = libraries[0].id;
     }
 
+    const targetLib = libraries.find((l) => l.id === targetLibraryId);
+    if (targetLib?.scanStatus === "SCANNING") {
+      return NextResponse.json(
+        { error: "Uma varredura já está em andamento para esta biblioteca" },
+        { status: 409 }
+      );
+    }
+
     // Executa o scan incremental cirúrgico
     const stats = await scanLibrary(targetLibraryId, {
       subFolder: targetSubFolder,

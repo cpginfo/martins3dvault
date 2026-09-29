@@ -40,22 +40,28 @@ export async function GET(request: Request) {
       return new NextResponse("Parâmetros inválidos", { status: 400 });
     }
 
-    // 1. Controle de concorrência por usuário (máx. 3) e global (máx. 15)
-    slot = acquireDownloadSlot(user.id, user.role);
-    if (!slot.allowed) {
-      logDownloadEvent({
-        userId: user.id,
-        userEmail: user.email,
-        filePath: relPath,
-        result: "RATE_LIMITED_429",
-        statusCode: slot.statusCode || 429,
-        message: slot.message,
-      });
+    // Detecta se é apenas uma imagem de capa/preview para exibição na UI
+    const ext = path.extname(relPath).toLowerCase();
+    const isImagePreview = !download && [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".ico"].includes(ext);
 
-      return NextResponse.json(
-        { error: slot.message },
-        { status: slot.statusCode || 429, headers: { "Retry-After": "5" } }
-      );
+    // Controle de concorrência aplica-se apenas a downloads explícitos ou arquivos pesados (modelos 3D, manuais, etc.)
+    if (!isImagePreview) {
+      slot = acquireDownloadSlot(user.id, user.role);
+      if (!slot.allowed) {
+        logDownloadEvent({
+          userId: user.id,
+          userEmail: user.email,
+          filePath: relPath,
+          result: "RATE_LIMITED_429",
+          statusCode: slot.statusCode || 429,
+          message: slot.message,
+        });
+
+        return NextResponse.json(
+          { error: slot.message },
+          { status: slot.statusCode || 429, headers: { "Retry-After": "5" } }
+        );
+      }
     }
 
     const library = await prisma.library.findUnique({
@@ -104,8 +110,8 @@ export async function GET(request: Request) {
       return new NextResponse("Recurso inválido", { status: 400 });
     }
 
-    const ext = path.extname(fullPath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    const fileExt = path.extname(fullPath).toLowerCase();
+    const contentType = MIME_TYPES[fileExt] || "application/octet-stream";
     const fileName = path.basename(fullPath);
 
     // Cria stream com throttling opcional de banda
@@ -113,17 +119,19 @@ export async function GET(request: Request) {
     const throttler = createBandwidthThrottler();
     const outputStream = throttler ? fileStream.pipe(throttler) : fileStream;
 
-    // Vincula a liberação do slot ao encerramento ou aborto da conexão
-    slot.bindToStream(outputStream, request.signal);
-    streamStarted = true;
+    // Vincula a liberação do slot ao encerramento ou aborto da conexão caso slot tenha sido alocado
+    if (slot) {
+      slot.bindToStream(outputStream, request.signal);
+      streamStarted = true;
 
-    logDownloadEvent({
-      userId: user.id,
-      userEmail: user.email,
-      filePath: safeRelPath,
-      result: "SUCCESS",
-      statusCode: 200,
-    });
+      logDownloadEvent({
+        userId: user.id,
+        userEmail: user.email,
+        filePath: safeRelPath,
+        result: "SUCCESS",
+        statusCode: 200,
+      });
+    }
 
     const readable = Readable.toWeb(outputStream as Readable) as ReadableStream;
 

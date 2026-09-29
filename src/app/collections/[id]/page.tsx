@@ -29,6 +29,8 @@ interface CollectionDetail {
   coverImage: string | null;
   parentId?: string | null;
   folderPath?: string | null;
+  modelsCount?: number;
+  directModelsCount?: number;
   breadcrumbs?: Array<{ id: string; name: string; slug: string }>;
   parent?: { id: string; name: string; slug: string; parentId: string | null; folderPath: string | null } | null;
   children?: Array<{
@@ -37,6 +39,8 @@ interface CollectionDetail {
     slug: string;
     folderPath: string | null;
     coverImage: string | null;
+    modelsCount?: number;
+    directModelsCount?: number;
     _count: { models: number; children: number };
   }>;
   models: ModelCardData[];
@@ -470,7 +474,7 @@ export default function CollectionDetailPage(props: {
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
-          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+          isSidebarCollapsed ? "lg:pl-20" : "sidebar-pl-dynamic"
         }`}
       >
         <Navbar
@@ -564,8 +568,13 @@ export default function CollectionDetailPage(props: {
                   </p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="px-2 py-0.5 rounded bg-surface-container-highest text-secondary text-[11px] font-mono">
-                      {collection?.models.length || 0} arquivos vinculados
+                      {collection?.modelsCount !== undefined ? collection.modelsCount : collection?.models.length || 0} arquivos no total
                     </span>
+                    {collection?.children && collection.children.length > 0 && (
+                      <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-[11px] font-mono border border-white/5">
+                        {collection?.models.length || 0} nesta pasta
+                      </span>
+                    )}
                     {filteredModels.length !== (collection?.models?.length || 0) && (
                       <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-[11px] font-mono border border-white/5">
                         {filteredModels.length} filtrados
@@ -592,7 +601,7 @@ export default function CollectionDetailPage(props: {
                   <span className="text-[11px] text-outline font-mono">Pastas aninhadas</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {collection.children.map((child) => (
+                  {collection.children.map((child: any) => (
                     <Link
                       key={child.id}
                       href={`/collections/${child.id}`}
@@ -610,7 +619,7 @@ export default function CollectionDetailPage(props: {
                         {child.name}
                       </span>
                       <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono text-on-surface-variant">
-                        <span>{child._count.models} modelos</span>
+                        <span>{child.modelsCount !== undefined ? child.modelsCount : child._count.models} modelos</span>
                         {child._count.children > 0 && (
                           <>
                             <span>•</span>

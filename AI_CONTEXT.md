@@ -298,6 +298,25 @@ O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/sr
    - O endpoint `/api/stats` expandiu o histórico para até 20 registros e expõe o campo `trigger`.
    - A tabela do histórico renderiza badges visuais `⚡ Automática (Boot)` (em ciano) e `👤 Manual` (em laranja), detalha balanço de alterações (`+novos`, `~alterados`, `-removidos`) e calcula a duração da varredura.
 
+### S. Coleções Avançadas, UX Desktop, Exclusão Física & Resiliência 429 (`v1.15.0`)
+1. **Coleções Apenas com Arquivos 3D & Isolamento de Cache (`src/lib/scanner/crawler.ts`)**:
+   - O diretório `cache` foi removido de `IGNORED_DIRS` genérico; o crawler agora ignora exclusivamente a pasta resolvida em `STORAGE_DATA_PATH/cache`.
+   - Coleções e subpastas só são criadas se contiverem arquivos 3D (`.stl`, `.3mf`, `.obj`, `.step`, `.stp`). Pastas sem arquivos 3D são automaticamente descartadas e limpas do banco.
+2. **Modo Lista & Controles na Árvore de Coleções (`src/app/collections/page.tsx`)**:
+   - Adicionada opção de exibição por **Lista** com tabela completa (capa, link, caminho no disco, arquivos 3D, subpastas, descrição e ações).
+   - Botões **Recolher Todos** e **Expandir Todos** com propagação recursiva em cascata via `expandAllSignal`.
+3. **Barra Lateral (Sidebar) Redimensionável no Desktop (`Sidebar.tsx`, `Navbar.tsx`, `globals.css`)**:
+   - Drag handle vertical interativo na borda direita da Sidebar (`cursor-col-resize`), ajustável entre 220px e 600px com restauração em duplo clique e persistência em `localStorage`.
+   - Classes utilitárias `@media (min-width: 1024px)` (`sidebar-width-dynamic`, `sidebar-left-dynamic`, `sidebar-pl-dynamic`) via CSS Variable `--sidebar-width`, mantendo 60 FPS e mobile 100% preservado.
+4. **Exclusão Física Automática no Disco (`src/lib/storage/file-ops.ts` e `collections/[id]/route.ts`)**:
+   - Função `deleteCollectionFolder` que remove fisicamente a pasta no disco do armazenamento ao deletar a coleção, com validação anti-Path Traversal e proteção de coleções reservadas (`download`).
+5. **Contador Recursivo de Arquivos 3D (`collections/route.ts` e `collections/[id]/route.ts`)**:
+   - Algoritmo de memoização $O(N)$ somando arquivos diretos e de todas as subpastas da coleção recursivamente.
+6. **Resolução de Erro 429 & Otimização do Limitador de Concorrência (`src/lib/security/concurrency-limiter.ts` e `api/assets/file`)**:
+   - Isenção total de imagens de preview do limitador de download.
+   - Limites ampliados para ADMIN (30), OPERATOR (16), USER (8) e Global (30).
+   - Imunidade para ADMIN e OPERATOR no Circuit Breaker, e rota `POST /api/security/circuit-breaker/reset` com botão "Liberar" na interface de Métricas.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto

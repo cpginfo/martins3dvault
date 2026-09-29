@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth, requireOperator, handleAuthError } from "@/lib/auth/session";
-import { renameCollectionFolder } from "@/lib/storage/file-ops";
+import { renameCollectionFolder, deleteCollectionFolder } from "@/lib/storage/file-ops";
 
 export async function GET(
   request: Request,
@@ -74,6 +74,44 @@ export async function GET(
       currParentId = p.parentId;
     }
 
+    // Calcula contagem recursiva de modelos incluindo subpastas
+    const allCollections = await prisma.collection.findMany({
+      select: { id: true, parentId: true, _count: { select: { models: true } } },
+    });
+
+    const childrenMap = new Map<string, string[]>();
+    const directCountMap = new Map<string, number>();
+
+    allCollections.forEach((c) => {
+      directCountMap.set(c.id, c._count.models);
+      if (c.parentId) {
+        const list = childrenMap.get(c.parentId) || [];
+        list.push(c.id);
+        childrenMap.set(c.parentId, list);
+      }
+    });
+
+    const recursiveCountMemo = new Map<string, number>();
+    function getRecursiveModelsCount(targetId: string, visited = new Set<string>()): number {
+      if (recursiveCountMemo.has(targetId)) return recursiveCountMemo.get(targetId)!;
+      if (visited.has(targetId)) return 0;
+      visited.add(targetId);
+
+      let total = directCountMap.get(targetId) || 0;
+      const childIds = childrenMap.get(targetId) || [];
+      for (const childId of childIds) {
+        total += getRecursiveModelsCount(childId, visited);
+      }
+      recursiveCountMemo.set(targetId, total);
+      return total;
+    }
+
+    const sanitizedChildren = collection.children.map((child) => ({
+      ...child,
+      modelsCount: getRecursiveModelsCount(child.id),
+      directModelsCount: child._count.models,
+    }));
+
     const sanitizedModels = collection.models.map((m) => ({
       ...m,
       files: m.files.map((f) => ({
@@ -84,6 +122,9 @@ export async function GET(
 
     return NextResponse.json({
       ...collection,
+      children: sanitizedChildren,
+      modelsCount: getRecursiveModelsCount(collection.id),
+      directModelsCount: collection._count.models,
       breadcrumbs,
       models: sanitizedModels,
     });
@@ -144,9 +185,20 @@ export async function DELETE(
 
     const { id } = await props.params;
 
-    // Prisma já está configurado com onDelete: SetNull na relação collection -> models
+    const existing = await prisma.collection.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Coleção não encontrada" }, { status: 404 });
+    }
+
+    // 1. Exclui a pasta física no disco da biblioteca com segurança
+    await deleteCollectionFolder(existing.id);
+
+    // 2. Remove a coleção do banco de dados (Prisma cuida dos modelos com SetNull)
     await prisma.collection.delete({
-      where: { id },
+      where: { id: existing.id },
     });
 
     return NextResponse.json({ success: true });

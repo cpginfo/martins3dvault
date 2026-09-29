@@ -2,8 +2,8 @@ import pLimit from "p-limit";
 import type { Readable } from "stream";
 import type { UserRole } from "@/lib/auth/session";
 
-export const MAX_GLOBAL_CONCURRENT = 15;
-export const MAX_USER_CONCURRENT = 3;
+export const MAX_GLOBAL_CONCURRENT = parseInt(process.env.MAX_GLOBAL_CONCURRENT || "30", 10);
+export const MAX_USER_CONCURRENT = parseInt(process.env.MAX_USER_CONCURRENT || "8", 10);
 
 // Instância do p-limit para controle global de promessas/tarefas
 export const globalLimiter = pLimit(MAX_GLOBAL_CONCURRENT);
@@ -24,7 +24,7 @@ interface CircuitBreakerEntry {
 const circuitBreakers = new Map<string, CircuitBreakerEntry>();
 
 // Configurações do Circuit Breaker (FASE 4)
-const CB_STRIKE_THRESHOLD = 10; // 10 violações 429
+const CB_STRIKE_THRESHOLD = 15; // 15 violações 429
 const CB_WINDOW_MS = 5 * 60 * 1000; // dentro de 5 minutos
 const CB_BLOCK_DURATION_MS = 15 * 60 * 1000; // bloqueio de 15 minutos
 
@@ -38,13 +38,31 @@ export interface ConcurrencySlot {
 }
 
 /**
- * Retorna o limite de concorrência permitido de acordo com o papel do usuário (FASE 5)
+ * Reseta o Circuit Breaker de um usuário ou de todos os usuários
+ */
+export function resetCircuitBreaker(userId?: string): { success: boolean; unblockedCount: number } {
+  let count = 0;
+  if (userId) {
+    if (circuitBreakers.has(userId)) {
+      circuitBreakers.delete(userId);
+      count++;
+    }
+  } else {
+    count = circuitBreakers.size;
+    circuitBreakers.clear();
+  }
+  return { success: true, unblockedCount: count };
+}
+
+/**
+ * Retorna o limite de concorrência permitido de acordo com o papel do usuário
  */
 export function getLimitForRole(role?: UserRole | string): number {
   switch (role) {
     case "ADMIN":
-      return MAX_USER_CONCURRENT; // Pode ser estendido no futuro se desejado
+      return Math.max(MAX_USER_CONCURRENT * 4, 30);
     case "OPERATOR":
+      return Math.max(MAX_USER_CONCURRENT * 2, 16);
     case "USER":
     case "EDITOR":
       return MAX_USER_CONCURRENT;
@@ -60,10 +78,11 @@ export function getLimitForRole(role?: UserRole | string): number {
  */
 export function acquireDownloadSlot(userId: string, role?: UserRole | string): ConcurrencySlot {
   const now = Date.now();
+  const isAdminOrOperator = role === "ADMIN" || role === "OPERATOR";
 
-  // 1. Verifica se o usuário está sob bloqueio temporário do Circuit Breaker (FASE 4)
+  // 1. Verifica se o usuário está sob bloqueio temporário do Circuit Breaker (ignorado para administradores e operadores)
   const cb = circuitBreakers.get(userId);
-  if (cb?.blockedUntil && cb.blockedUntil > now) {
+  if (!isAdminOrOperator && cb?.blockedUntil && cb.blockedUntil > now) {
     const remainingMinutes = Math.ceil((cb.blockedUntil - now) / 60000);
     const message = `Acesso temporariamente bloqueado por exceder repetidamente os limites de concorrência. Tente novamente em ${remainingMinutes} minutos.`;
     return {
@@ -81,7 +100,7 @@ export function acquireDownloadSlot(userId: string, role?: UserRole | string): C
     cb.strikes = [];
   }
 
-  // 2. Verifica Limite de Concorrência Global (máximo 15 no processo)
+  // 2. Verifica Limite de Concorrência Global
   if (globalActiveSlots >= MAX_GLOBAL_CONCURRENT) {
     return {
       allowed: false,
@@ -92,13 +111,15 @@ export function acquireDownloadSlot(userId: string, role?: UserRole | string): C
     };
   }
 
-  // 3. Verifica Limite de Concorrência por Usuário (máximo 3)
+  // 3. Verifica Limite de Concorrência por Usuário
   const currentCount = userActiveSlots.get(userId) || 0;
   const userLimit = getLimitForRole(role);
 
   if (currentCount >= userLimit) {
-    // Registra strike no Circuit Breaker
-    recordCircuitBreakerStrike(userId);
+    // Registra strike no Circuit Breaker apenas para usuários comuns
+    if (!isAdminOrOperator) {
+      recordCircuitBreakerStrike(userId);
+    }
 
     const message = `Limite de downloads simultâneos atingido (máx. ${userLimit}). Aguarde um dos downloads em andamento finalizar.`;
     return {

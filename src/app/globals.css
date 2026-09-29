@@ -273,3 +273,20 @@ html.light .glass-card:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* Largura Dinâmica da Barra Lateral (Desktop) */
+:root {
+  --sidebar-width: 288px;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-width-dynamic {
+    width: var(--sidebar-width, 288px) !important;
+  }
+  .sidebar-pl-dynamic {
+    padding-left: var(--sidebar-width, 288px) !important;
+  }
+  .sidebar-left-dynamic {
+    left: var(--sidebar-width, 288px) !important;
+  }
+}

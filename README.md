@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.14.0)
+# Martins3DVault 🖨️✨ (v1.15.0)
 
 <div align="center">
 
@@ -36,6 +36,17 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 📂 **Gestão Avançada de Coleções & Navegação Flexível (`/collections`)**:
+  - Três modos de visualização integrados: **Grade**, **Lista** (com tabela completa com capas, subpastas, contadores e ações) e **Árvore**.
+  - Controles de **Recolher Todos** e **Expandir Todos** com propagação recursiva em cascata para toda a estrutura de pastas.
+  - **Barra Lateral Redimensionável**: alça interativa no PC (220px a 600px), restauração com duplo clique e persistência no navegador.
+  - **Exclusão Física Automática no Disco**: ao remover uma coleção pelo sistema, sua pasta no armazenamento é removida com proteção estrita contra Directory Traversal.
+  - **Contador Recursivo de Arquivos**: cálculo automático do total consolidado de modelos 3D somando todas as subpastas.
+
+- 🛡️ **Segurança e Alta Disponibilidade de Assets & Previews**:
+  - Isenção de imagens estáticas de preview do limitador de concorrência, acabando com erros 429 durante a navegação em pastas grandes.
+  - Limites de download expandidos para Administradores (até 30 conexões simultâneas) e botão de reset imediato do Circuit Breaker em Métricas.
 
 - 📊 **Monitoramento de Varredura em Tempo Real & Histórico Inteligente (`/metrics`)**:
   - Redirecionamento instantâneo para a tela de **Métricas dos Arquivos** ao clicar em "Escanear Agora", oferecendo visibilidade completa da operação.

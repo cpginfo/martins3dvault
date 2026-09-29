@@ -240,7 +240,7 @@ export default function UsersPage() {
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
-          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+          isSidebarCollapsed ? "lg:pl-20" : "sidebar-pl-dynamic"
         }`}
       >
         <Navbar

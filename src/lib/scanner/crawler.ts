@@ -24,8 +24,25 @@ const IGNORED_DIRS = new Set([
   "__macosx",
   ".ds_store",
   "thumbs.db",
-  "cache",
 ]);
+
+export function has3dFilesInDirSync(dirPath: string): boolean {
+  try {
+    if (!fs.existsSync(dirPath)) return false;
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith(".") || IGNORED_DIRS.has(entry.name.toLowerCase())) continue;
+      if (entry.isDirectory()) {
+        const fullSub = path.join(dirPath, entry.name);
+        if (has3dFilesInDirSync(fullSub)) return true;
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (SUPPORTED_3D_EXTENSIONS.has(ext)) return true;
+      }
+    }
+  } catch {}
+  return false;
+}
 
 export interface ScanStats {
   scannedFolders: number;
@@ -106,28 +123,36 @@ export async function scanLibrary(
     errors: [],
   };
 
-  const storageDataPath = process.env.STORAGE_DATA_PATH || "./data";
+    const storageDataPath = process.env.STORAGE_DATA_PATH || "./data";
+    const resolvedDataCache = path.resolve(storageDataPath, "cache");
+    const resolvedDataPath = path.resolve(storageDataPath);
 
-  try {
-    const rootPath = path.resolve(library.path);
-    if (!fs.existsSync(rootPath)) {
-      throw new Error(`Caminho da biblioteca não existe: ${rootPath}`);
-    }
+    try {
+      const rootPath = path.resolve(library.path);
+      if (!fs.existsSync(rootPath)) {
+        throw new Error(`Caminho da biblioteca não existe: ${rootPath}`);
+      }
 
-    // Define o ponto de partida do walk (toda a biblioteca ou uma subpasta específica)
-    let scanStartDir = rootPath;
-    if (options?.subFolder) {
-      const normalizedSub = options.subFolder.replace(/\\/g, "/");
-      const subParts = normalizedSub.split("/").filter((p) => p && p !== ".");
-      if (subParts.some((p) => IGNORED_DIRS.has(p.toLowerCase()))) {
-        // Se a subpasta requisitada for um diretório ignorado (ex: cache), aborta sem escanear
-        return stats;
+      // Define o ponto de partida do walk (toda a biblioteca ou uma subpasta específica)
+      let scanStartDir = rootPath;
+      if (options?.subFolder) {
+        const normalizedSub = options.subFolder.replace(/\\/g, "/");
+        const subParts = normalizedSub.split("/").filter((p) => p && p !== ".");
+        if (subParts.some((p) => IGNORED_DIRS.has(p.toLowerCase()))) {
+          return stats;
+        }
+        scanStartDir = path.resolve(rootPath, options.subFolder);
+        if (
+          scanStartDir === resolvedDataCache ||
+          scanStartDir.startsWith(resolvedDataCache + path.sep) ||
+          scanStartDir === resolvedDataPath
+        ) {
+          return stats;
+        }
+        if (!fs.existsSync(scanStartDir)) {
+          throw new Error(`Subpasta não encontrada: ${options.subFolder}`);
+        }
       }
-      scanStartDir = path.resolve(rootPath, options.subFolder);
-      if (!fs.existsSync(scanStartDir)) {
-        throw new Error(`Subpasta não encontrada: ${options.subFolder}`);
-      }
-    }
 
     // Cache de coleções existentes no banco
     const collections = await prisma.collection.findMany();
@@ -262,7 +287,16 @@ export async function scanLibrary(
         }
 
         if (entry.isDirectory()) {
-          subDirs.push(path.join(currentDir, name));
+          const fullSubDir = path.resolve(currentDir, name);
+          // Ignora APENAS se for exatamente o cache do sistema em STORAGE_DATA_PATH
+          if (
+            fullSubDir === resolvedDataCache ||
+            fullSubDir.startsWith(resolvedDataCache + path.sep) ||
+            fullSubDir === resolvedDataPath
+          ) {
+            continue;
+          }
+          subDirs.push(fullSubDir);
         } else if (entry.isFile()) {
           filesInDir.push(name);
         }
@@ -869,7 +903,26 @@ export async function scanLibrary(
             }
           });
 
-        if (!folderExists) {
+        // A coleção só deve ser mantida se sua pasta existir E se ela possuir arquivos 3D (.stl, .3mf, .obj, etc.)
+        // direta ou indiretamente em subpastas vinculadas
+        const hasDiscovered3dFiles = discoveredTargets.some(
+          (t) =>
+            t.collectionPath === colFolderPath ||
+            t.collectionPath?.startsWith(colFolderPath + "/") ||
+            t.collectionPath?.startsWith(colFolderPath + "\\")
+        );
+
+        const has3dOnDisk =
+          hasDiscovered3dFiles ||
+          allLibraries.some((lib) => {
+            const libRoot = path.resolve(lib.path);
+            const fullPath = path.join(libRoot, colFolderPath);
+            return has3dFilesInDirSync(fullPath);
+          });
+
+        const shouldDelete = !folderExists || !has3dOnDisk;
+
+        if (shouldDelete) {
           try {
             // Desassocia modelos da coleção removida
             const lingeringModels = await prisma.model.findMany({

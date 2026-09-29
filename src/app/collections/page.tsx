@@ -25,14 +25,22 @@ function CollectionTreeCard({
   onEdit,
   onDelete,
   level = 0,
+  expandAllSignal,
 }: {
   col: CollectionItem;
   onEdit: (col: CollectionItem, e: React.MouseEvent) => void;
   onDelete: (id: string, name: string, e: React.MouseEvent) => void;
   level?: number;
+  expandAllSignal?: { expanded: boolean; timestamp: number } | null;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = col.children && col.children.length > 0;
+
+  useEffect(() => {
+    if (expandAllSignal) {
+      setIsExpanded(expandAllSignal.expanded);
+    }
+  }, [expandAllSignal]);
 
   return (
     <div className="flex flex-col">
@@ -117,6 +125,7 @@ function CollectionTreeCard({
               onEdit={onEdit}
               onDelete={onDelete}
               level={level + 1}
+              expandAllSignal={expandAllSignal}
             />
           ))}
         </div>
@@ -133,7 +142,8 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCol, setEditingCol] = useState<CollectionItem | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "tree">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "tree">("grid");
+  const [expandAllSignal, setExpandAllSignal] = useState<{ expanded: boolean; timestamp: number } | null>(null);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -290,8 +300,8 @@ export default function CollectionsPage() {
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
-          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+        className={`flex-1 flex flex-col transition-all duration-150 pl-0 ${
+          isSidebarCollapsed ? "lg:pl-20" : "sidebar-pl-dynamic"
         }`}
       >
         <Navbar
@@ -419,11 +429,11 @@ export default function CollectionsPage() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                {/* View Mode Toggle: Grid vs Tree */}
+                {/* View Mode Toggle: Grid vs List vs Tree */}
                 <div className="flex items-center p-0.5 rounded-lg bg-surface-container-high border border-white/5">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       viewMode === "grid"
                         ? "bg-primary-container text-on-primary font-bold shadow-sm"
                         : "text-on-surface-variant hover:text-on-surface"
@@ -434,8 +444,20 @@ export default function CollectionsPage() {
                     <span>Grade</span>
                   </button>
                   <button
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                      viewMode === "list"
+                        ? "bg-primary-container text-on-primary font-bold shadow-sm"
+                        : "text-on-surface-variant hover:text-on-surface"
+                    }`}
+                    title="Visualização em Lista"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+                    <span>Lista</span>
+                  </button>
+                  <button
                     onClick={() => setViewMode("tree")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       viewMode === "tree"
                         ? "bg-primary-container text-on-primary font-bold shadow-sm"
                         : "text-on-surface-variant hover:text-on-surface"
@@ -484,12 +506,31 @@ export default function CollectionsPage() {
               </div>
             ) : viewMode === "tree" ? (
               <div className="flex flex-col gap-1 p-4 rounded-2xl bg-surface-container-low border border-white/5 shadow-inner">
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/5 text-xs font-mono text-outline">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-2 border-b border-white/5 text-xs font-mono text-outline">
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px]">folder_copy</span>
-                    <span>Estrutura de Pastas e Subcoleções</span>
+                    <span className="material-symbols-outlined text-[16px] text-secondary">folder_copy</span>
+                    <span>Estrutura de Pastas e Subcoleções ({treeCollections.length} na raiz)</span>
                   </span>
-                  <span>{treeCollections.length} coleções na raiz</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpandAllSignal({ expanded: true, timestamp: Date.now() })}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-medium transition-colors border border-white/5 cursor-pointer"
+                      title="Expandir todas as pastas da árvore"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">unfold_more</span>
+                      <span>Expandir Todos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExpandAllSignal({ expanded: false, timestamp: Date.now() })}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-medium transition-colors border border-white/5 cursor-pointer"
+                      title="Recolher todas as pastas da árvore"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">unfold_less</span>
+                      <span>Recolher Todos</span>
+                    </button>
+                  </div>
                 </div>
                 {treeCollections.map((col) => (
                   <CollectionTreeCard
@@ -498,8 +539,101 @@ export default function CollectionsPage() {
                     onEdit={handleOpenEdit}
                     onDelete={handleDeleteCollection}
                     level={0}
+                    expandAllSignal={expandAllSignal}
                   />
                 ))}
+              </div>
+            ) : viewMode === "list" ? (
+              <div className="w-full overflow-x-auto rounded-xl bg-surface-container-low border border-white/5 shadow-sm">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[11px] font-mono uppercase tracking-wider text-outline bg-surface-container-lowest">
+                      <th className="py-3 px-4">Coleção</th>
+                      <th className="py-3 px-4">Caminho da Pasta</th>
+                      <th className="py-3 px-4">Arquivos 3D</th>
+                      <th className="py-3 px-4">Subpastas</th>
+                      <th className="py-3 px-4">Descrição</th>
+                      <th className="py-3 px-4 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 font-mono">
+                    {filtered.map((col) => (
+                      <tr
+                        key={col.id}
+                        className="hover:bg-surface-container-high transition-colors text-on-surface group"
+                      >
+                        <td className="py-3 px-4">
+                          <Link
+                            href={`/collections/${col.id}`}
+                            className="flex items-center gap-3 group-hover:text-primary transition-colors"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden flex-shrink-0 border border-white/5">
+                              {col.coverImage ? (
+                                <img
+                                  src={col.coverImage}
+                                  alt={col.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="material-symbols-outlined text-[20px] text-secondary">
+                                  folder
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-semibold text-sm truncate max-w-xs text-on-surface group-hover:text-primary">
+                                {col.name}
+                              </span>
+                              <span className="text-[10px] text-outline font-mono truncate">
+                                {col.slug}
+                              </span>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4 text-outline text-[11px] truncate max-w-xs">
+                          {col.folderPath || col.name}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary-container/15 text-primary border border-primary-container/30">
+                            {col.modelsCount} {col.modelsCount === 1 ? "arquivo" : "arquivos"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {col.childrenCount && col.childrenCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/15 text-secondary border border-secondary/30">
+                              {col.childrenCount} subpastas
+                            </span>
+                          ) : (
+                            <span className="text-outline text-[11px]">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-on-surface-variant text-[11px] truncate max-w-sm font-sans">
+                          {col.description || "-"}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenEdit(col, e)}
+                              className="p-1.5 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
+                              title="Editar"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
+                              className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
+                              title="Excluir"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
