@@ -53,7 +53,7 @@ export async function runStartupLibraryScan(): Promise<void> {
 
       console.log(`[Startup Scan] 📂 Varrendo biblioteca '${lib.name}' (${resolvedPath})...`);
       try {
-        const stats = await scanLibrary(lib.id);
+        const stats = await scanLibrary(lib.id, { trigger: "STARTUP" });
         console.log(
           `[Startup Scan] ✅ '${lib.name}' concluída: ` +
           `+${stats.addedModels} novos, ~${stats.updatedModels} atualizados, ` +

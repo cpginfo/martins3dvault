@@ -5,6 +5,32 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.14.0] - 2026-09-29
+
+### Adicionado / Monitoramento & Varredura em Tempo Real
+- **Redirecionamento Automático para Métricas dos Arquivos (`src/components/layout/Navbar.tsx`)**:
+  - O clique no botão superior **Escanear Agora** agora redireciona o operador instantaneamente para a tela de **Métricas dos Arquivos** (`/metrics`), permitindo acompanhar a varredura em tempo real desde o primeiro segundo.
+  - Emissão de evento global `scanStatusChanged` para sincronização reativa de componentes e páginas ativas.
+- **Barra de Progresso da Varredura ao Vivo em Métricas (`src/app/metrics/page.tsx`)**:
+  - Novo card de progresso em tempo real integrado diretamente na seção **Histórico Recente de Varreduras**.
+  - Barra visual com gradiente fluido, percentual calculado dinamicamente (0% a 100%), nome do arquivo/modelo ou pasta sendo inspecionado e tempo de execução.
+  - Monitoramento das duas fases do escaneamento: **Fase 1 (Descoberta & Mapeamento de Pastas)** e **Fase 2 (Processamento Diferencial & Extração de Metadados)**.
+  - Painel de contadores ao vivo exibindo pastas verificadas, progresso de modelos analisados, novos modelos detectados (`+`), modelos atualizados (`~`) e modelos inalterados (`=`).
+  - Alerta de conclusão com celebração visual de 100% que recarrega automaticamente o histórico e as métricas do banco de dados após a finalização.
+- **Gerenciador de Progresso Singleton & Endpoint Leve (`src/lib/scanner/scan-progress.ts` e `/api/scan/status`)**:
+  - Criação do módulo [`scan-progress.ts`](file:///swarm/stl/src/lib/scanner/scan-progress.ts) mantendo o estado da varredura na memória do processo Node.js em `globalThis`, garantindo respostas de polling em microssegundos sem onerar o banco de dados.
+  - Rota de API dedicada [`GET /api/scan/status`](file:///swarm/stl/src/app/api/scan/status/route.ts) consumida por polling reativo pela página de métricas.
+- **Histórico Completo com Identificação de Boot e Manual (`src/lib/scanner/crawler.ts` e `startup-scan.ts`)**:
+  - Suporte ao parâmetro `trigger` (`MANUAL` ou `STARTUP`) gravado de forma retrocompatível no log do modelo `ScanJob`.
+  - A varredura automática executada no início do contêiner (`startup-scan.ts`) é registrada com identificação `[STARTUP]`.
+  - A API [`/api/stats`](file:///swarm/stl/src/app/api/stats/route.ts) agora traz histórico expandido com até 20 registros e atributos mapeados (`trigger`, `updatedCount`, `deletedCount`, `completedAt`).
+  - Tabela do **Histórico Recente de Varreduras** aprimorada com:
+    - Coluna **Origem / Tipo**: badges visuais `⚡ Automática (Boot)` (em ciano) e `👤 Manual` (em laranja).
+    - Coluna **Alterações**: balanço colorido de arquivos adicionados (`+novos`), modificados (`~modif.`) e removidos (`-remov.`).
+    - Coluna **Duração**: tempo total calculado de execução da varredura.
+
+---
+
 ## [1.13.1] - 2026-09-29
 
 ### Corrigido / UX & Mobile

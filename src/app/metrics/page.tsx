@@ -4,18 +4,48 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 
+export interface CurrentScanState {
+  isScanning: boolean;
+  jobId: string | null;
+  libraryId: string | null;
+  libraryName: string | null;
+  trigger: "MANUAL" | "STARTUP" | null;
+  phase: string;
+  currentFolder: string;
+  currentModel: string;
+  processedFolders: number;
+  totalFolders: number;
+  processedModels: number;
+  totalModels: number;
+  addedCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+  deletedCount: number;
+  percentage: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  durationMs: number;
+  errorMessage: string | null;
+}
+
 interface StatsData {
   totalModels: number;
   totalLibraries: number;
   totalFiles: number;
   totalSizeBytes: number;
   formatDistribution: Record<string, number>;
+  currentScan?: CurrentScanState;
   recentScans: Array<{
     id: string;
     status: string;
     scannedCount: number;
     addedCount: number;
+    updatedCount?: number;
+    deletedCount?: number;
     startedAt: string;
+    completedAt?: string | null;
+    log?: string | null;
+    trigger: "MANUAL" | "STARTUP";
     library: { name: string };
   }>;
   cache?: {
@@ -48,6 +78,7 @@ export default function MetricsPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [scanProgress, setScanProgress] = useState<CurrentScanState | null>(null);
   const [loading, setLoading] = useState(true);
   const [clearingCache, setClearingCache] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -59,6 +90,9 @@ export default function MetricsPage() {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+        if (data.currentScan) {
+          setScanProgress(data.currentScan);
+        }
       }
     } catch (err) {
       console.error("Erro ao carregar métricas:", err);
@@ -66,6 +100,58 @@ export default function MetricsPage() {
       setLoading(false);
     }
   };
+
+  // Polling em tempo real enquanto houver varredura ativa
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    const checkScanStatus = async () => {
+      try {
+        const res = await fetch("/api/scan/status");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.progress) {
+            setScanProgress((prev) => {
+              // Se estava escaneando e finalizou, recarrega o histórico
+              if (prev?.isScanning && !data.progress.isScanning) {
+                fetchStats();
+              }
+              return data.progress;
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao consultar status da varredura:", err);
+      }
+    };
+
+    if (scanProgress?.isScanning) {
+      interval = setInterval(checkScanStatus, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [scanProgress?.isScanning]);
+
+  // Listener para eventos globais de disparo de varredura
+  useEffect(() => {
+    const handleScanEvent = () => {
+      fetch("/api/scan/status")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.progress) {
+            setScanProgress(data.progress);
+          }
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener("scanStatusChanged", handleScanEvent);
+    return () => {
+      window.removeEventListener("scanStatusChanged", handleScanEvent);
+    };
+  }, []);
 
   const handleClearCache = async () => {
     setClearingCache(true);
@@ -96,6 +182,17 @@ export default function MetricsPage() {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const formatDuration = (startedAt: string, completedAt?: string | null) => {
+    if (!completedAt) return "Em execução...";
+    const start = new Date(startedAt).getTime();
+    const end = new Date(completedAt).getTime();
+    const diffSec = Math.max(0, Math.round((end - start) / 1000));
+    if (diffSec < 60) return `${diffSec}s`;
+    const mins = Math.floor(diffSec / 60);
+    const secs = diffSec % 60;
+    return `${mins}m ${secs}s`;
+  };
 
   const formatBytes = (bytes: number) => {
     if (!bytes || bytes === 0) return "0 B";
@@ -571,30 +668,182 @@ export default function MetricsPage() {
                   </div>
                 </section>
 
-                {/* Recent Scans Table */}
-                <section className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-6 rounded bg-tertiary"></div>
-                    <h2 className="text-base font-bold text-on-surface tracking-tight">
-                      Histórico Recente de Varreduras
-                    </h2>
+                {/* Recent Scans Section */}
+                <section className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-6 rounded bg-tertiary"></div>
+                      <h2 className="text-base font-bold text-on-surface tracking-tight">
+                        Histórico Recente de Varreduras
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-on-surface-variant font-mono">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        Automática (Boot)
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-primary"></span>
+                        Manual
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Barra de Progresso em Tempo Real (Visível durante a varredura ou logo após) */}
+                  {scanProgress && (scanProgress.isScanning || scanProgress.phase === "COMPLETED" || scanProgress.phase === "FAILED") && (
+                    <div
+                      className={`p-4 sm:p-5 rounded-xl border transition-all duration-300 ${
+                        scanProgress.phase === "COMPLETED"
+                          ? "bg-tertiary/5 border-tertiary/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                          : scanProgress.phase === "FAILED"
+                          ? "bg-error/5 border-error/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+                          : "bg-surface-container-low border-primary/30 shadow-[0_0_24px_rgba(249,115,22,0.12)]"
+                      }`}
+                    >
+                      {/* Top Header Card */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2.5 rounded-xl flex items-center justify-center ${
+                              scanProgress.phase === "COMPLETED"
+                                ? "bg-tertiary/15 text-tertiary border border-tertiary/30"
+                                : scanProgress.phase === "FAILED"
+                                ? "bg-error/15 text-error border border-error/30"
+                                : "bg-primary-container/20 text-primary border border-primary-container/40"
+                            }`}
+                          >
+                            <span
+                              className={`material-symbols-outlined text-[24px] ${
+                                scanProgress.isScanning ? "animate-spin" : ""
+                              }`}
+                            >
+                              {scanProgress.phase === "COMPLETED"
+                                ? "check_circle"
+                                : scanProgress.phase === "FAILED"
+                                ? "error"
+                                : "sync"}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-bold text-on-surface">
+                                {scanProgress.phase === "COMPLETED"
+                                  ? "Varredura Concluída com Sucesso!"
+                                  : scanProgress.phase === "FAILED"
+                                  ? "Varredura Interrompida com Erro"
+                                  : `Varredura em Andamento — ${scanProgress.libraryName || "Geral"}`}
+                              </h3>
+                              {scanProgress.trigger && (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase font-mono ${
+                                    scanProgress.trigger === "STARTUP"
+                                      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+                                      : "bg-primary/15 text-primary border border-primary/30"
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[12px]">
+                                    {scanProgress.trigger === "STARTUP" ? "power_settings_new" : "person"}
+                                  </span>
+                                  {scanProgress.trigger === "STARTUP" ? "Automática (Boot)" : "Manual"}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-on-surface-variant mt-0.5 font-mono">
+                              {scanProgress.phase === "DISCOVERING"
+                                ? "Fase 1/2: Mapeando diretórios do disco e novos arquivos..."
+                                : scanProgress.phase === "PROCESSING"
+                                ? "Fase 2/2: Análise diferencial incremental e extração de metadados..."
+                                : scanProgress.phase === "COMPLETED"
+                                ? `Concluído em ${scanProgress.durationMs ? `${(scanProgress.durationMs / 1000).toFixed(1)}s` : "poucos segundos"}. Todos os modelos sincronizados.`
+                                : scanProgress.errorMessage || "Ocorreu um erro no processo."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Percentual em Destaque */}
+                        <div className="flex items-baseline gap-1.5 self-end sm:self-center font-mono">
+                          <span
+                            className={`text-2xl font-black ${
+                              scanProgress.phase === "COMPLETED"
+                                ? "text-tertiary"
+                                : scanProgress.phase === "FAILED"
+                                ? "text-error"
+                                : "text-primary"
+                            }`}
+                          >
+                            {scanProgress.percentage}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Barra de Progresso Visual */}
+                      <div className="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ease-out ${
+                            scanProgress.phase === "COMPLETED"
+                              ? "bg-gradient-to-r from-tertiary via-emerald-400 to-tertiary"
+                              : scanProgress.phase === "FAILED"
+                              ? "bg-error"
+                              : "bg-gradient-to-r from-primary via-orange-400 to-amber-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]"
+                          }`}
+                          style={{ width: `${Math.max(4, Math.min(100, scanProgress.percentage))}%` }}
+                        ></div>
+                      </div>
+
+                      {/* Linha de Detalhes Inferior */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/5 text-[11px] font-mono">
+                        <div className="flex items-center gap-1.5 text-on-surface-variant truncate max-w-md">
+                          <span className="material-symbols-outlined text-[14px] text-outline shrink-0">
+                            {scanProgress.isScanning ? "folder_open" : "task_alt"}
+                          </span>
+                          <span className="truncate">
+                            {scanProgress.currentModel
+                              ? `Modelo: ${scanProgress.currentModel}`
+                              : scanProgress.currentFolder || (scanProgress.isScanning ? "Analisando..." : "Varredura pronta")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+                          <span className="text-on-surface-variant">
+                            Pastas: <strong className="text-on-surface">{scanProgress.processedFolders}</strong>
+                          </span>
+                          {scanProgress.totalModels > 0 && (
+                            <span className="text-on-surface-variant">
+                              Modelos: <strong className="text-on-surface">{scanProgress.processedModels}/{scanProgress.totalModels}</strong>
+                            </span>
+                          )}
+                          <span className="text-tertiary font-bold">
+                            +{scanProgress.addedCount} novos
+                          </span>
+                          <span className="text-blue-400 font-bold">
+                            ~{scanProgress.updatedCount} alterados
+                          </span>
+                          <span className="text-outline">
+                            ={scanProgress.unchangedCount} inalterados
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tabela do Histórico */}
                   <div className="w-full overflow-x-auto rounded-xl bg-surface-container-low border border-white/5 shadow-sm">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="border-b border-white/10 text-[11px] font-mono uppercase tracking-wider text-outline bg-surface-container-lowest">
+                          <th className="py-3 px-4">Origem / Tipo</th>
                           <th className="py-3 px-4">Biblioteca</th>
                           <th className="py-3 px-4">Status</th>
-                          <th className="py-3 px-4">Pastas Processadas</th>
-                          <th className="py-3 px-4">Novos Modelos</th>
+                          <th className="py-3 px-4">Pastas</th>
+                          <th className="py-3 px-4">Alterações</th>
                           <th className="py-3 px-4">Iniciado Em</th>
+                          <th className="py-3 px-4">Duração</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5 font-mono">
                         {stats.recentScans.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-6 text-center text-on-surface-variant">
+                            <td colSpan={7} className="py-6 text-center text-on-surface-variant">
                               Nenhuma varredura registrada ainda.
                             </td>
                           </tr>
@@ -604,12 +853,26 @@ export default function MetricsPage() {
                               key={scan.id}
                               className="hover:bg-surface-container-high transition-colors text-on-surface"
                             >
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wide uppercase ${
+                                    scan.trigger === "STARTUP"
+                                      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/25"
+                                      : "bg-primary/15 text-primary border border-primary/25"
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[13px]">
+                                    {scan.trigger === "STARTUP" ? "power_settings_new" : "person"}
+                                  </span>
+                                  {scan.trigger === "STARTUP" ? "Automática (Boot)" : "Manual"}
+                                </span>
+                              </td>
                               <td className="py-3 px-4 font-semibold text-primary">
                                 {scan.library?.name || "Geral"}
                               </td>
                               <td className="py-3 px-4">
                                 <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                                     scan.status === "COMPLETED"
                                       ? "bg-tertiary/15 text-tertiary"
                                       : scan.status === "RUNNING"
@@ -617,17 +880,52 @@ export default function MetricsPage() {
                                       : "bg-error/15 text-error"
                                   }`}
                                 >
-                                  {scan.status === "COMPLETED" ? "Concluído" : scan.status}
+                                  <span className="material-symbols-outlined text-[12px]">
+                                    {scan.status === "COMPLETED"
+                                      ? "check_circle"
+                                      : scan.status === "RUNNING"
+                                      ? "sync"
+                                      : "error"}
+                                  </span>
+                                  {scan.status === "COMPLETED"
+                                    ? "Concluído"
+                                    : scan.status === "RUNNING"
+                                    ? "Em Andamento"
+                                    : "Falha"}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-on-surface-variant">
                                 {scan.scannedCount}
                               </td>
-                              <td className="py-3 px-4 text-tertiary font-bold">
-                                +{scan.addedCount}
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {scan.addedCount > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded bg-tertiary/10 text-tertiary font-bold text-[10px]">
+                                      +{scan.addedCount} novos
+                                    </span>
+                                  )}
+                                  {(scan.updatedCount ?? 0) > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold text-[10px]">
+                                      ~{scan.updatedCount} modif.
+                                    </span>
+                                  )}
+                                  {(scan.deletedCount ?? 0) > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded bg-error/10 text-error font-bold text-[10px]">
+                                      -{scan.deletedCount} remov.
+                                    </span>
+                                  )}
+                                  {scan.addedCount === 0 &&
+                                    (scan.updatedCount ?? 0) === 0 &&
+                                    (scan.deletedCount ?? 0) === 0 && (
+                                      <span className="text-outline text-[11px]">Sem alterações</span>
+                                    )}
+                                </div>
                               </td>
                               <td className="py-3 px-4 text-outline text-[11px]">
                                 {new Date(scan.startedAt).toLocaleString("pt-BR")}
+                              </td>
+                              <td className="py-3 px-4 text-on-surface-variant text-[11px]">
+                                {formatDuration(scan.startedAt, scan.completedAt)}
                               </td>
                             </tr>
                           ))

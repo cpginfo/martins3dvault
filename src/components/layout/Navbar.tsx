@@ -68,6 +68,8 @@ export default function Navbar({
 
   const handleGlobalScan = async () => {
     setScanning(true);
+    // Sempre redireciona imediatamente para Métricas dos Arquivos
+    router.push("/metrics");
     try {
       const libRes = await fetch("/api/libraries");
       if (libRes.ok) {
@@ -79,6 +81,7 @@ export default function Navbar({
       if (onScanTriggered) onScanTriggered();
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("refreshCollections"));
+        window.dispatchEvent(new CustomEvent("scanStatusChanged"));
       }
     } catch (err) {
       console.error("Erro ao disparar varredura:", err);

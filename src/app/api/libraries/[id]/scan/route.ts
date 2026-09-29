@@ -48,7 +48,7 @@ export async function POST(
     }
 
     // Executa a varredura incremental inteligente
-    const stats = await scanLibrary(id, { subFolder, forceFullScan });
+    const stats = await scanLibrary(id, { subFolder, forceFullScan, trigger: "MANUAL" });
 
     return NextResponse.json({
       success: true,

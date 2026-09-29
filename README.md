@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.13.1)
+# Martins3DVault 🖨️✨ (v1.14.0)
 
 <div align="center">
 
@@ -36,6 +36,12 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 📊 **Monitoramento de Varredura em Tempo Real & Histórico Inteligente (`/metrics`)**:
+  - Redirecionamento instantâneo para a tela de **Métricas dos Arquivos** ao clicar em "Escanear Agora", oferecendo visibilidade completa da operação.
+  - Card de progresso dinâmico com barra visual fluida (0 a 100%), acompanhamento de fases (Descoberta vs Processamento), nome do arquivo/modelo em análise e contadores ao vivo (`+novos`, `~alterados`, `=inalterados`).
+  - Histórico de varreduras expandido com identificação nítida da origem da execução: **Varredura Automática (Boot)** (`⚡ Automática (Boot)`) e **Varredura Manual** (`👤 Manual`).
+  - Balanço analítico de alterações por varredura e cálculo do tempo exato de duração.
 
 - 🔄 **Re-scan Diferencial Automático no Boot & Extração Profunda (.3mf)**:
   - Sincronização automática não-bloqueante executada em segundo plano na inicialização ou reinicialização do contêiner Docker via hook nativo Next.js (`src/instrumentation.ts`).

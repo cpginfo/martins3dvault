@@ -85,6 +85,7 @@ export async function POST(
     // Executa o scan incremental cirúrgico
     const stats = await scanLibrary(targetLibraryId, {
       subFolder: targetSubFolder,
+      trigger: "MANUAL",
     });
 
     return NextResponse.json({

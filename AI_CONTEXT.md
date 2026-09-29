@@ -289,6 +289,15 @@ O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/sr
 3. **Rolagem Fluida sem Scroll Traps**: A Ficha Técnica mobile rola como uma superfície contínua unificada (`overflow-y-auto overscroll-contain`) com abas técnicas fixas (`sticky top-0 backdrop-blur-md`), permitindo rolagem com o polegar a partir de qualquer ponto da tela.
 4. **Altura Mínima Responsiva**: `min-h-[420px]` foi substituído por `min-h-[260px] sm:min-h-[350px] md:min-h-[420px] touch-none` para evitar distorções no mobile landscape e corte do botão de carregamento da malha 3D.
 
+### R. Monitoramento de Varredura em Tempo Real & Histórico Expandido (`v1.14.0`)
+1. **Redirecionamento ao Clicar em "Escanear Agora" (`src/components/layout/Navbar.tsx`)**: O botão de varredura global aciona `router.push("/metrics")` imediatamente, levando o operador na hora para a tela de Métricas com o evento `scanStatusChanged`.
+2. **Gerenciador de Progresso Singleton em Memória (`src/lib/scanner/scan-progress.ts`)**: Armazenado em `globalThis` no runtime Node.js, rastreia em tempo real as fases `DISCOVERING` (descoberta de pastas e arquivos no disco) e `PROCESSING` (verificação diferencial, hashes, extração de capas e metadados). Fornece porcentagem dinâmica calculada (0 a 100%), nome do arquivo/modelo sob análise e contagem de itens em microssegundos sem consultas repetidas ao banco de dados.
+3. **Barra de Progresso Visual em `/metrics` (`src/app/metrics/page.tsx`)**: Card integrado diretamente no topo da seção "Histórico Recente de Varreduras", com polling reativo enquanto ativo e transição para estado de sucesso (100% verde) por 20 segundos após a conclusão, acionando o recarregamento instantâneo do histórico e dos números gerais.
+4. **Histórico com Varreduras Automáticas (Boot) e Manuais (`src/lib/scanner/startup-scan.ts` e `crawler.ts`)**:
+   - O campo `log` do `ScanJob` no banco registra `[STARTUP]` para varreduras disparadas pelo contêiner no boot e `[MANUAL]` para varreduras manuais.
+   - O endpoint `/api/stats` expandiu o histórico para até 20 registros e expõe o campo `trigger`.
+   - A tabela do histórico renderiza badges visuais `⚡ Automática (Boot)` (em ciano) e `👤 Manual` (em laranja), detalha balanço de alterações (`+novos`, `~alterados`, `-removidos`) e calcula a duração da varredura.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto

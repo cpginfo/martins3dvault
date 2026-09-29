@@ -4,6 +4,15 @@ import prisma from "@/lib/prisma";
 import { parseStlFile } from "./extractors/stl-parser";
 import { extractThreeMfMetadata } from "./extractors/threemf";
 import { analyzeFolderCompanions, normalizeBaseName, findMatchingImage } from "./extractors/companion";
+import {
+  startScanProgress,
+  updateScanDiscovery,
+  setScanTargets,
+  updateScanModelProgress,
+  completeScanProgress,
+  failScanProgress,
+  ScanTrigger,
+} from "./scan-progress";
 
 const SUPPORTED_3D_EXTENSIONS = new Set([".stl", ".3mf", ".obj", ".step", ".stp"]);
 const IGNORED_DIRS = new Set([
@@ -31,6 +40,7 @@ export interface ScanStats {
 export interface ScanOptions {
   subFolder?: string; // Caminho relativo opcional para escanear apenas uma pasta específica
   forceFullScan?: boolean; // Forçar re-processamento completo
+  trigger?: ScanTrigger; // Origem da varredura: MANUAL ou STARTUP
 }
 
 function slugify(text: string): string {
@@ -69,12 +79,17 @@ export async function scanLibrary(
     throw new Error(`Biblioteca não encontrada com ID: ${libraryId}`);
   }
 
+  const trigger: ScanTrigger = options?.trigger || "MANUAL";
+
   const scanJob = await prisma.scanJob.create({
     data: {
       libraryId: library.id,
       status: "RUNNING",
+      log: `[${trigger}] Varredura iniciada...`,
     },
   });
+
+  startScanProgress(scanJob.id, library.id, library.name, trigger);
 
   await prisma.library.update({
     where: { id: library.id },
@@ -260,6 +275,7 @@ export async function scanLibrary(
       if (threeDFiles.length > 0) {
         stats.scannedFolders++;
         const relDir = path.relative(rootPath, currentDir) || ".";
+        updateScanDiscovery(stats.scannedFolders, relDir);
         const dirParts = relDir.split(path.sep).filter((p) => p && p !== ".");
 
         const companionInfo = analyzeFolderCompanions(filesInDir);
@@ -340,11 +356,24 @@ export async function scanLibrary(
 
     await walk(scanStartDir);
 
+    setScanTargets(discoveredTargets.length);
+
     // Conjunto de IDs de modelos renomeados/migrados para não serem excluídos como órfãos
     const migratedModelIds = new Set<string>();
+    let processedModelCount = 0;
 
     // 1. Processa cada alvo descoberto (Verificação Diferencial Inteligente)
     for (const target of discoveredTargets) {
+      processedModelCount++;
+      updateScanModelProgress({
+        processed: processedModelCount,
+        total: discoveredTargets.length,
+        currentModel: target.name,
+        added: stats.addedModels,
+        updated: stats.updatedModels,
+        unchanged: stats.unchangedModels,
+      });
+
       try {
         // Garante que a Coleção e toda a sua hierarquia existam
         let targetCollectionId: string | null = null;
@@ -873,6 +902,8 @@ export async function scanLibrary(
     // Finaliza o ScanJob com sucesso e relatório incremental
     const summaryMsg = `Scan incremental concluído: ${stats.scannedFolders} pastas analisadas (${stats.unchangedModels} inalteradas, ${stats.addedModels} adicionados, ${stats.updatedModels} modificados, ${stats.deletedModels} removidos).`;
 
+    completeScanProgress(stats);
+
     await prisma.scanJob.update({
       where: { id: scanJob.id },
       data: {
@@ -881,7 +912,7 @@ export async function scanLibrary(
         addedCount: stats.addedModels,
         updatedCount: stats.updatedModels,
         deletedCount: stats.deletedModels,
-        log: stats.errors.length > 0 ? stats.errors.join("\n") : summaryMsg,
+        log: `[${trigger}] ` + (stats.errors.length > 0 ? stats.errors.join("\n") : summaryMsg),
         completedAt: new Date(),
       },
     });
@@ -895,12 +926,13 @@ export async function scanLibrary(
     });
   } catch (err: any) {
     stats.errors.push(`Erro fatal no scan: ${err.message}`);
+    failScanProgress(err.message);
 
     await prisma.scanJob.update({
       where: { id: scanJob.id },
       data: {
         status: "FAILED",
-        log: err.message,
+        log: `[${trigger}] ${err.message}`,
         completedAt: new Date(),
       },
     });

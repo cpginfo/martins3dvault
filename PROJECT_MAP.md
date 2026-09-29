@@ -217,11 +217,10 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
         │   └── __tests__/
         │       └── calculator.test.ts # Suíte com 5 testes unitários determinísticos
         ├── storage/
-        │   ├── health.ts          # Diagnóstico ativo de montagem, I/O e detecção de timeout de NFS/CIFS
-        │   ├── cache-ops.ts       # Estatísticas e limpeza da pasta /data/cache (STL binários de malha)
-        │   └── file-ops.ts        # Movimentação física em árvore, renomeação em cascata e criação de subpastas
         └── scanner/
             ├── crawler.ts         # Motor de varredura diferencial com pre-flight probe e trava de segurança NAS
+            ├── scan-progress.ts   # Gerenciador singleton em memória do progresso da varredura em tempo real (fases, percentual e contadores)
+            ├── startup-scan.ts    # Varredura automática não-bloqueante acionada no boot do contêiner
             └── extractors/
                 ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos com prioridade para mesmo nome base (.png, .jpg, .webp, .avif)
                 ├── stl-parser.ts  # Leitor e validor de geometria STL binário/ASCII
@@ -235,7 +234,9 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Status de saúde do container, banco, storage/NAS, versão (`v1.11.1`), uptime e concorrência. |
+| `GET` | `/api/health` | Status de saúde do container, banco, storage/NAS, versão (`v1.14.0`), uptime e concorrência. |
+| `GET` | `/api/scan/status` | Retorna o status e percentual da varredura ativa em tempo real (fase, arquivo atual, contagens). |
+| `GET` | `/api/stats` | Métricas gerais do acervo e histórico expandido com distinção entre scans automáticos de boot e manuais. |
 | `GET` | `/api/cache` | Retorna o tamanho total em bytes e contagem de arquivos em `/data/cache`. |
 | `DELETE` | `/api/cache` | Limpa com segurança o cache de malhas 3D liberando espaço em disco. |
 | `GET` | `/api/collections?tree=true` | Retorna a árvore hierárquica completa de coleções e contadores recursivos. |
