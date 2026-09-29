@@ -69,84 +69,122 @@ export default function PaginationBar({
 
       {/* Controles de navegação de páginas */}
       {pageSize !== "all" && totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          {/* Primeira página */}
-          <button
-            type="button"
-            onClick={() => onPageChange(1)}
-            disabled={currentPage === 1}
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
-            title="Primeira página"
-          >
-            <span className="material-symbols-outlined text-[16px]">first_page</span>
-          </button>
+        <div className="flex items-center justify-center w-full sm:w-auto">
+          {/* Mobile View: Compacta (< sm) */}
+          <div className="flex sm:hidden items-center justify-between w-full gap-2">
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 min-h-[36px] rounded-lg flex items-center gap-1 bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5 text-xs font-semibold"
+              aria-label="Página anterior"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+              <span>Anterior</span>
+            </button>
 
-          {/* Página anterior */}
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
-            title="Página anterior"
-          >
-            <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-          </button>
+            <span className="text-xs font-mono text-on-surface font-semibold px-2.5 py-1 rounded-lg bg-surface-container-lowest border border-white/5 shadow-inner">
+              {currentPage} / {totalPages}
+            </span>
 
-          {/* Números de páginas */}
-          <div className="flex items-center gap-1">
-            {pages.map((p, idx) => {
-              if (p === "...") {
-                return (
-                  <span
-                    key={`ellipsis-${idx}`}
-                    className="w-8 h-8 flex items-center justify-center text-outline text-xs select-none"
-                  >
-                    •••
-                  </span>
-                );
-              }
-
-              const pageNum = p as number;
-              const isActive = pageNum === currentPage;
-
-              return (
-                <button
-                  key={`page-${pageNum}`}
-                  type="button"
-                  onClick={() => onPageChange(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-xs font-mono font-medium transition-all ${
-                    isActive
-                      ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)] scale-105"
-                      : "bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high border border-white/5"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 min-h-[36px] rounded-lg flex items-center gap-1 bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5 text-xs font-semibold"
+              aria-label="Próxima página"
+            >
+              <span>Próxima</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
           </div>
 
-          {/* Próxima página */}
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
-            title="Próxima página"
-          >
-            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-          </button>
+          {/* Desktop/Tablet View (>= sm) */}
+          <div className="hidden sm:flex items-center gap-1">
+            {/* Primeira página */}
+            <button
+              type="button"
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1}
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
+              title="Primeira página"
+              aria-label="Primeira página"
+            >
+              <span className="material-symbols-outlined text-[16px]">first_page</span>
+            </button>
 
-          {/* Última página */}
-          <button
-            type="button"
-            onClick={() => onPageChange(totalPages)}
-            disabled={currentPage === totalPages}
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
-            title="Última página"
-          >
-            <span className="material-symbols-outlined text-[16px]">last_page</span>
-          </button>
+            {/* Página anterior */}
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
+              title="Página anterior"
+              aria-label="Página anterior"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+            </button>
+
+            {/* Números de páginas */}
+            <div className="flex items-center gap-1">
+              {pages.map((p, idx) => {
+                if (p === "...") {
+                  return (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="w-8 h-8 flex items-center justify-center text-outline text-xs select-none"
+                    >
+                      •••
+                    </span>
+                  );
+                }
+
+                const pageNum = p as number;
+                const isActive = pageNum === currentPage;
+
+                return (
+                  <button
+                    key={`page-${pageNum}`}
+                    type="button"
+                    onClick={() => onPageChange(pageNum)}
+                    className={`w-8 h-8 rounded-lg text-xs font-mono font-medium transition-all ${
+                      isActive
+                        ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)] scale-105"
+                        : "bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high border border-white/5"
+                    }`}
+                    aria-label={`Página ${pageNum}`}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Próxima página */}
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
+              title="Próxima página"
+              aria-label="Próxima página"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+
+            {/* Última página */}
+            <button
+              type="button"
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:pointer-events-none border border-white/5"
+              title="Última página"
+              aria-label="Última página"
+            >
+              <span className="material-symbols-outlined text-[16px]">last_page</span>
+            </button>
+          </div>
         </div>
       )}
 

@@ -161,6 +161,16 @@ export default function ModelDetailModal({
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   // Configurações de precificação para estimativa em tempo real
   const [printerConfig, setPrinterConfig] = useState<PrinterConfig>({
     printerCost: 2500,
@@ -546,12 +556,19 @@ export default function ModelDetailModal({
   const isVoronCompatible = maxDim !== null ? maxDim <= 300 : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-6xl h-[100dvh] sm:h-[92dvh] flex flex-col md:flex-row rounded-none sm:rounded-3xl bg-surface-container-low border-0 sm:border sm:border-white/10 shadow-2xl overflow-hidden relative">
         {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 rounded-xl bg-black/60 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all backdrop-blur-md min-w-[38px] min-h-[38px] flex items-center justify-center"
+          title="Fechar"
+          aria-label="Fechar detalhes do modelo"
         >
           <X className="w-5 h-5" />
         </button>

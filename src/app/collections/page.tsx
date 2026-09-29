@@ -87,18 +87,20 @@ function CollectionTreeCard({
             </span>
           )}
 
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => onEdit(col, e)}
-              className="p-1.5 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+              className="p-1.5 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Editar"
+              aria-label={`Editar coleção ${col.name}`}
             >
               <span className="material-symbols-outlined text-[16px]">edit</span>
             </button>
             <button
               onClick={(e) => onDelete(col.id, col.name, e)}
-              className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors"
+              className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Excluir"
+              aria-label={`Excluir coleção ${col.name}`}
             >
               <span className="material-symbols-outlined text-[16px]">delete</span>
             </button>
@@ -512,20 +514,22 @@ export default function CollectionsPage() {
                       <div className="p-2.5 rounded-lg bg-surface-container-highest text-secondary group-hover:text-primary transition-colors">
                         <span className="material-symbols-outlined text-[24px]">folder</span>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={(e) => handleOpenEdit(col, e)}
-                          className="p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                          className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
                           title="Editar coleção"
+                          aria-label={`Editar coleção ${col.name}`}
                         >
                           <span className="material-symbols-outlined text-[16px]">edit</span>
                         </button>
                         <button
                           type="button"
                           onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
-                          className="p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-surface-container-high transition-colors"
+                          className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-surface-container-high transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
                           title="Excluir coleção"
+                          aria-label={`Excluir coleção ${col.name}`}
                         >
                           <span className="material-symbols-outlined text-[16px]">delete</span>
                         </button>

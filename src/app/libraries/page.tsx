@@ -361,7 +361,7 @@ export default function LibrariesPage() {
                         value={newLibName}
                         onChange={(e) => setNewLibName(e.target.value)}
                         placeholder="Ex: Peças Técnicas Voron"
-                        className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+                        className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
                         required
                       />
                     </div>
@@ -375,7 +375,7 @@ export default function LibrariesPage() {
                         value={newLibPath}
                         onChange={(e) => setNewLibPath(e.target.value)}
                         placeholder="Ex: /libraries ou /mnt/nas/stl"
-                        className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+                        className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
                         required
                       />
                     </div>
@@ -384,14 +384,14 @@ export default function LibrariesPage() {
                       <button
                         type="button"
                         onClick={() => setShowAddForm(false)}
-                        className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
+                        className="px-4 py-2 min-h-[36px] rounded-lg bg-surface-container-high text-on-surface text-xs font-medium"
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={creating}
-                        className="px-4 py-2 rounded-lg bg-primary-container text-on-primary text-xs font-bold hover:bg-primary transition-all disabled:opacity-50"
+                        className="px-4 py-2 min-h-[36px] rounded-lg bg-primary-container text-on-primary text-xs font-bold hover:bg-primary transition-all disabled:opacity-50"
                       >
                         {creating ? "Salvando..." : "Salvar e Iniciar Scan"}
                       </button>

@@ -960,21 +960,21 @@ export default function CollectionDetailPage(props: {
 
       {/* Floating Action Bar quando houver itens selecionados */}
       {selectedModelIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl bg-surface-container-highest/95 border border-white/15 backdrop-blur-xl shadow-2xl animate-fadeIn">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-surface-container-highest/95 border border-white/15 backdrop-blur-xl shadow-2xl animate-fadeIn max-w-[95vw] w-auto">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs font-bold text-white">
+            <span className="text-xs font-bold text-white whitespace-nowrap">
               {selectedModelIds.length}{" "}
-              {selectedModelIds.length === 1 ? "arquivo selecionado" : "arquivos selecionados"}
+              {selectedModelIds.length === 1 ? "selecionado" : "selecionados"}
             </span>
           </div>
 
-          <div className="h-4 w-px bg-white/20" />
+          <div className="hidden xs:block h-4 w-px bg-white/20" />
 
           <button
             type="button"
             onClick={handleSelectAll}
-            className="text-xs text-slate-300 hover:text-white transition-colors"
+            className="text-xs text-slate-300 hover:text-white transition-colors whitespace-nowrap"
           >
             {selectedModelIds.length === (collection?.models?.length || 0)
               ? "Desmarcar todos"
@@ -984,17 +984,18 @@ export default function CollectionDetailPage(props: {
           <button
             type="button"
             onClick={handleOpenMoveModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-container text-on-primary text-xs font-bold hover:bg-primary transition-all shadow-lg shadow-primary-container/30"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[36px] rounded-xl bg-primary-container text-on-primary text-xs font-bold hover:bg-primary transition-all shadow-lg shadow-primary-container/30 whitespace-nowrap"
           >
-            <FolderInput className="w-4 h-4" />
+            <FolderInput className="w-4 h-4 shrink-0" />
             <span>Mover para Coleção</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSelectedModelIds([])}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
             title="Cancelar seleção"
+            aria-label="Cancelar seleção"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1078,7 +1079,7 @@ export default function CollectionDetailPage(props: {
                 <select
                   value={targetCollectionId}
                   onChange={(e) => setTargetCollectionId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0f121d] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0f121d] border border-white/10 text-base sm:text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
                 >
                   <option value="">Selecione uma coleção...</option>
                   {allCollections.map((c) => (

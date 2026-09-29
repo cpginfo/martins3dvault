@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-4 sm:p-6 relative overflow-hidden">
+    <main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-4 sm:p-6 py-8 relative overflow-y-auto">
       {/* Subtle CAD Isometric Pattern & Ambient Glows from Stitch */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         <svg
@@ -74,7 +74,7 @@ export default function LoginPage() {
       </div>
 
       {/* Central Vault Card from Stitch */}
-      <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-5 sm:p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10">
+      <div className="relative w-full max-w-lg bg-surface-container/90 backdrop-blur-xl rounded-2xl shadow-2xl p-5 sm:p-8 md:p-10 z-10 flex flex-col gap-6 border border-white/10 my-auto">
 
         {/* Header Section: Logo & Identity */}
         <div className="flex flex-col items-center text-center gap-2">
@@ -132,7 +132,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+              <label htmlFor="email" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[16px] text-primary">person</span>
                 <span>Usuário ou E-mail</span>
               </label>
@@ -176,6 +176,7 @@ export default function LoginPage() {
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-1 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                 title={showPassword ? "Ocultar senha" : "Ver senha"}
+                aria-label={showPassword ? "Ocultar senha" : "Ver senha"}
               >
                 <span className="material-symbols-outlined text-[18px]">
                   {showPassword ? "visibility_off" : "visibility"}
