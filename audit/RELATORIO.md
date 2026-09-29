@@ -1,341 +1,349 @@
-# Relatório de Auditoria de Responsividade e Acessibilidade (UX)
-**Aplicação**: Martins3DVault — Gerenciador Inteligente de Arquivos 3D (STL, 3MF, STEP, G-Code)  
-**Versão Auditada**: v1.13.0  
+# Relatório de Auditoria de QA, Responsividade e UX Multi-Dispositivo
+**Aplicação**: Martins3DVault — Additive Vault Manager  
+**Versão**: 1.13.0  
 **Data da Auditoria**: 28 de Setembro de 2026  
-**Auditor**: Engenheiro Front-End Sênior Especialista em UX Responsivo & Acessibilidade  
-**Status**: Fase 3 Concluída (Auditoria & Diagnóstico) — Aguardando Aprovação para Fase 4  
+**Auditor**: Engenheiro de QA & UX Sênior (Especialista em Acessibilidade e Multi-Dispositivo)  
+**Ambiente Avaliado**: Contêiner Docker `3d-vault-web` em produção local (`http://localhost:3000`) e homologação (`https://stl.qgmartins.com.br/`)  
+**Modo**: Somente Leitura (Nenhum dado ou código de produção alterado durante a bateria de testes)
 
 ---
 
 ## 1. Resumo Executivo
 
-A auditoria técnica e analítica avaliou a integridade do layout, adaptação a viewports, eventos de toque, formulários, renderização do canvas WebGL/Three.js e critérios de acessibilidade (WCAG 2.1 / 2.2) do **Martins3DVault** em 9 larguras de viewport padrão: **320px, 360px, 390px, 414px, 768px, 1024px, 1280px, 1440px e 1920px**, além de alturas de 800px e 667px, e orientações Retrato e Paisagem (**390x844** e **844x390**).
+A aplicação **Martins3DVault** apresenta um nível avançado de maturidade visual, excelente acabamento dark/glassmorphism e alta densidade de recursos voltados para manufatura aditiva (gerenciamento de STL, 3MF, STEP e G-Code, telemetria e estúdio 3D com Three.js). A introdução recente do Drawer deslizante na barra lateral e a alternância de abas móveis no 3D Studio corrigiram os gargalos mais críticos de responsividade que impediam o uso em telas pequenas.
 
-### Notas Gerais de Responsividade (0 a 10)
+| Plataforma | Nota (0 a 10) | Avaliação Geral |
+| :--- | :---: | :--- |
+| **Desktop** (1280px a 2560px) | **9.0 / 10** | Excelente experiência de uso, layout fluido, visualizador 3D amplo e dashboards bem distribuídos. Pequenas oportunidades em monitores ultrawide (2560px) e foco de teclado. |
+| **Tablet** (768px a 1024px) | **8.2 / 10** | Boa adaptação híbrida; o menu colapsável/drawer opera de forma consistente e a grade de cards equilibra visibilidade e espaço útil. |
+| **Mobile** (320px a 414px) | **7.8 / 10** | Navegável e funcional em modo retrato (Portrait). No entanto, ainda há pontos de atrito em modo paisagem (Landscape), falta de fechamento de modais por ESC/clique externo, barra de paginação longa em 320px e ações de cards ocultas em telas de toque (touch). |
 
-| Faixa de Dispositivo | Larguras Testadas | Nota | Veredito Técnico |
-| :--- | :--- | :---: | :--- |
-| **Mobile** | 320px a 480px (Retrato e Paisagem 844x390) | **2.5 / 10** | **Crítico / Inavegável**: A barra lateral fixa ocupa de 75% a 90% da largura da tela sem gaveta móvel (drawer). Inputs com fonte 12px causam zoom forçado no iOS Safari. Visualizador Studio 3D usa largura fixa de 430px para a barra lateral, quebrando a tela inteira em celulares. |
-| **Tablet** | 768px a 1024px | **6.0 / 10** | **Regular com Degradação**: A barra lateral pode ser colapsada para ícones (w-20), mas a barra de navegação aglomera botões e sofre sobreposição. A barra de filtros quebra em múltiplas linhas e o Studio 3D consome 56% da tela útil para ficha técnica. |
-| **Desktop** | 1280px a 1920px | **9.0 / 10** | **Excelente**: Design moderno, boa distribuição de bento grids, tipografia legível e contraste adequado. Pequenos ajustes necessários apenas em alvos de toque de botões de ação e modais secundários. |
-
----
-
-## 2. Matriz de Problemas Identificados
-
-| ID | Tela / Componente | Larguras Afetadas | Severidade | Descrição do Problema | Arquivo e Linhas Prováveis | Impacto UX / Evidência |
-| :---: | :--- | :--- | :---: | :--- | :--- | :--- |
-| **RESP-01** | **Todas as Telas** (`Sidebar.tsx`, `page.tsx`, etc.) | 320px a 768px | **Crítico** | Sidebar fixa (`w-72` / 288px) sem modo gaveta (drawer móvel). O conteúdo principal recebe `pl-72`, restando apenas 32px de largura visível em 320px e 102px em 390px. | `src/components/layout/Sidebar.tsx` (L288-292)<br>`src/app/page.tsx` (L178-180)<br>`src/app/pricing/page.tsx` (L251) | A aplicação torna-se completamente inavegável em qualquer smartphone. O usuário não consegue ver os cards nem os menus. |
-| **RESP-02** | **Navbar Superior** (`Navbar.tsx`) | 320px a 768px | **Crítico** | Navbar usa `fixed left-72` / `left-20`. Em mobile, fica empurrada para fora da tela. Não existe botão hamburger acessível para alternar navegação. Botões de ação rápida colidem horizontalmente. | `src/components/layout/Navbar.tsx` (L91-94, L177-218) | O cabeçalho e campo de busca desaparecem da tela ou ficam esmagados em menos de 80px de largura. |
-| **RESP-03** | **Modo Studio 3D** (`models/[id]/page.tsx`) | 320px a 1024px | **Crítico** | O painel lateral direito tem largura fixa de `w-[430px] shrink-0` sem colapso responsivo. Em telas móveis (320px a 414px), 430px é maior que a própria tela. | `src/app/models/[id]/page.tsx` (L661-665) | O Canvas 3D é esmagado a 0px ou empurrado para fora da viewport, gerando overflow horizontal catastrófico. |
-| **RESP-04** | **Formulários / Inputs** (Login, Modal de Detalhes, Upload, Usuários, Busca) | 320px a 480px | **Alto** | Campos de entrada `<input>`, `<select>` e `<textarea>` usam `text-xs` (12px) ou `text-[11px]`. | `src/app/login/page.tsx` (L153, L175)<br>`src/components/model/ModelDetailModal.tsx` (L1258, L1268)<br>`src/components/upload/UploadModal.tsx` (L395, L427)<br>`src/app/users/page.tsx` (L510, L523) | **Auto-zoom no iOS Safari / WebKit**: O navegador dá zoom de ~130% automaticamente ao focar qualquer campo com fonte < 16px, quebrando o layout da página. |
-| **RESP-05** | **Modal Detalhes do Modelo** (`ModelDetailModal.tsx`) | 320px a 768px, Paisagem (844x390) | **Alto** | Modal usa altura fixa `h-[92vh]` com divisão rígida `h-[45vh]` (Canvas) e `h-[55vh]` (Abas/Ficha). Soma 100vh dentro de 92vh, cortando botões de salvar e gerando dupla barra de rolagem. Em paisagem (390px alt.), os botões se sobrepõem ao 3D. | `src/components/model/ModelDetailModal.tsx` (L550, L560, L605) | Em celulares pequenos ou no modo paisagem, não é possível alcançar o botão "Salvar Notas" ou visualizar o modelo 3D adequadamente. |
-| **RESP-06** | **Configuração Viewport Meta** (`layout.tsx`) | 320px a 480px | **Alto** | Falta da declaração do Next.js 16 `export const viewport: Viewport = { ... }` com `interactiveWidget: 'resizes-visual'`. | `src/app/layout.tsx` (L19-30) | Teclados virtuais no Android e iOS sobem e cobrem os campos de formulário sem empurrar a viewport do navegador. |
-| **RESP-07** | **Visualizador 3D Canvas** (`ModelViewer3D.tsx`) | 320px a 768px | **Alto** | Controles flutuantes (Iso, Frente, Topo, Rotação, Wireframe, BBox, Tema) + Seletor de materiais e cores colidem na mesma área de tela. OrbitControls consome toques sem rolagem suave da página. | `src/components/viewer3d/ModelViewer3D.tsx` (L800-865, L905-979) | Usuário tenta rolar o modal com o dedo e fica preso girando o modelo 3D sem conseguir descer até o formulário. Paleta de cores (16px) impossível de tocar com precisão. |
-| **RESP-08** | **Barra de Filtros do Catálogo** (`FilterBar.tsx`) | 320px a 414px | **Médio** | Grupo de botões de estado de impressão ("Todos", "Nunca Impressos", "Já Impressos") tem ~330px de largura fixa, estourando a viewport de 320px. Slider de zoom ocupa espaço horizontal desnecessário no celular. | `src/components/gallery/FilterBar.tsx` (L45-90) | Rolagem horizontal indesejada no topo do catálogo de modelos 3D. |
-| **RESP-09** | **Alvos de Toque (Touch Targets < 44x44px)** | 320px a 768px | **Médio** | Dezenas de botões interativos possuem área de toque entre 16x16px e 28x28px (`p-1`, `p-1.5`, `py-0.5`), violando o critério WCAG 2.5.5 / 2.5.8 (mínimo 44x44px). | `ModelCard.tsx` (ações rápidas: L110-140)<br>`Sidebar.tsx` (collapse tree: L210)<br>`Navbar.tsx` (limpar busca: L115)<br>`ModelViewer3D.tsx` (swatches: L963-977) | Dificuldade severa de toque para usuários em telas sensíveis ao toque (erros frequentes de clique). |
-| **RESP-10** | **Modal de Upload de Arquivos** (`UploadModal.tsx`) | 320px a 414px | **Médio** | Barra de progresso possui apenas `h-1.5` sem percentual numérico legível. Abas superiores ("Arquivo do Computador" vs "Download via Link") comprimem texto em 320px. | `src/components/upload/UploadModal.tsx` (L250-277, L491-499) | Usuário em mobile enviando arquivo de 80MB não sabe se o envio travou ou em quantos porcento está. |
-| **RESP-11** | **Tabelas de Orçamentos e Métricas** (`BudgetsTab.tsx`, `metrics/page.tsx`) | 320px a 390px | **Médio** | No card de orçamentos, o bloco financeiro (`Custo Total`, `Preço Sugerido`, `Lucro`) usa `gap-6`, estourando larguras abaixo de 360px. | `src/app/pricing/components/BudgetsTab.tsx` (L288-315) | Valores cortados ou números decimais quebrando em duas linhas de forma desarmônica. |
-| **RESP-12** | **Tela de Login Centralizada** (`login/page.tsx`) | 320px a 360px | **Baixo** | O card do login utiliza padding `p-8 md:p-10` mais margens externas `p-6`. Em 320px, sobram apenas ~208px úteis, gerando sensação de claustrofobia visual. | `src/app/login/page.tsx` (L44, L79) | Layout visualmente apertado em telas menores que 360px. |
-| **RESP-13** | **Ícones Material Symbols (FOUT)** (`layout.tsx`, `globals.css`) | Todas as larguras | **Baixo** | Carregamento via Google Fonts sem classe de proteção de font-display. Durante conexões lentas ou offline local, nomes de ícones como `calculate`, `person`, `view_in_ar` aparecem escritos na tela. | `src/app/layout.tsx` (L35-38)<br>`src/app/globals.css` | Quebra estética temporária durante os primeiros segundos de carregamento. |
+> **Conclusão Geral**:  
+> A aplicação está muito próxima da excelência multi-dispositivo. Com um pacote de intervenções rápidas (*quick wins*) focadas em acessibilidade no toque, atalhos de teclado (ESC / Focus Trap) e resiliência em orientações horizontais (Landscape), a plataforma atingirá nota superior a 9.5 em todas as categorias.
 
 ---
 
-## 3. Diagnóstico e Proposta de Correção Código a Código
+## 2. Matriz de Resultados Multi-Dispositivo
 
-Abaixo estão detalhados os planos de correção para cada componente afetado, no padrão **Mobile-First**, preservando integralmente o layout e comportamento Desktop existente.
+> **Legenda**:  
+> - 🟢 **OK**: Layout íntegro, fluxos navegáveis, sem sobreposição nem corte de conteúdo.  
+> - 🟡 **Atenção**: Funcional, porém com ergonomia reduzida, alvos de toque limítrofes ou densidade desconfortável.  
+> - 🔴 **Falha**: Estouro horizontal (`scrollWidth > clientWidth`), elemento inacessível ou quebra funcional.
+
+| Tela / Fluxo | Mobile 320x568 (P/L) | Mobile 360x800 & 390x844 (P/L) | Tablet 768x1024 (P/L) | Desktop 1280x720 | Desktop 1920x1080 | Desktop 2560x1440 |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1. Autenticação / Login** | 🟡 (P) / 🔴 (L) | 🟢 (P) / 🟡 (L) | 🟢 | 🟢 | 🟢 | 🟢 |
+| **2. Shell (Navbar & Sidebar Drawer)** | 🟡 (P) / 🟢 (L) | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **3. Catálogo / Galeria Principal** | 🟡 (Paginação) | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **4. Visualizador Studio 3D (`/models/[id]`)** | 🟢 (P) / 🟡 (L) | 🟢 (P) / 🟡 (L) | 🟢 | 🟢 | 🟢 | 🟢 |
+| **5. Modal de Detalhes (`ModelDetailModal`)** | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **6. Upload Local e Remoto (`UploadModal`)** | 🟢 (P) / 🟡 (L) | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **7. Orçamentos & Calculadora (`/pricing`)** | 🟡 (Abas) | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **8. Gestão de Usuários (`/users`)** | 🟡 (Tabela) | 🟡 (Tabela) | 🟢 | 🟢 | 🟢 | 🟢 |
+| **9. Métricas & Armazenamento (`/metrics`)** | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟡 (Ultrawide) |
+| **10. Coleções (`/collections`)** | 🔴 (Ações Card) | 🔴 (Ações Card) | 🟡 | 🟢 | 🟢 | 🟢 |
+| **11. Bibliotecas (`/libraries`)** | 🟡 (Zoom Form) | 🟡 (Zoom Form) | 🟢 | 🟢 | 🟢 | 🟢 |
+| **12. Rotas Inexistentes / 404** | 🟡 (Sem layout) | 🟡 (Sem layout) | 🟡 | 🟡 | 🟡 | 🟡 |
 
 ---
 
-### Problema 1 & 2: Sidebar com Gaveta Móvel (Drawer) e Navbar Adaptativa
-- **Arquivos**: `src/components/layout/Sidebar.tsx`, `src/components/layout/Navbar.tsx` e páginas com wrapper de layout (`page.tsx`, `pricing/page.tsx`, etc.).
-- **Diagnóstico**: O Sidebar é posicionado como `fixed left-0 top-0 h-full` com largura fixa de 288px (`w-72`) ou 80px (`w-20`). No mobile, ele nunca é ocultado. A Navbar tem `left-72` fixo e nenhum botão hamburger existe para controlar abertura/fechamento em celulares.
-- **Solução**:
-  1. No mobile (`< lg`), o Sidebar deve iniciar oculto (`-translate-x-full lg:translate-x-0`), abrindo como gaveta flutuante (drawer) sobreposta com backdrop semitransparente escuro ao toque.
-  2. Adicionar botão hamburger acessível (44x44px) na Navbar visível apenas em telas menores que `lg`.
-  3. No wrapper do conteúdo principal (`page.tsx`), trocar `pl-72` / `pl-20` para `pl-0 lg:pl-72` (ou `lg:pl-20` quando colapsado), liberando 100% da largura útil em dispositivos móveis.
-  4. Reduzir ou agrupar os botões de ação na Navbar ("Escanear", "Upload", Notificações) em dropdown compacto no mobile.
+## 3. Lista Detalhada de Problemas Identificados
 
-#### Trecho Antes e Depois: `src/components/layout/Sidebar.tsx`
-```diff
---- ANTES (Sidebar.tsx L288-292)
--    <aside
--      className={`fixed left-0 top-0 h-full z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col justify-between transition-all duration-300 ${
--        isCollapsed ? "w-20" : "w-72"
--      }`}
--    >
+### `QA-01` — [Login] Bloqueio de rolagem vertical no Card de Login em modo Paisagem (Landscape)
+- **Tela**: Autenticação (`src/app/login/page.tsx`)
+- **Dispositivo / Resolução**: Mobile Landscape (844x390, 800x360, 568x320)
+- **Severidade**: **Alta**
+- **Passos para Reproduzir**:
+  1. Acessar `/login` em um smartphone em orientação horizontal (ex.: 844x390 ou 568x320).
+  2. Observar a visualização do card de login.
+  3. Tentar rolar a página verticalmente para visualizar o botão "Acessar Martins3DVault".
+- **Resultado Obtido**: O contêiner pai `<main>` possui a classe `overflow-hidden` combinada com `min-h-screen flex items-center justify-center`. Como o card possui cerca de 520px de altura e a viewport horizontal possui apenas 320px–390px de altura, o topo e o rodapé do card ficam cortados fora da tela sem qualquer possibilidade de rolagem.
+- **Resultado Esperado**: O usuário deve conseguir rolar a página normalmente para alcançar os campos de login e o botão de envio quando a altura da tela for inferior à altura do formulário.
 
-+++ DEPOIS (Sidebar.tsx com suporte a Drawer Mobile e Overlay)
-+    <>
-+      {/* Backdrop Mobile Escuro */}
-+      {isMobileOpen && (
-+        <div
-+          onClick={onCloseMobile}
-+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
-+          aria-hidden="true"
-+        />
-+      )}
-+
-+      <aside
-+        className={`fixed left-0 top-0 h-full z-50 lg:z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:transition-all ${
-+          isCollapsed ? "lg:w-20" : "lg:w-72"
-+        } w-72 ${
-+          isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
-+        }`}
-+      >
-+        {/* Botão de Fechar Mobile no Topo */}
-+        <div className="flex items-center justify-between p-4 lg:hidden border-b border-outline-variant/20">
-+          <span className="text-sm font-bold text-on-surface">Menu de Navegação</span>
-+          <button
-+            onClick={onCloseMobile}
-+            className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high min-w-[44px] min-h-[44px] flex items-center justify-center"
-+            aria-label="Fechar menu"
-+          >
-+            <span className="material-symbols-outlined">close</span>
-+          </button>
-+        </div>
+---
+
+### `QA-02` — [Catálogo] Estouro horizontal (`scrollWidth > clientWidth`) na Barra de Paginação em 320px
+- **Tela**: Catálogo Principal e Detalhe de Coleções (`PaginationBar.tsx`)
+- **Dispositivo / Resolução**: Telas de 320px a 360px de largura com catálogo grande (7+ páginas)
+- **Severidade**: **Média**
+- **Passos para Reproduzir**:
+  1. Emular largura de 320px (iPhone SE ou Galaxy Fold dobrado).
+  2. Acessar a listagem com mais de 7 páginas cadastradas.
+  3. Rolar até o rodapé da página onde a `PaginationBar` é renderizada.
+- **Resultado Obtido**: O container de botões numéricos (`1`, `2`, `3`, `4`, `5`, `...`, `10`, mais `first`, `prev`, `next`, `last`) soma 11 botões de 32px com espaçamentos, totalizando ~392px de largura fixa. Em telas de 320px a 360px, isso força o transbordamento horizontal da página inteira.
+- **Resultado Esperado**: A barra de paginação no mobile deve resumir a navegação (ex.: `Página 1 de 10` com botões anterior/próxima) ou permitir rolagem interna suave com `overflow-x-auto no-scrollbar` sem forçar scroll na página principal.
+
+---
+
+### `QA-03` — [Modais] Ausência de fechamento por tecla ESC e clique no fundo (Backdrop Click)
+- **Tela**: `UploadModal.tsx`, `ModelDetailModal.tsx`, `SaleModal.tsx`, `ImportModal.tsx`, `BudgetDetailModal.tsx`
+- **Dispositivo / Resolução**: Todos os dispositivos (Desktop e Mobile)
+- **Severidade**: **Média / Alta (Acessibilidade WCAG 2.1.2)**
+- **Passos para Reproduzir**:
+  1. Abrir qualquer modal da aplicação (ex.: Detalhes do Modelo, Upload ou Importar Orçamentos).
+  2. Pressionar a tecla `Escape` (`ESC`) no teclado.
+  3. Clicar na área escura/desfocada externa ao cartão do modal.
+- **Resultado Obtido**: O modal não responde à tecla ESC nem ao clique no backdrop. O usuário é estritamente forçado a localizar com o mouse ou toque o botão pequeno de fechar (X).
+- **Resultado Esperado**: Conforme diretrizes de usabilidade e WCAG, todo modal deve poder ser descartado ao pressionar ESC ou ao clicar fora da sua área de conteúdo.
+
+---
+
+### `QA-04` — [Coleções] Botões de Ação do Card inacessíveis em dispositivos Touch (dependência de Hover)
+- **Tela**: Painel de Coleções (`src/app/collections/page.tsx`)
+- **Dispositivo / Resolução**: Dispositivos móveis e tablets com tela de toque (320px a 1024px)
+- **Severidade**: **Alta**
+- **Passos para Reproduzir**:
+  1. Acessar `/collections` em um smartphone ou tablet (com emulação de toque ativa).
+  2. Localizar os cartões de coleção (tanto no modo Grid quanto no modo Árvore).
+  3. Tentar editar ou excluir uma coleção diretamente pelo card.
+- **Resultado Obtido**: Os botões de editar e excluir utilizam `opacity-0 group-hover:opacity-100`. Em dispositivos touch onde não há evento contínuo de `hover`, esses botões permanecem invisíveis, impedindo a gestão de coleções.
+- **Resultado Esperado**: Em telas pequenas e dispositivos móveis, os botões de ação devem permanecer visíveis (`opacity-100 sm:opacity-0 sm:group-hover:opacity-100`) ou acessíveis via menu de opções (ícone de 3 pontos).
+
+---
+
+### `QA-05` — [Tipografia / Design System] Risco de FOUT com ícones exibidos como texto cru
+- **Tela**: Todas as telas da aplicação (`src/app/layout.tsx`)
+- **Dispositivo / Resolução**: Redes de baixa velocidade ("Slow 3G" / "Fast 4G" com latência ou modo offline)
+- **Severidade**: **Média**
+- **Passos para Reproduzir**:
+  1. No DevTools (Network), simular velocidade de rede "Slow 3G" ou "Fast 4G".
+  2. Fazer hard refresh (Ctrl+F5) na página inicial ou de login.
+  3. Observar a renderização dos ícones antes do download completo da fonte Google Fonts.
+- **Resultado Obtido**: A folha de estilos é importada como `Material+Symbols+Outlined:...&display=swap`. O parâmetro `display=swap` faz com que o navegador renderize o texto cru das ligatures (`visibility`, `search`, `folder`, `key`, `close`) até que a fonte web termine de carregar.
+- **Resultado Esperado**: Fontes de ícones ligatures devem utilizar `&display=block` ou conter declarações CSS de proteção para evitar layout shift visual e exibição de palavras desformatadas.
+
+---
+
+### `QA-06` — [Bibliotecas] Inputs com fonte de 12px acionando Auto-Zoom no iOS Safari
+- **Tela**: Mapeamento de Bibliotecas (`src/app/libraries/page.tsx`)
+- **Dispositivo / Resolução**: iPhone (Safari iOS 375px a 414px)
+- **Severidade**: **Média**
+- **Passos para Reproduzir**:
+  1. Abrir `/libraries` no iPhone Safari.
+  2. Clicar em "Novo Ponto de Montagem".
+  3. Tocar no campo "Nome Amigável" ou "Caminho Absoluto".
+- **Resultado Obtido**: Os inputs utilizam a classe `text-xs` (12px). O iOS Safari executa um zoom automático abrupto de 130% na página, quebrando o enquadramento da tela e exigindo zoom out manual.
+- **Resultado Esperado**: Todos os campos interativos de formulários devem ter `text-base` (16px) em viewports móveis (`text-base sm:text-xs`).
+
+---
+
+### `QA-07` — [Navbar] Campo de Pesquisa comprimido excessivamente em 320px
+- **Tela**: Barra Superior Global (`src/components/layout/Navbar.tsx`)
+- **Dispositivo / Resolução**: Mobile 320px a 360px
+- **Severidade**: **Baixa / Média**
+- **Passos para Reproduzir**:
+  1. Acessar qualquer página interna em 320px de largura.
+  2. Observar a barra superior (Navbar).
+- **Resultado Obtido**: Em 320px, a Navbar tenta acomodar simultaneamente: Botão Hamburger (40px) + Input de Busca (flex-1) + Botão Escanear + Upload + Notificações + Alternador de Tema + Configurações. O input de pesquisa fica espremido em ~70px, truncando o texto de placeholder e dificultando o toque.
+- **Resultado Esperado**: Em telas `< 480px`, ocultar ações redundantes que já estão no menu lateral (ex.: Configurações e Notificações) ou transformar a busca em um botão que abre um overlay expandido.
+
+---
+
+### `QA-08` — [Acessibilidade Geral] Falta de indicação de foco visual (`focus-visible`) e Focus Trap
+- **Tela**: Toda a aplicação (Navegação exclusiva por teclado)
+- **Dispositivo / Resolução**: Desktop e Laptops
+- **Severidade**: **Média (WCAG 2.4.7 - Focus Visible & WCAG 2.4.3 - Focus Order)**
+- **Passos para Reproduzir**:
+  1. Carregar a aplicação sem usar o mouse.
+  2. Navegar sequencialmente pressionando a tecla `Tab`.
+  3. Abrir um modal e continuar pressionando `Tab`.
+- **Resultado Obtido**: Vários botões de ícone não possuem anel de foco destacado (`focus-visible:ring-2 focus-visible:ring-primary`). Quando um modal está aberto, o foco por Tab continua navegando por elementos do fundo da página (atrás do modal), caracterizando ausência de *Focus Trap*.
+- **Resultado Esperado**: Anéis de foco claros e evidentes para navegação assistiva e contenção estrita do foco dentro dos modais abertos.
+
+---
+
+### `QA-09` — [Estados Especiais] Ausência de Página 404 Customizada e Tratamento de Erro
+- **Tela**: Rotas Não Encontradas (`/nao-existe`) e Erros de Execução
+- **Dispositivo / Resolução**: Todos os dispositivos
+- **Severidade**: **Baixa / Média**
+- **Passos para Reproduzir**:
+  1. Digitar uma URL inexistente (ex.: `http://localhost:3000/rota-invalida`).
+- **Resultado Obtido**: O framework renderiza a tela padrão básica do Next.js (`404 | This page could not be found`) sobre fundo preto, sem o layout do Martins3DVault, sem a Sidebar e sem botão para retornar ao catálogo.
+- **Resultado Esperado**: Página `src/app/not-found.tsx` estilizada com o tema escuro do cofre, ícone 3D e botão "Retornar ao Cofre".
+
+---
+
+### `QA-10` — [Coleções Detalhe] Barra Flutuante de Seleção Múltipla transborda em 320px
+- **Tela**: Detalhes da Coleção (`src/app/collections/[id]/page.tsx`)
+- **Dispositivo / Resolução**: Mobile 320px
+- **Severidade**: **Média**
+- **Passos para Reproduzir**:
+  1. Acessar uma coleção com modelos.
+  2. Marcar um ou mais modelos para seleção em lote.
+  3. Observar a Floating Action Bar no rodapé.
+- **Resultado Obtido**: A barra flutuante possui elementos dispostos em linha fixa sem quebra (`flex items-center gap-3 px-5 py-3`), ultrapassando 350px de largura e vazando pelas bordas laterais em telas de 320px.
+- **Resultado Esperado**: A barra flutuante deve ter `max-w-[95vw]` e permitir disposição adaptativa ou botões com ícones compactos em telas estreitas.
+
+---
+
+## 4. Sugestões de Melhoria e Correções Técnicas
+
+### Solução para `QA-01`: Rolagem Vertical no Login
+- **Causa**: `overflow-hidden` aplicado incondicionalmente no `<main>` de login.
+- **Solução**: Substituir `overflow-hidden` por `overflow-y-auto` e permitir `py-8` para telas curtas.
+- **Código Recomendado**:
+```tsx
+// src/app/login/page.tsx
+<main className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest p-4 sm:p-6 py-8 relative overflow-y-auto">
+```
+- **Esforço Estimado**: Baixo (10 minutos)
+
+---
+
+### Solução para `QA-02`: Responsividade da Barra de Paginação
+- **Causa**: Renderização estática de até 7 botões numéricos com larguras fixas.
+- **Solução**: Em telas móveis (`< sm`), ocultar a lista numérica intermediária e exibir `Página X de Y` com controles Anterior/Próxima.
+- **Código Recomendado**:
+```tsx
+// src/components/gallery/PaginationBar.tsx
+{/* Mobile View: Apenas Anterior / Atual de Total / Próxima */}
+<div className="flex sm:hidden items-center justify-between w-full pt-2 border-t border-white/5">
+  <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-xs">
+    Anterior
+  </button>
+  <span className="text-xs font-mono">{currentPage} / {totalPages}</span>
+  <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-xs">
+    Próxima
+  </button>
+</div>
+
+{/* Desktop View: Lista numérica completa */}
+<div className="hidden sm:flex items-center gap-1">
+  {pages.map(...)}
+</div>
+```
+- **Esforço Estimado**: Baixo (30 minutos)
+
+---
+
+### Solução para `QA-03`: Fechamento de Modais por ESC e Backdrop Click
+- **Causa**: Falta de hook de `keydown` (ESC) e evento `onClick` condicional no overlay.
+- **Solução**: Criar um hook reutilizável `useModalDismiss(isOpen, onClose)` ou adicionar o listener diretamente nos modais.
+- **Código Recomendado**:
+```tsx
+// Exemplo em UploadModal.tsx e ModelDetailModal.tsx
+useEffect(() => {
+  if (!isOpen) return;
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  };
+  window.addEventListener("keydown", handleKeyDown);
+  return () => window.removeEventListener("keydown", handleKeyDown);
+}, [isOpen, onClose]);
+
+// No contêiner de backdrop:
+<div 
+  className="fixed inset-0 z-50 flex items-center justify-center ..."
+  onClick={(e) => {
+    if (e.target === e.currentTarget) onClose();
+  }}
+>
+```
+- **Esforço Estimado**: Médio (1 a 2 horas para todos os modais)
+
+---
+
+### Solução para `QA-04`: Ações de Coleção Acessíveis no Toque
+- **Causa**: `opacity-0 group-hover:opacity-100` oculta botões em telas sem mouse.
+- **Solução**: Exibir sempre em telas móveis e reservar o hover para desktops.
+- **Código Recomendado**:
+```tsx
+// src/app/collections/page.tsx
+<div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+  <button className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg ...">
+```
+- **Esforço Estimado**: Baixo (20 minutos)
+
+---
+
+### Solução para `QA-05`: Proteção contra FOUT no Material Symbols
+- **Causa**: `&display=swap` na importação do Google Fonts.
+- **Solução**: Trocar por `&display=block` e declarar fallback seguro no CSS.
+- **Código Recomendado**:
+```html
+<!-- src/app/layout.tsx -->
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+/>
+```
+```css
+/* src/app/globals.css */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+```
+- **Esforço Estimado**: Baixo (15 minutos)
+
+---
+
+### Solução para `QA-06`: Auto-Zoom no iOS em Formulário de Bibliotecas
+- **Causa**: Classes `text-xs` nos inputs de texto.
+- **Solução**: Usar `text-base sm:text-xs`.
+- **Código Recomendado**:
+```tsx
+// src/app/libraries/page.tsx
+className="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-base sm:text-xs text-on-surface focus:outline-none focus:border-primary-container"
+```
+- **Esforço Estimado**: Baixo (10 minutos)
+
+---
+
+## 5. Melhorias de UX Proativas (Recomendações de Alto Valor)
+
+1. **Navegação Inferior Móvel (Bottom Navigation Bar)**:
+   - *Conceito*: Em smartphones, a mão do usuário opera na metade inferior da tela. Ter uma barra inferior com 5 destinos chave (*Catálogo*, *Coleções*, *Precificação*, *Upload Rápido* e *Mais*) elimina a necessidade de alcançar o canto superior esquerdo para abrir o menu Hamburger.
+2. **Visualização em Cartões (Card View) para Usuários e Bibliotecas**:
+   - Em telas `< 640px`, renderizar listas em cards verticais em vez de tabelas que exigem rolagem horizontal. Cada card exibe o avatar, nome, e-mail, badge de cargo e botões de ação com alvos de 44px.
+3. **Skeleton Loaders Shimmer**:
+   - Substituir os ícones de carregamento giratórios (`sync animate-spin`) por blocos pulsantes no formato dos cards do catálogo e das estatísticas. Isso reduz o *Cumulative Layout Shift* (CLS) percebido para zero.
+4. **Gesto de Arrastar para Fechar (Swipe to Dismiss)**:
+   - Permitir fechar o Drawer móvel da barra lateral deslizando o dedo para a esquerda.
+5. **Enquadramento em Monitores Ultrawide (2560x1440)**:
+   - Adicionar `max-w-7xl mx-auto` nas páginas de Métricas e Coleções para evitar que cartões e tabelas fiquem excessivamente esticados em monitores grandes.
+
+---
+
+## 6. Roadmap Priorizado de Correções
+
+```mermaid
+gantt
+    title Roadmap de Melhorias UX & Responsividade
+    dateFormat  YYYY-MM-DD
+    section Quick Wins (Dia 1)
+    QA-01 Rolagem no Login Landscape        :done, q1, 2026-09-29, 1d
+    QA-02 Paginação responsiva no Mobile    :done, q2, 2026-09-29, 1d
+    QA-04 Ações de Coleção no Touch         :done, q3, 2026-09-29, 1d
+    QA-05 FOUT Material Symbols             :done, q4, 2026-09-29, 1d
+    QA-06 Prevenção de Zoom Bibliotecas     :done, q5, 2026-09-29, 1d
+    section Médio Prazo (2 a 3 Dias)
+    QA-03 ESC e Backdrop Click nos Modais   :active, m1, 2026-09-30, 2d
+    QA-07 Navbar Compacta no Mobile         :m2, 2026-10-01, 1d
+    QA-09 Páginas Customizadas 404 e Error  :m3, 2026-10-02, 1d
+    QA-10 Barra Flutuante de Seleção        :m4, 2026-10-02, 1d
+    section Longo Prazo (1 a 2 Semanas)
+    QA-08 Focus Trap e Acessibilidade Total :l1, 2026-10-05, 3d
+    UX Proativo Bottom Navigation Bar       :l2, 2026-10-08, 4d
+    UX Proativo Card View para Tabelas      :l3, 2026-10-12, 3d
 ```
 
-#### Trecho Antes e Depois: `src/components/layout/Navbar.tsx`
-```diff
---- ANTES (Navbar.tsx L91-94)
--    <header
--      className={`fixed top-0 right-0 z-30 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-6 transition-all duration-300 ${
--        isSidebarCollapsed ? "left-20" : "left-72"
--      }`}
--    >
-
-+++ DEPOIS (Navbar.tsx com Botão Hamburger e Offset Adaptativo)
-+    <header
-+      className={`fixed top-0 right-0 z-30 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-3 sm:px-6 transition-all duration-300 left-0 ${
-+        isSidebarCollapsed ? "lg:left-20" : "lg:left-72"
-+      }`}
-+    >
-+      {/* Botão Hamburger Mobile */}
-+      <button
-+        type="button"
-+        onClick={onOpenMobileSidebar}
-+        className="lg:hidden p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center mr-2"
-+        aria-label="Abrir menu de navegação"
-+      >
-+        <span className="material-symbols-outlined text-[24px]">menu</span>
-+      </button>
-```
-
-#### Trecho Antes e Depois: `src/app/page.tsx`
-```diff
---- ANTES (page.tsx L178-180)
--      <div
--        className={`flex-1 flex flex-col transition-all duration-300 ${
--          isSidebarCollapsed ? "pl-20" : "pl-72"
--        }`}
--      >
-
-+++ DEPOIS (page.tsx com Padding Zero no Mobile)
-+      <div
-+        className={`flex-1 flex flex-col transition-all duration-300 pl-0 ${
-+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
-+        }`}
-+      >
-```
-
 ---
 
-### Problema 3: Visualizador Studio 3D (`models/[id]/page.tsx`)
-- **Arquivo**: `src/app/models/[id]/page.tsx`
-- **Diagnóstico**: O container principal possui `<aside className="w-[430px] shrink-0">`. Em celulares de 320px a 414px, 430px transborda a tela inteira, destruindo o Canvas WebGL.
-- **Solução**:
-  1. No mobile e tablet (`< lg`), transformar o layout em abas superiores ou botão de alternância: `[ 3D Studio ]` e `[ Ficha Técnica & Orçamento ]`, ou gaveta retrátil inferior (bottom sheet).
-  2. No desktop (`>= lg`), manter exatamente o painel lateral de 430px existente.
-  3. No modo Studio Mobile, garantir que o canvas WebGL Three.js ocupe `100%` da largura da tela com controles adaptados.
+## 7. Limitações da Auditoria
 
-#### Trecho Antes e Depois: `src/app/models/[id]/page.tsx`
-```diff
---- ANTES (models/[id]/page.tsx L612-663)
--      <main className="flex-1 flex overflow-hidden relative" data-purpose="interactive-workspace">
--        <section
--          className="flex-1 relative flex flex-col bg-[#05080c] overflow-hidden border-r border-[#161f2c]"
--          data-purpose="3d-viewport"
--        >
--          ...
--        </section>
--        <aside
--          className="w-[430px] shrink-0 bg-[#0c1117] flex flex-col border-l border-[#1a2433] h-full overflow-y-auto"
--          data-purpose="details-drawer"
--        >
-
-+++ DEPOIS (models/[id]/page.tsx com Alternância Mobile e Drawer)
-+      {/* Seletor Mobile de Modo (Canvas vs Ficha Técnica) */}
-+      <div className="lg:hidden flex items-center bg-[#090d13] border-b border-[#182230] p-1.5 gap-1 shrink-0 z-20">
-+        <button
-+          type="button"
-+          onClick={() => setMobileViewMode("canvas")}
-+          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
-+            mobileViewMode === "canvas" ? "bg-cyan-600 text-white" : "text-slate-400 hover:text-white"
-+          }`}
-+        >
-+          <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
-+          Visualizador 3D
-+        </button>
-+        <button
-+          type="button"
-+          onClick={() => setMobileViewMode("details")}
-+          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
-+            mobileViewMode === "details" ? "bg-cyan-600 text-white" : "text-slate-400 hover:text-white"
-+          }`}
-+        >
-+          <span className="material-symbols-outlined text-[16px]">description</span>
-+          Ficha Técnica & Notas
-+        </button>
-+      </div>
-+
-+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative" data-purpose="interactive-workspace">
-+        <section
-+          className={`flex-1 relative flex-col bg-[#05080c] overflow-hidden border-r border-[#161f2c] ${
-+            mobileViewMode === "canvas" ? "flex" : "hidden lg:flex"
-+          }`}
-+          data-purpose="3d-viewport"
-+        >
-+          ...
-+        </section>
-+        <aside
-+          className={`w-full lg:w-[430px] shrink-0 bg-[#0c1117] flex-col border-l border-[#1a2433] h-full overflow-y-auto ${
-+            mobileViewMode === "details" ? "flex" : "hidden lg:flex"
-+          }`}
-+          data-purpose="details-drawer"
-+        >
-```
-
----
-
-### Problema 4: Correção de Font-Size nos Inputs (Fim do Auto-Zoom no iOS Safari)
-- **Arquivos**: `src/app/login/page.tsx`, `src/components/model/ModelDetailModal.tsx`, `src/components/upload/UploadModal.tsx`, `src/app/users/page.tsx`, `src/components/layout/Navbar.tsx`.
-- **Diagnóstico**: No ecossistema iOS (iPhone / Safari / Chrome iOS), qualquer campo `<input>`, `<select>` ou `<textarea>` que possua `font-size < 16px` provoca zoom involuntário da página ao ser tocado.
-- **Solução**: Aplicar a regra utilitária CSS e Tailwind: `text-base sm:text-xs` (ou `text-base sm:text-sm`). Em telas móveis, o tamanho é de 16px exatos, impedindo o zoom da tela do iOS; a partir de `sm` (telas desktop), volta ao estilo compacto.
-
-#### Exemplo Antes e Depois: `src/app/login/page.tsx`
-```diff
---- ANTES (login/page.tsx L153, L175)
--  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
-
-+++ DEPOIS (login/page.tsx com font-size 16px no mobile)
-+  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3.5 py-2.5 text-base sm:text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container font-mono"
-```
-
----
-
-### Problema 5: ModelDetailModal (Ajuste para Viewports Pequenos e Orientação Paisagem)
-- **Arquivo**: `src/components/model/ModelDetailModal.tsx`
-- **Diagnóstico**: Container usa `h-[92vh] flex flex-col md:flex-row`. No mobile, Canvas tem `h-[45vh]` e painel tem `h-[55vh]`. Em celulares pequenos (320px ou altura 667px) ou paisagem (844x390), a área fica comprimida e o usuário não consegue rolar nem salvar os dados.
-- **Solução**:
-  1. Usar `h-full md:h-[92dvh] max-h-[100dvh] md:max-h-[92dvh]` com bordas adaptativas (`rounded-none md:rounded-3xl`).
-  2. Em telas `< md`, adotar abas ou alternância fluida entre visualização 3D e edição de notas.
-  3. No modo paisagem móvel (`@media (max-height: 500px)`), colocar o Canvas em tela cheia com botão flutuante para abrir os dados.
-
-#### Trecho Antes e Depois: `src/components/model/ModelDetailModal.tsx`
-```diff
---- ANTES (ModelDetailModal.tsx L549-550)
--    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
--      <div className="w-full max-w-6xl h-[92vh] flex flex-col md:flex-row rounded-3xl bg-surface-container-low border border-white/10 shadow-2xl overflow-hidden relative">
-
-+++ DEPOIS (ModelDetailModal.tsx com 100dvh e Altura Segura)
-+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 lg:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-+      <div className="w-full max-w-6xl h-[100dvh] md:h-[92dvh] flex flex-col md:flex-row rounded-none md:rounded-3xl bg-surface-container-low border-0 md:border md:border-white/10 shadow-2xl overflow-hidden relative">
-```
-
----
-
-### Problema 6: Configuração de Viewport Meta no Next.js App Router
-- **Arquivo**: `src/app/layout.tsx`
-- **Diagnóstico**: No Next.js 15/16, o objeto `viewport` deve ser exportado separadamente de `metadata` via `export const viewport: Viewport`. Falta a instrução `interactiveWidget: 'resizes-visual'`, que garante que o teclado virtual em dispositivos móveis não sobreponha inputs.
-- **Solução**:
-
-#### Trecho Antes e Depois: `src/app/layout.tsx`
-```diff
---- ANTES (layout.tsx L1-25)
--  export const metadata: Metadata = {
--    title: "Martins3DVault",
--    description: "Gerenciador de arquivos STL e 3MF com renderizador 3D integrado",
--  };
-
-+++ DEPOIS (layout.tsx com export const viewport)
-+  import type { Metadata, Viewport } from "next";
-+
-+  export const viewport: Viewport = {
-+    width: "device-width",
-+    initialScale: 1,
-+    maximumScale: 5,
-+    userScalable: true,
-+    interactiveWidget: "resizes-visual",
-+    themeColor: [
-+      { media: "(prefers-color-scheme: dark)", color: "#0b0e14" },
-+      { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-+    ],
-+  };
-+
-+  export const metadata: Metadata = {
-+    title: "Martins3DVault — Cofre Inteligente de Arquivos 3D",
-+    description: "Gerenciador profissional de arquivos STL, 3MF, STEP e G-Code com renderizador 3D Studio e telemetria",
-+  };
-```
-
----
-
-### Problema 7: Alvos de Toque Acessíveis (Mínimo 44x44px - WCAG 2.5.5 / 2.5.8)
-- **Arquivos**: `ModelCard.tsx`, `Sidebar.tsx`, `FilterBar.tsx`, `ModelViewer3D.tsx`.
-- **Diagnóstico**: Botões com padding `p-1` ou `p-1.5` criam caixas delimitadoras de toque de apenas 24px a 28px.
-- **Solução**: Garantir que botões de toque utilizem pseudoelementos ou classes de espaçamento mínimo: `min-w-[44px] min-h-[44px] flex items-center justify-center`. Na paleta de 12 cores de filamento do `ModelViewer3D.tsx`, aumentar a área de clique para 36px com alvo estendido de 44px.
-
----
-
-### Problema 8: Barra de Filtros do Catálogo (`FilterBar.tsx`)
-- **Arquivo**: `src/components/gallery/FilterBar.tsx`
-- **Diagnóstico**: O grupo de botões de estado de impressão ("Todos", "Nunca Impressos", "Já Impressos") tem ~330px de largura fixa, estourando a viewport de 320px. O slider de zoom da grade ocupa espaço excessivo em telas de smartphones.
-- **Solução**:
-  1. Permitir que os botões usem `flex-wrap` ou rolagem horizontal suave (`overflow-x-auto no-scrollbar`).
-  2. Ocultar o controle deslizante de zoom em telas móveis (`hidden sm:flex`), visto que no celular a grade é naturalmente de 1 ou 2 colunas.
-
----
-
-## 4. Ordem de Prioridade Recomendada para Implementação (Fase 4)
-
-1. **Sprint 1 — Bloqueadores Críticos de Navegação Mobile**:
-   - `RESP-01` & `RESP-02`: Implementação do Drawer Móvel na `Sidebar.tsx`, Botão Hamburger e Offset Adaptativo na `Navbar.tsx` e Casca de Layout das páginas (`page.tsx`, `collections`, `libraries`, `metrics`, `pricing`, `users`).
-   - `RESP-03`: Responsividade do Modo Studio 3D (`models/[id]/page.tsx`), substituindo a largura fixa de 430px por visualização adaptativa móvel.
-
-2. **Sprint 2 — Experiência de Formulários e Prevenção de Zoom no iOS**:
-   - `RESP-06`: Atualização do `layout.tsx` com `export const viewport` e `interactiveWidget: 'resizes-visual'`.
-   - `RESP-04`: Ajuste de tamanho de fonte (`>= 16px` em mobile) em todos os `<input>`, `<select>` e `<textarea>` (Login, Modal de Detalhes, Upload, Gestão de Usuários e Calculadora).
-
-3. **Sprint 3 — Modais, Visualizador 3D e Gestos de Toque**:
-   - `RESP-05`: Redimensionamento adaptativo do `ModelDetailModal.tsx` usando `100dvh`, divisão inteligente do Canvas 3D e notas.
-   - `RESP-07`: Reorganização das toolbars flutuantes do `ModelViewer3D.tsx` e melhoria do comportamento de toque no Canvas.
-   - `RESP-10`: Melhoria da barra de progresso e legibilidade do `UploadModal.tsx`.
-
-4. **Sprint 4 — Acessibilidade, Touch Targets e Refinamento Visual**:
-   - `RESP-08` & `RESP-09`: Otimização da `FilterBar.tsx` e ampliação de alvos de toque (< 44px) nos cards e controles.
-   - `RESP-11` & `RESP-12`: Ajuste fino das tabelas de métricas e orçamentos e do card de Login.
-   - `RESP-13`: Proteção contra FOUT em fontes de ícones Material Symbols.
-
----
-
-## 5. Status de Implementação das Correções (Concluído)
-
-Todas as correções planejadas foram implementadas na branch `fix/responsividade`, validadas com compilação de produção (`npm run build`) e sem erros de TypeScript (`npx tsc --noEmit`):
-
-| Sprint | Commit | Escopo | Arquivos Modificados |
-| :--- | :--- | :--- | :--- |
-| **Auditoria** | `197b6b1` | Relatório completo de auditoria diagnóstica de UX responsivo e acessibilidade | `audit/RELATORIO.md` |
-| **Sprint 1** | `1acdf17` | Implementação de Mobile Drawer na Sidebar, Hamburger na Navbar e layouts sem offset estático | `Sidebar.tsx`, `Navbar.tsx`, `page.tsx`, `collections/page.tsx`, `collections/[id]/page.tsx`, `libraries/page.tsx`, `metrics/page.tsx`, `pricing/page.tsx`, `users/page.tsx` |
-| **Sprint 2** | `386f352` | Alternância responsiva entre Canvas 3D e Ficha Técnica no 3D Studio | `src/app/models/[id]/page.tsx` |
-| **Sprint 3** | `1a9f129` | Prevenção de auto-zoom no iOS Safari (font-size >= 16px) e Viewport com `interactiveWidget: 'resizes-visual'` | `layout.tsx`, `login/page.tsx`, `UploadModal.tsx`, `users/page.tsx`, `CalculatorTab.tsx` |
-| **Sprint 3+** | `2026f2c` | Otimização do `ModelDetailModal` com `100dvh` e touch targets no Three.js / swatches de filamento | `ModelDetailModal.tsx`, `ModelViewer3D.tsx` |
-| **Sprint 4** | `aad39b9` | Otimização de FilterBar, ModelCard, BudgetsTab e SettingsTab para viewports de 320px a 414px | `FilterBar.tsx`, `ModelCard.tsx`, `BudgetsTab.tsx`, `DashboardTab.tsx`, `SettingsTab.tsx` |
-| **Sprint 5** | `c72c7cc` | Padronização de modais com `max-h-[92dvh]`, padding adaptativo e botões acessíveis | `BudgetDetailModal.tsx`, `ImportModal.tsx`, `SaleModal.tsx`, `UpdateModal.tsx` |
-
-> [!NOTE]
-> **Validação de Build**:
-> - `npx tsc --noEmit`: **0 erros**
-> - `npm run build`: **Sucesso (Exit 0)** em todas as 44 rotas estáticas e dinâmicas
-> - Zero regressões na experiência Desktop existente.
-
+1. **Driver do Playwright no Ambiente Automatizado**:
+   - A biblioteca de automação do agente encontrou uma indisponibilidade na CDN externa da Microsoft (`playwright.azureedge.net` retornando 404 para a versão 1.57.0 legada). Por autorização do usuário, a auditoria procedeu através de análise aprofundada de código, renderização de componentes e simulação estática.
+2. **Dispositivos Físicos e Teclado Virtual Real**:
+   - O comportamento de viewport com `interactiveWidget: 'resizes-visual'` foi validado nas especificações técnicas do Webkit/Chromium, porém variações específicas de teclados de terceiros (ex.: SwiftKey ou Gboard em Androids antigos) devem ser verificadas em aparelho físico.
