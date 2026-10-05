@@ -5,6 +5,15 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.16.1] - 2026-10-05
+
+### Segurança & Dependências
+- **Correção de Vulnerabilidade Crítica no Next.js (CVE / GHSA-vcvr-r3jv-pc5j)**:
+  - Atualização do `next` e `eslint-config-next` para `16.3.8`.
+  - Elimina vulnerabilidade crítica de Remote Code Execution (RCE) em `next/og ImageResponse` detectada na auditoria e scan de segurança do Trivy no deploy da imagem Docker.
+
+---
+
 ## [1.16.0] - 2026-10-05
 
 ### Adicionado / Scanner, Miniaturas & Fidelidade .3MF
