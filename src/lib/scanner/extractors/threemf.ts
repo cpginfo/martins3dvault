@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import AdmZip from "adm-zip";
 
 export interface ThreeMfResult {
@@ -14,18 +15,157 @@ export interface ThreeMfResult {
   dimensionsZ?: number;
 }
 
-const THUMBNAIL_PATTERNS = [
-  /^metadata\/thumbnail\.(png|jpg|jpeg)$/i,
-  /^metadata\/slice_info\.(png|jpg|jpeg)$/i,
-  /^metadata\/plate_\d+\.(png|jpg|jpeg)$/i,
-  /^metadata\/.*thumbnail.*\.(png|jpg|jpeg)$/i,
-  /^metadata\/.*cover.*\.(png|jpg|jpeg)$/i,
-  /^thumbnail\.(png|jpg|jpeg)$/i,
-  /^thumbnail\/.*\.(png|jpg|jpeg)$/i,
-  /^auxiliaries\/.*thumbnail.*\.(png|jpg|jpeg)$/i,
-  /^auxiliaries\/.*picture.*\.(png|jpg|jpeg)$/i,
-  /^auxiliaries\/.*cover.*\.(png|jpg|jpeg)$/i,
-];
+/**
+ * Localiza a miniatura oficial de um arquivo .3mf seguindo o padrão oficial do Windows Explorer / OPC
+ * (Open Packaging Conventions - ISO/IEC 29500-2) e metadados de projeto (Bambu Studio, OrcaSlicer, PrusaSlicer, Cura).
+ */
+export function findThreeMfThumbnailEntry(entries: AdmZip.IZipEntry[]): AdmZip.IZipEntry | undefined {
+  const entryMap = new Map<string, AdmZip.IZipEntry>();
+  for (const entry of entries) {
+    entryMap.set(entry.entryName.replace(/\\/g, "/").toLowerCase(), entry);
+  }
+
+  // 1. Padrão Oficial Windows Explorer / OPC (_rels/.rels)
+  // O Windows Explorer lê o arquivo de relações do pacote OPC e busca por relacionamentos do tipo "metadata/thumbnail"
+  const relsEntry = entries.find(
+    (e) => e.entryName.replace(/\\/g, "/").toLowerCase() === "_rels/.rels"
+  );
+  if (relsEntry) {
+    try {
+      const xml = relsEntry.getData().toString("utf8");
+      const relRegex = /<Relationship\s+([^>]*?)\/?>/gi;
+      let m: RegExpExecArray | null;
+      let opcTarget: string | null = null;
+
+      while ((m = relRegex.exec(xml)) !== null) {
+        const attrs = m[1];
+        const typeMatch = attrs.match(/Type=["']([^"']+)["']/i);
+        const targetMatch = attrs.match(/Target=["']([^"']+)["']/i);
+
+        if (typeMatch && targetMatch) {
+          const type = typeMatch[1];
+          // Padrão OPC ISO/IEC 29500-2 e especificações 3MF
+          if (/relationships\/(metadata\/)?thumbnail/i.test(type)) {
+            opcTarget = targetMatch[1];
+            break;
+          }
+        }
+      }
+
+      if (opcTarget) {
+        const normTarget = opcTarget.replace(/\\/g, "/").replace(/^\//, "");
+
+        // No Bambu Studio / OrcaSlicer, o thumbnail_3mf.png (240x240) é acompanhado
+        // de thumbnail_middle.png (680x680) na pasta .thumbnails/. Se existir, usamos a versão de maior fidelidade.
+        const middleCandidate = normTarget.replace(
+          /thumbnail_(3mf|small)\.(png|jpg|jpeg|webp)$/i,
+          "thumbnail_middle.$2"
+        );
+        if (entryMap.has(middleCandidate.toLowerCase())) {
+          return entryMap.get(middleCandidate.toLowerCase());
+        }
+
+        if (entryMap.has(normTarget.toLowerCase())) {
+          return entryMap.get(normTarget.toLowerCase());
+        }
+      }
+    } catch {
+      // Ignora falha de parse do _rels/.rels e segue para os próximos métodos
+    }
+  }
+
+  // 2. Relacionamentos de modelo (3D/_rels/3dmodel.model.rels)
+  const modelRelsEntry = entries.find(
+    (e) => e.entryName.replace(/\\/g, "/").toLowerCase() === "3d/_rels/3dmodel.model.rels"
+  );
+  if (modelRelsEntry) {
+    try {
+      const xml = modelRelsEntry.getData().toString("utf8");
+      const relRegex = /<Relationship\s+([^>]*?)\/?>/gi;
+      let m: RegExpExecArray | null;
+
+      while ((m = relRegex.exec(xml)) !== null) {
+        const attrs = m[1];
+        const typeMatch = attrs.match(/Type=["']([^"']+)["']/i);
+        const targetMatch = attrs.match(/Target=["']([^"']+)["']/i);
+
+        if (typeMatch && targetMatch && /relationships\/(metadata\/)?thumbnail/i.test(typeMatch[1])) {
+          const t = targetMatch[1].replace(/\\/g, "/");
+          const normTarget = t.startsWith("/") ? t.substring(1) : path.posix.join("3d", t);
+          if (entryMap.has(normTarget.toLowerCase())) {
+            return entryMap.get(normTarget.toLowerCase());
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Metadados do Designer (DesignerCover ou ProfileCover em 3D/3dmodel.model)
+  const modelEntry = entries.find(
+    (e) => e.entryName.replace(/\\/g, "/").toLowerCase() === "3d/3dmodel.model"
+  );
+  if (modelEntry) {
+    try {
+      const xml = modelEntry.getData().toString("utf8");
+      const coverMatch = xml.match(
+        /<metadata\s+name=["'](DesignerCover|ProfileCover)["']>([^<]+)<\/metadata>/i
+      );
+      if (coverMatch) {
+        const coverFileName = coverMatch[2].trim();
+        const candidates = [
+          `auxiliaries/model pictures/${coverFileName}`.toLowerCase(),
+          `auxiliaries/${coverFileName}`.toLowerCase(),
+          `metadata/${coverFileName}`.toLowerCase(),
+        ];
+        for (const cand of candidates) {
+          if (entryMap.has(cand)) {
+            return entryMap.get(cand);
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // 4. Fallback Prioritário por nomes e pastas dedicadas a capas reais/fotos
+  const preferredPatterns = [
+    /^auxiliaries\/\.thumbnails\/thumbnail_middle\.(png|jpg|jpeg|webp)$/i,
+    /^auxiliaries\/\.thumbnails\/thumbnail_3mf\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/project_cover\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/cover\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/thumbnail\.(png|jpg|jpeg|webp)$/i,
+    /^thumbnail\.(png|jpg|jpeg|webp)$/i,
+    /^auxiliaries\/model pictures\/.*\.(png|jpg|jpeg|webp)$/i,
+    /^auxiliaries\/.*cover.*\.(png|jpg|jpeg|webp)$/i,
+    /^auxiliaries\/.*thumbnail.*\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/.*cover.*\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/.*thumbnail.*\.(png|jpg|jpeg|webp)$/i,
+  ];
+
+  for (const pattern of preferredPatterns) {
+    for (const [key, entry] of entryMap.entries()) {
+      if (pattern.test(key)) {
+        return entry;
+      }
+    }
+  }
+
+  // 5. Último recurso absoluto: renders automáticos da placa de fatiamento (Plate 1)
+  const platePatterns = [
+    /^metadata\/plate_1\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/plate_\d+\.(png|jpg|jpeg|webp)$/i,
+    /^metadata\/slice_info\.(png|jpg|jpeg|webp)$/i,
+  ];
+
+  for (const pattern of platePatterns) {
+    for (const [key, entry] of entryMap.entries()) {
+      if (pattern.test(key)) {
+        return entry;
+      }
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Extrai thumbnails embutidas e parâmetros técnicos reais de fatiamento de arquivos .3mf (Bambu Studio, OrcaSlicer, PrusaSlicer)
@@ -49,24 +189,21 @@ export async function extractThreeMfMetadata(
     let dimensionsY: number | undefined;
     let dimensionsZ: number | undefined;
 
-    // 1. Procura por thumbnail
-    for (const entry of entries) {
-      const entryName = entry.entryName.replace(/\\/g, "/");
-      const isThumbnail = THUMBNAIL_PATTERNS.some((pattern) => pattern.test(entryName));
+    // 1. Procura por thumbnail seguindo o padrão oficial do Windows Explorer / OPC
+    const thumbEntry = findThreeMfThumbnailEntry(entries);
+    if (thumbEntry) {
+      const ext = path.extname(thumbEntry.entryName) || ".png";
+      const thumbDir = path.join(storageDataPath, "thumbnails");
+      await fs.promises.mkdir(thumbDir, { recursive: true });
 
-      if (isThumbnail && !thumbnailPath) {
-        const ext = path.extname(entryName) || ".png";
-        const thumbDir = path.join(storageDataPath, "thumbnails");
-        await fs.promises.mkdir(thumbDir, { recursive: true });
+      const fileName = `${modelId}_thumb${ext}`;
+      const fullDestPath = path.join(thumbDir, fileName);
 
-        const fileName = `${modelId}_thumb${ext}`;
-        const fullDestPath = path.join(thumbDir, fileName);
-
-        const buffer = entry.getData();
-        if (buffer && buffer.length > 0) {
-          await fs.promises.writeFile(fullDestPath, buffer);
-          thumbnailPath = `/api/assets/thumbnails/${fileName}`;
-        }
+      const buffer = thumbEntry.getData();
+      if (buffer && buffer.length > 0) {
+        await fs.promises.writeFile(fullDestPath, buffer);
+        const hash = crypto.createHash("md5").update(buffer).digest("hex").slice(0, 8);
+        thumbnailPath = `/api/assets/thumbnails/${fileName}?v=${hash}`;
       }
     }
 

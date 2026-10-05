@@ -5,6 +5,25 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.16.0] - 2026-10-05
+
+### Adicionado / Scanner, Miniaturas & Fidelidade .3MF
+- **Extração de Miniaturas no Padrão Oficial OPC / Windows Explorer (`src/lib/scanner/extractors/threemf.ts`)**:
+  - Implementada a função `findThreeMfThumbnailEntry` aderente às especificações ISO/IEC 29500-2 (Open Packaging Conventions - OPC) e padrões 3MF oficiais, idêntica ao método de indexação do Windows Explorer.
+  - Leitura estruturada de relacionamentos primários em `_rels/.rels` (Relationship Type `metadata/thumbnail`).
+  - Resolução inteligente de miniaturas de alta resolução em pacotes de fatiadores modernos (Bambu Studio, OrcaSlicer, PrusaSlicer): quando o arquivo aponta para uma miniatura básica (`thumbnail_3mf.png` ou `thumbnail_small.png` 240x240), o sistema automaticamente detecta e prioriza a versão de alta fidelidade (`thumbnail_middle.png` 680x680) presente no pacote.
+  - Leitura e fallback para relacionamentos de modelo 3D em `3d/_rels/3dmodel.model.rels`.
+  - Suporte a capas personalizadas de designer (`DesignerCover` e `ProfileCover`) em `3d/3dmodel.model` com mapeamento direto para `auxiliaries/model pictures/`.
+  - Cadeia de fallback hierárquico que prioriza fotos de capas de projeto reais antes de recorrer a renders de fatiamento (`plate_1`, `plate_N` ou `slice_info`).
+- **Cache-Busting com Versionamento MD5 em Miniaturas (`src/lib/scanner/extractors/threemf.ts`)**:
+  - Adicionado sufixo de query string determinístico `?v={hash}` com os primeiros 8 dígitos do hash MD5 do buffer da imagem no caminho das miniaturas geradas (`/api/assets/thumbnails/{modelId}_thumb.png?v=...`).
+  - Previne que o navegador sirva miniaturas em cache defasadas quando arquivos são atualizados ou re-extraídos.
+- **Re-scan Diferencial Inteligente para Atualização de Miniaturas Legadas (`src/lib/scanner/crawler.ts`)**:
+  - O crawler diferencial agora identifica modelos com capas antigas sem controle de versão (`isLegacyThumb`), forçando a re-extração automática para o novo padrão OPC de alta fidelidade sem necessidade de recriar a biblioteca.
+  - Atualização automática da capa principal do modelo (`modelCover`) quando uma miniatura .3mf com qualidade superior é descoberta.
+
+---
+
 ## [1.15.0] - 2026-09-29
 
 ### Adicionado / Coleções, UX & Resiliência

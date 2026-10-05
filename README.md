@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.15.0)
+# Martins3DVault 🖨️✨ (v1.16.0)
 
 <div align="center">
 
@@ -36,6 +36,14 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 🖼️ **Extração de Capas no Padrão Oficial OPC / Windows Explorer (.3mf)**:
+  - Total conformidade com a especificação ISO/IEC 29500-2 (Open Packaging Conventions) e padrões 3MF oficiais via parsing do relacionamento `_rels/.rels` (`metadata/thumbnail`).
+  - **Alta Fidelidade Automática**: detecta e extrai preferencialmente a miniatura em resolução superior (`thumbnail_middle.png` 680x680) gerada por Bambu Studio e OrcaSlicer, em vez da versão reduzida (240x240).
+  - Suporte completo a metadados de designer (`DesignerCover` e `ProfileCover`) em `3d/3dmodel.model` com mapeamento para capas em `auxiliaries/model pictures/`.
+  - Cadeia de fallback hierárquico priorizando fotos e capas reais de projeto antes de recorrer a renders de fatiamento (`plate_1`).
+  - **Cache-Busting com Versionamento MD5**: sufixo `?v=hash` nos assets de thumbnail para anular caches defasados no navegador.
+  - **Re-scan Inteligente de Miniaturas Legadas**: identificação e atualização automática de capas antigas durante varreduras diferenciais sem alterar o acervo físico.
 
 - 📂 **Gestão Avançada de Coleções & Navegação Flexível (`/collections`)**:
   - Três modos de visualização integrados: **Grade**, **Lista** (com tabela completa com capas, subpastas, contadores e ações) e **Árvore**.

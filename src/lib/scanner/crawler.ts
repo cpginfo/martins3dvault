@@ -556,9 +556,14 @@ export async function scanLibrary(
               const hasUnprocessed3mfFile = threeMfFiles.some((fileName) => {
                 const fileRec = existingModel!.files.find((f) => f.fileName === fileName);
                 if (!fileRec) return true;
+                const isLegacyThumb =
+                  !target.primaryCoverImage &&
+                  existingModel!.coverImage?.startsWith("/api/assets/thumbnails/") &&
+                  !existingModel!.coverImage.includes("?v=");
                 return (
                   fileRec.mimeType !== "model/3mf" ||
-                  (!existingModel!.coverImage && !target.primaryCoverImage)
+                  (!existingModel!.coverImage && !target.primaryCoverImage) ||
+                  isLegacyThumb
                 );
               });
 
@@ -631,11 +636,17 @@ export async function scanLibrary(
 
           // Se o arquivo 3D específico está inalterado, não precisa re-parsear STL/3MF
           // EXCETO se for .3mf e estiver com informações pendentes de extração
+          const isLegacyThumb =
+            !target.primaryCoverImage &&
+            existingModel.coverImage?.startsWith("/api/assets/thumbnails/") &&
+            !existingModel.coverImage.includes("?v=");
+
           const fileNeeds3mfExtraction =
             ext === ".3mf" &&
             (
               existingFile?.mimeType !== "model/3mf" ||
-              (!existingModel.coverImage && !target.primaryCoverImage)
+              (!existingModel.coverImage && !target.primaryCoverImage) ||
+              isLegacyThumb
             );
 
           if (
@@ -669,7 +680,7 @@ export async function scanLibrary(
               storageDataPath
             );
 
-            if (threeMfMeta.thumbnailPath && !modelCover) {
+            if (threeMfMeta.thumbnailPath && (!target.primaryCoverImage || !modelCover)) {
               modelCover = threeMfMeta.thumbnailPath;
             }
 
@@ -804,7 +815,7 @@ export async function scanLibrary(
         }
 
         // Fallback de capa 3MF caso não haja imagem de capa
-        if (!modelCover && target.threeDFiles.length > 0) {
+        if ((!modelCover || !target.primaryCoverImage) && target.threeDFiles.length > 0) {
           const primaryFile = target.threeDFiles[0];
           if (path.extname(primaryFile).toLowerCase() === ".3mf") {
             const threeMfMeta = await extractThreeMfMetadata(

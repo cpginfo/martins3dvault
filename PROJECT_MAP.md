@@ -1,4 +1,4 @@
-# Mapa do Projeto - Martins3DVault (v1.11.1)
+# Mapa do Projeto - Martins3DVault (v1.16.0)
 
 Este documento descreve a topologia completa de diretórios, componentes, serviços de backend e arquitetura do **Martins3DVault**, auxiliando agentes de IA e desenvolvedores a navegar e estender a aplicação com total precisão técnica.
 
@@ -8,13 +8,13 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                           MARTINS3DVAULT v1.11.1                                  │
+│                           MARTINS3DVAULT v1.16.0                                  │
 │             Google Stitch Design System ("Martins3D Vault Manager")              │
 ├────────────────────────────┬─────────────────────────────┬───────────────────────┤
 │        APRESENTAÇÃO        │      NEGÓCIO & PARSERS      │      PERSISTÊNCIA     │
 │  - Stitch Industrial Dark  │  - Differential Crawler     │  - PostgreSQL 16      │
 │  - Light Mode Calibrado    │  - Hierarchical Tree Colls  │  - Prisma ORM 6.19    │
-│  - Persistent Sidebar & NAS│  - 3MF to Binary STL Parser │  - Docker Volumes FS  │
+│  - Persistent Sidebar & NAS│  - OPC 3MF Parser / Hi-Res  │  - Docker Volumes FS  │
 │  - Tree Explorer / Grid    │  - Affine Transform Matrix  │  - Session JWT (Jose) │
 │  - Zoom Slider & View Modes│  - Exact Base-Name Covers   │  - Disk Cache (STL)   │
 │  - Dynamic Breadcrumbs     │  - Disk Sync & Cascading    │  - Cache Size & Clear │
@@ -224,7 +224,7 @@ Este documento descreve a topologia completa de diretórios, componentes, servi�
             └── extractors/
                 ├── companion.ts   # Normalização de nomes e detecção de capas/manuais irmãos com prioridade para mesmo nome base (.png, .jpg, .webp, .avif)
                 ├── stl-parser.ts  # Leitor e validor de geometria STL binário/ASCII
-                ├── threemf.ts     # Extrator de thumbnails embutidas e metadados de fatiamento
+                ├── threemf.ts     # Extrator de thumbnails no padrão oficial OPC / Windows Explorer, alta resolução e metadados
                 └── threemf-converter.ts # Extrator de geometrias 3MF e montador de STL Binário
 ```
 

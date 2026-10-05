@@ -317,6 +317,19 @@ O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/sr
    - Limites ampliados para ADMIN (30), OPERATOR (16), USER (8) e Global (30).
    - Imunidade para ADMIN e OPERATOR no Circuit Breaker, e rota `POST /api/security/circuit-breaker/reset` com botão "Liberar" na interface de Métricas.
 
+### T. Padrão OPC/Windows Explorer para Capas 3MF, Alta Fidelidade & Cache-Busting (`v1.16.0`)
+1. **Parser Oficial de Miniaturas OPC / Windows Explorer (`src/lib/scanner/extractors/threemf.ts`)**:
+   - Criação da função especializada `findThreeMfThumbnailEntry` que inspeciona o arquivo de relações `_rels/.rels` em conformidade com o padrão Open Packaging Conventions (ISO/IEC 29500-2).
+   - Identifica o relacionamento `http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail` (usado nativamente pelo Windows Explorer).
+2. **Resolução de Miniaturas de Alta Fidelidade (Bambu Studio & OrcaSlicer)**:
+   - Em pacotes que apontam para `thumbnail_3mf.png` (240x240), o sistema busca e prioriza automaticamente `thumbnail_middle.png` (680x680) presente na pasta `.thumbnails/`.
+   - Suporte a metadados de capa do designer (`DesignerCover` e `ProfileCover` em `3d/3dmodel.model`).
+   - Fallback hierárquico estruturado: capas reais do projeto > renders de fatiamento de placas (`plate_1`, `plate_N`).
+3. **Cache-Busting com Versionamento MD5**:
+   - Sufixo `?v={hash}` de 8 caracteres adicionado nas URLs de miniaturas (`/api/assets/thumbnails/{modelId}_thumb.png?v=...`) derivado do buffer da imagem, garantindo atualização visual imediata no navegador.
+4. **Re-scan Diferencial com Atualização Automática de Capas Legadas (`src/lib/scanner/crawler.ts`)**:
+   - O crawler identifica miniaturas legadas sem versionamento (`isLegacyThumb`) e re-extrai automaticamente as capas no novo padrão de alta definição durante os scans diferenciais normais.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto
