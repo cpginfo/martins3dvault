@@ -34,6 +34,8 @@ import {
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
 import { calculatePrintCost, formatBRL } from "@/lib/pricing/calculator";
 import { PrinterConfig, MaterialConfig, BudgetCalculationInput } from "@/lib/pricing/types";
+import { useToast } from "@/components/ui/ToastContext";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export interface ModelDetailData {
   id: string;
@@ -80,6 +82,7 @@ export default function ModelDetailModal({
   onModelUpdated,
   onUpdate,
 }: ModelDetailModalProps) {
+  const { toast } = useToast();
   const router = useRouter();
   const [model, setModel] = useState<ModelDetailData>(initialModel);
   const [activeTab, setActiveTab] = useState<"files" | "notes" | "manuals">("files");
@@ -99,6 +102,7 @@ export default function ModelDetailModal({
   // Upload de Manual
   const [uploadingManual, setUploadingManual] = useState(false);
   const [deletingManualId, setDeletingManualId] = useState<string | null>(null);
+  const [manualToDelete, setManualToDelete] = useState<{ id: string; name: string } | null>(null);
   const manualFileInputRef = useRef<HTMLInputElement>(null);
 
   // Formulário de notas técnicas
@@ -372,23 +376,32 @@ export default function ModelDetailModal({
   };
 
   // 3.2 Exclusão de Manual
-  const handleDeleteManual = async (assetId: string) => {
-    if (!confirm("Deseja realmente remover este manual?")) return;
+  const handleDeleteManual = (assetId: string, name: string) => {
+    setManualToDelete({ id: assetId, name });
+  };
 
-    setDeletingManualId(assetId);
+  const handleConfirmDeleteManual = async () => {
+    if (!manualToDelete) return;
+
+    setDeletingManualId(manualToDelete.id);
     try {
-      const res = await fetch(`/api/models/${model.id}/manual?assetId=${assetId}`, {
+      const res = await fetch(`/api/models/${model.id}/manual?assetId=${manualToDelete.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        const updatedAssets = model.assets.filter((a) => a.id !== assetId);
+        const updatedAssets = model.assets.filter((a) => a.id !== manualToDelete.id);
         const newModel = { ...model, assets: updatedAssets };
         setModel(newModel);
         if (onModelUpdated) onModelUpdated(newModel);
+        toast.success("Manual de instrução removido.");
+        setManualToDelete(null);
+      } else {
+        toast.error("Erro ao remover manual.");
       }
     } catch (err) {
       console.error("Erro ao remover manual:", err);
+      toast.error("Erro ao comunicar com o servidor.");
     } finally {
       setDeletingManualId(null);
     }
@@ -1722,7 +1735,7 @@ export default function ModelDetailModal({
                         </a>
 
                         <button
-                          onClick={() => handleDeleteManual(asset.id)}
+                          onClick={() => handleDeleteManual(asset.id, asset.fileName)}
                           disabled={deletingManualId === asset.id}
                           className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 transition-all disabled:opacity-50"
                           title="Remover Manual"
@@ -1742,6 +1755,17 @@ export default function ModelDetailModal({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!manualToDelete}
+        title="Remover Manual de Instrução"
+        message={`Deseja realmente remover o manual "${manualToDelete?.name}" deste modelo? O arquivo PDF será desvinculado.`}
+        confirmLabel="Remover Manual"
+        variant="danger"
+        loading={deletingManualId === manualToDelete?.id}
+        onConfirm={handleConfirmDeleteManual}
+        onCancel={() => setManualToDelete(null)}
+      />
     </div>
   );
 }

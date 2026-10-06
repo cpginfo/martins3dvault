@@ -9,9 +9,11 @@ import ModelDetailModal, { ModelDetailData } from "@/components/model/ModelDetai
 import UploadModal from "@/components/upload/UploadModal";
 import PaginationBar from "@/components/gallery/PaginationBar";
 import BatchActionBar from "@/components/gallery/BatchActionBar";
+import { useToast } from "@/components/ui/ToastContext";
 import Link from "next/link";
 
 export default function HomePage() {
+  const toast = useToast();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [models, setModels] = useState<ModelCardData[]>([]);
@@ -324,11 +326,37 @@ export default function HomePage() {
 
             {/* Gallery View (Grid or Table) */}
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-3 text-on-surface-variant">
-                <span className="material-symbols-outlined text-[36px] animate-spin text-primary-container">
-                  sync
-                </span>
-                <span className="text-xs font-mono">Indexando arquivos 3D no cofre...</span>
+              <div
+                className="grid gap-4"
+                style={{
+                  gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${
+                    viewMode === "compact" ? Math.max(160, zoomSize * 0.75) : zoomSize
+                  }px), 1fr))`,
+                }}
+              >
+                {Array.from({ length: 12 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-xl bg-surface-container-low border border-white/5 flex flex-col overflow-hidden animate-pulse ${
+                      viewMode === "compact" ? "gap-2 p-2" : "gap-3 p-3"
+                    }`}
+                  >
+                    <div
+                      className={`w-full rounded-lg bg-surface-container-highest/60 flex items-center justify-center relative ${
+                        viewMode === "compact" ? "aspect-square" : "aspect-[4/3]"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/5" />
+                    </div>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="h-3.5 bg-surface-container-highest/80 rounded w-3/4" />
+                      <div className="flex items-center justify-between">
+                        <div className="h-2.5 bg-surface-container-highest/60 rounded w-1/3" />
+                        <div className="h-4 bg-surface-container-highest/50 rounded-full w-14" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : models.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 rounded-2xl bg-surface-container-low border border-white/5 text-center gap-3">
@@ -357,8 +385,8 @@ export default function HomePage() {
                       {isBatchMode && <th className="py-3 px-3 w-8"></th>}
                       <th className="py-3 px-3">Modelo / Biblioteca</th>
                       <th className="py-3 px-3">Extensão</th>
-                      <th className="py-3 px-3">Dimensões (XYZ)</th>
-                      <th className="py-3 px-3">Arquivos</th>
+                      <th className="py-3 px-3 hidden md:table-cell">Dimensões (XYZ)</th>
+                      <th className="py-3 px-3 hidden sm:table-cell">Arquivos</th>
                       <th className="py-3 px-3">Status de Impressão</th>
                       <th className="py-3 px-3 text-right">Favorito</th>
                     </tr>
@@ -377,11 +405,13 @@ export default function HomePage() {
                           setModels((prev) =>
                             prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
                           );
+                          toast.info(state ? "Adicionado aos favoritos" : "Removido dos favoritos");
                         }}
                         onPrintedToggle={(id, state) => {
                           setModels((prev) =>
                             prev.map((m) => (m.id === id ? { ...m, isPrinted: state } : m))
                           );
+                          toast.info(state ? "Marcado como impresso" : "Marcado como não impresso");
                         }}
                       />
                     ))}
@@ -392,9 +422,9 @@ export default function HomePage() {
               <div
                 className="grid gap-4"
                 style={{
-                  gridTemplateColumns: `repeat(auto-fill, minmax(${
-                    viewMode === "compact" ? Math.max(180, zoomSize * 0.75) : zoomSize
-                  }px, 1fr))`,
+                  gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${
+                    viewMode === "compact" ? Math.max(160, zoomSize * 0.75) : zoomSize
+                  }px), 1fr))`,
                 }}
               >
                 {models.map((model) => (
@@ -410,11 +440,13 @@ export default function HomePage() {
                       setModels((prev) =>
                         prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
                       );
+                      toast.info(state ? "Adicionado aos favoritos" : "Removido dos favoritos");
                     }}
                     onPrintedToggle={(id, state) => {
                       setModels((prev) =>
                         prev.map((m) => (m.id === id ? { ...m, isPrinted: state } : m))
                       );
+                      toast.info(state ? "Marcado como impresso" : "Marcado como não impresso");
                     }}
                   />
                 ))}

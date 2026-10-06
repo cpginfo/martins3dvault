@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
+import { useToast } from "@/components/ui/ToastContext";
+import { Trash2, AlertTriangle, AlertCircle } from "lucide-react";
 
 interface CollectionItem {
   id: string;
@@ -29,7 +31,7 @@ function CollectionTreeCard({
 }: {
   col: CollectionItem;
   onEdit: (col: CollectionItem, e: React.MouseEvent) => void;
-  onDelete: (id: string, name: string, e: React.MouseEvent) => void;
+  onDelete: (col: CollectionItem, e: React.MouseEvent) => void;
   level?: number;
   expandAllSignal?: { expanded: boolean; timestamp: number } | null;
 }) {
@@ -105,7 +107,7 @@ function CollectionTreeCard({
               <span className="material-symbols-outlined text-[16px]">edit</span>
             </button>
             <button
-              onClick={(e) => onDelete(col.id, col.name, e)}
+              onClick={(e) => onDelete(col, e)}
               className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Excluir"
               aria-label={`Excluir coleção ${col.name}`}
@@ -135,6 +137,7 @@ function CollectionTreeCard({
 }
 
 export default function CollectionsPage() {
+  const toast = useToast();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
@@ -144,6 +147,11 @@ export default function CollectionsPage() {
   const [editingCol, setEditingCol] = useState<CollectionItem | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list" | "tree">("grid");
   const [expandAllSignal, setExpandAllSignal] = useState<{ expanded: boolean; timestamp: number } | null>(null);
+
+  // Deletion modal state
+  const [deleteTarget, setDeleteTarget] = useState<CollectionItem | null>(null);
+  const [deletePhysicalFiles, setDeletePhysicalFiles] = useState(false);
+  const [deletingCollection, setDeletingCollection] = useState(false);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -259,6 +267,7 @@ export default function CollectionsPage() {
 
       setIsCreateOpen(false);
       window.dispatchEvent(new Event("refreshCollections"));
+      toast.success(editingCol ? "Coleção atualizada com sucesso!" : "Coleção criada com sucesso!");
       fetchCollections();
     } catch (err: any) {
       setErrorMsg(err.message || "Ocorreu um erro ao salvar");
@@ -267,20 +276,37 @@ export default function CollectionsPage() {
     }
   };
 
-  const handleDeleteCollection = async (id: string, name: string, e: React.MouseEvent) => {
+  const handleOpenDelete = (col: CollectionItem, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Tem certeza que deseja excluir a coleção "${name}"? Os modelos permanecerão no cofre.`)) {
-      return;
-    }
+    setDeleteTarget(col);
+    setDeletePhysicalFiles(false);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeletingCollection(true);
     try {
-      const res = await fetch(`/api/collections/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        fetchCollections();
+      const res = await fetch(
+        `/api/collections/${deleteTarget.id}?deleteFiles=${deletePhysicalFiles}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || "Falha ao excluir coleção");
       }
-    } catch (err) {
-      console.error("Erro ao excluir coleção:", err);
+      toast.success(
+        deletePhysicalFiles
+          ? `Coleção "${deleteTarget.name}" e arquivos físicos excluídos`
+          : `Coleção "${deleteTarget.name}" desagrupada (arquivos preservados no cofre)`
+      );
+      setDeleteTarget(null);
+      window.dispatchEvent(new Event("refreshCollections"));
+      fetchCollections();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao excluir coleção");
+    } finally {
+      setDeletingCollection(false);
     }
   };
 
@@ -537,7 +563,7 @@ export default function CollectionsPage() {
                     key={col.id}
                     col={col}
                     onEdit={handleOpenEdit}
-                    onDelete={handleDeleteCollection}
+                    onDelete={handleOpenDelete}
                     level={0}
                     expandAllSignal={expandAllSignal}
                   />
@@ -622,7 +648,7 @@ export default function CollectionsPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
+                              onClick={(e) => handleOpenDelete(col, e)}
                               className="p-1.5 rounded-lg hover:bg-error-container text-error transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
                               title="Excluir"
                             >
@@ -660,7 +686,7 @@ export default function CollectionsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => handleDeleteCollection(col.id, col.name, e)}
+                          onClick={(e) => handleOpenDelete(col, e)}
                           className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-surface-container-high transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
                           title="Excluir coleção"
                           aria-label={`Excluir coleção ${col.name}`}
@@ -805,6 +831,69 @@ export default function CollectionsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Seguro de Exclusão de Coleção */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-[#161014] border border-red-500/30 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight">
+                  Excluir Coleção &quot;{deleteTarget.name}&quot;
+                </h3>
+                <span className="text-[11px] font-mono text-slate-400">
+                  {deleteTarget.modelsCount} modelo(s) vinculado(s)
+                </span>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-300 space-y-2.5 leading-relaxed bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <p>
+                Por padrão, esta ação apenas <strong>remove o agrupamento</strong> no Martins3DVault. Os modelos 3D permanecerão seguros na biblioteca.
+              </p>
+              
+              <label className="flex items-start gap-2.5 pt-2 border-t border-white/10 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={deletePhysicalFiles}
+                  onChange={(e) => setDeletePhysicalFiles(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-red-500/50 text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
+                />
+                <div className="text-xs">
+                  <span className="font-semibold text-red-300 block group-hover:text-red-200">
+                    Excluir permanentemente pasta e arquivos do disco
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Atenção: Todos os arquivos 3D contidos nesta subpasta serão apagados fisicamente do armazenamento.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/5">
+              <button
+                type="button"
+                disabled={deletingCollection}
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deletingCollection}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-lg shadow-red-900/40 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              >
+                {deletingCollection ? "Excluindo..." : deletePhysicalFiles ? "Sim, Excluir Pasta & Arquivos" : "Desagrupar Coleção"}
+              </button>
+            </div>
           </div>
         </div>
       )}

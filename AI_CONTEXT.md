@@ -123,6 +123,23 @@ O **Martins3DVault** (anteriormente chamado PrintVault) é uma plataforma auto-h
   - **Refinamento de Layout e UX do Modal e Modo Studio**:
     - Caminho da pasta 100% completo com quebra contínua (`break-all`), sem cortes nem reticências (`...`).
     - Remoção de telemetria estática / simulada na barra superior do Modo Studio 3D (`OFICINA [CONECTADA] | MESA: 60°C BICO: 215°C`), com navegação contextual `router.back()`.
+
+- **Backup, Restauração, Varredura Assíncrona & Design System Resiliente (`v1.17.0`)**:
+  - **Restauração e Sincronização do Banco de Dados (`/api/database/restore`)**:
+    - Suporta restauração idempotente via `upsert` com resolução de dependências hierárquicas em duas passagens para coleções (evitando violações de foreign key).
+    - Serialização de `BigInt` segura em JSON (`BigInt.prototype.toJSON`) para prevenir quebras durante backup de malhas e arquivos grandes.
+    - Gestão de snapshots salvos em `/data/backups/` com tabela interativa em `/metrics` e deleção com proteção de path traversal (`/api/database/backups/[filename]`).
+  - **Varredura Global Assíncrona (`/api/scan/all`)**:
+    - Dispara crawler em segundo plano e retorna `HTTP 202` imediatamente, substituindo loop síncrono no navegador e evitando timeout de rede.
+  - **Integridade de Coleções & Prevenção de Perda de Dados (P0)**:
+    - Exclusão de coleções (`/api/collections/[id]`) desvincula modelos por padrão e não remove pastas físicas a menos que `?deleteFiles=true` seja passado explicitamente.
+  - **Design System: Erradicação de Alertas e Diálogos Nativos**:
+    - `ToastProvider` (`src/components/ui/ToastContext.tsx`) e `<ConfirmDialog>` (`src/components/ui/ConfirmDialog.tsx`) padronizados com tema dark glassmorphic Stitch, eliminando 100% dos `alert()` e `confirm()` nativos da aplicação.
+  - **Otimização de Banco de Dados**:
+    - Índices criados no PostgreSQL: `Model(filamentType)`, `ModelFile(format, fileHash)`, `PrintBudget(isSale, soldAt)`.
+  - **UX & Responsividade Mobile**:
+    - Skeletons animados no carregamento da galeria, contenção de largura de grid em telas pequenas e docking ergonômico da barra de ações em lote.
+
     - Agrupamento dos metadados de tamanho do arquivo (`formatBytes`) à esquerda na miniatura e passagem do botão Studio via `headerAction` no `ModelViewer3D`, eliminando sobreposições.
 
 - **Navegação & Carregamento 3D sob Demanda (`v1.7.0`)**:
@@ -343,9 +360,18 @@ O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/sr
 3. **Otimização Extrema de Banco de Dados PostgreSQL & CTE Recursiva**:
    - Índices adicionados no `schema.prisma`: `Model(collectionId, isFavorite, isPrinted, createdAt)` e `Collection(name)`.
    - Consulta de subcoleções em `src/app/api/models/route.ts` migrada para CTE PostgreSQL nativo `WITH RECURSIVE subcolls AS (...)`, reduzindo N queries para 1 round-trip.
-4. **Backup e Exportação do PostgreSQL (`/api/database/backup`, `/api/metrics`)**:
-   - Exportação completa em JSON de todas as tabelas (Users, Collections, Models, ModelFiles, ModelManuals, ScanStats, DownloadLogs, FilamentMetrics) com salvamento no volume `/data/backups/`.
-   - Painel integrado na página `/metrics` com botão de download imediato do snapshot de segurança.
+4. **Backup, Restauração e Gestão de Snapshots (`/api/database/backup`, `/api/database/restore`, `/api/database/backups`)**:
+   - Exportação completa em JSON com serialização segura de `BigInt` salva em `/data/backups/`.
+   - Restauração idempotente (`POST /api/database/restore`) via `upsert` com resolução de dependências em duas passagens para coleções e modelos.
+   - Painel integrado em `/metrics` com tabela de backups, download direto, restauração em 1 clique e exclusão com proteção contra directory traversal (`DELETE /api/database/backups/[filename]`).
+5. **Varredura Assíncrona em Background (`/api/scan/all`)**:
+   - Endpoint assíncrono que retorna `HTTP 202` imediatamente e executa a sincronização de todas as bibliotecas ativas em segundo plano no servidor.
+6. **Erradicação de Alertas e Confirmações Nativas (Design System)**:
+   - `ToastProvider` e hook `useToast()` com variantes `success`, `error`, `warning`, `info`.
+   - `<ConfirmDialog>` padronizado no tema Stitch com variantes `danger`, `warning`, `primary`.
+   - Remoção de 100% de `alert()` e `confirm()` nativos da aplicação.
+7. **Proteção de Integridade de Coleções (P0)**:
+   - Rota `/api/collections/[id]` desvincula modelos e exige `?deleteFiles=true` para remover pastas físicas no disco.
 
 ---
 

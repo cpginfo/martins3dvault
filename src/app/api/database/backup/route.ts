@@ -5,6 +5,17 @@ import prisma from "@/lib/prisma";
 import { requireAuth, handleAuthError, isAdmin } from "@/lib/auth/session";
 import { APP_VERSION } from "@/lib/version";
 
+// Garante que BigInt possa ser serializado em JSON sem erros de runtime
+if (!("toJSON" in BigInt.prototype)) {
+  Object.defineProperty(BigInt.prototype, "toJSON", {
+    value: function () {
+      return this.toString();
+    },
+    configurable: true,
+    writable: true,
+  });
+}
+
 export async function GET(request: Request) {
   try {
     const user = await requireAuth(undefined, request);

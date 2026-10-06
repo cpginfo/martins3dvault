@@ -61,3 +61,51 @@ export async function GET(
     return new NextResponse("Erro ao baixar backup", { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  props: { params: Promise<{ filename: string }> }
+) {
+  try {
+    const user = await requireAuth(undefined, request);
+    if (!isAdmin(user)) {
+      return NextResponse.json(
+        { error: "Acesso restrito a administradores" },
+        { status: 403 }
+      );
+    }
+
+    const params = await props.params;
+    const fileName = params.filename;
+
+    if (!fileName || !fileName.endsWith(".json")) {
+      return NextResponse.json({ error: "Arquivo inválido" }, { status: 400 });
+    }
+
+    // Proteção contra path traversal
+    const safeFileName = path.basename(fileName);
+    const storageDataPath = process.env.STORAGE_DATA_PATH || "./data";
+    const backupsDir = path.resolve(path.join(storageDataPath, "backups"));
+    const fullPath = path.join(backupsDir, safeFileName);
+
+    if (!fs.existsSync(fullPath)) {
+      return NextResponse.json({ error: "Backup não encontrado" }, { status: 404 });
+    }
+
+    await fs.promises.unlink(fullPath);
+
+    return NextResponse.json({
+      success: true,
+      message: `Backup ${safeFileName} removido com sucesso.`,
+    });
+  } catch (err: any) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
+
+    console.error("Erro ao excluir backup:", err);
+    return NextResponse.json(
+      { error: err?.message || "Erro interno ao excluir backup" },
+      { status: 500 }
+    );
+  }
+}

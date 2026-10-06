@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import UploadModal from "@/components/upload/UploadModal";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import NotificationMenu from "@/components/layout/NotificationMenu";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface NavbarProps {
   searchQuery?: string;
@@ -26,6 +27,7 @@ export default function Navbar({
   isSidebarCollapsed = false,
   onOpenMobileSidebar,
 }: NavbarProps) {
+  const { toast } = useToast();
   const pathname = usePathname();
   const router = useRouter();
   const isControlled = searchQuery !== undefined;
@@ -71,12 +73,12 @@ export default function Navbar({
     // Sempre redireciona imediatamente para Métricas dos Arquivos
     router.push("/metrics");
     try {
-      const libRes = await fetch("/api/libraries");
-      if (libRes.ok) {
-        const libs = await libRes.json();
-        for (const lib of libs) {
-          await fetch(`/api/libraries/${lib.id}/scan`, { method: "POST" });
-        }
+      const res = await fetch("/api/scan/all", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.info(data.message || "Varredura iniciada em segundo plano.");
+      } else {
+        toast.error(data.error || "Falha ao iniciar varredura.");
       }
       if (onScanTriggered) onScanTriggered();
       if (typeof window !== "undefined") {
@@ -85,6 +87,7 @@ export default function Navbar({
       }
     } catch (err) {
       console.error("Erro ao disparar varredura:", err);
+      toast.error("Erro ao disparar varredura.");
     } finally {
       setTimeout(() => setScanning(false), 2000);
     }

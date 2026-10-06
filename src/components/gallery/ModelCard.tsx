@@ -90,13 +90,17 @@ export default function ModelCard({
     }
 
     try {
-      await fetch(`/api/models/${model.id}`, {
+      const res = await fetch(`/api/models/${model.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: nextState }),
       });
+      if (!res.ok) throw new Error("Erro na resposta da API");
     } catch (err) {
       console.error("Erro ao favoritar modelo:", err);
+      // Reverte em caso de erro
+      setFavorite(!nextState);
+      onFavoriteToggle?.(model.id, !nextState);
     }
   };
 
@@ -110,13 +114,17 @@ export default function ModelCard({
     }
 
     try {
-      await fetch(`/api/models/${model.id}`, {
+      const res = await fetch(`/api/models/${model.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPrinted: nextState }),
       });
+      if (!res.ok) throw new Error("Erro na resposta da API");
     } catch (err) {
       console.error("Erro ao atualizar status de impressão:", err);
+      // Reverte em caso de erro
+      setIsPrinted(!nextState);
+      onPrintedToggle?.(model.id, !nextState);
     }
   };
 
@@ -189,10 +197,10 @@ export default function ModelCard({
             ))}
           </div>
         </td>
-        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant">
+        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant hidden md:table-cell">
           {dimsText || "—"}
         </td>
-        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant">
+        <td className="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant hidden sm:table-cell">
           {model._count?.files || model.files.length} arquivos
         </td>
         <td className="py-2.5 px-3">

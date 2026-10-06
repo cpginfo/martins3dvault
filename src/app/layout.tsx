@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import { UpdateProvider } from "@/lib/update/UpdateContext";
+import { ToastProvider } from "@/components/ui/ToastContext";
 import UpdateBanner from "@/components/update/UpdateBanner";
 import UpdateModal from "@/components/update/UpdateModal";
 
@@ -81,9 +82,11 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface font-sans antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary transition-colors duration-200">
         <ThemeProvider>
           <UpdateProvider>
-            {children}
-            <UpdateBanner />
-            <UpdateModal />
+            <ToastProvider>
+              {children}
+              <UpdateBanner />
+              <UpdateModal />
+            </ToastProvider>
           </UpdateProvider>
         </ThemeProvider>
       </body>

@@ -93,6 +93,7 @@ model Model {
   @@index([collectionId])
   @@index([isFavorite])
   @@index([isPrinted])
+  @@index([filamentType])
   @@index([createdAt])
 }
 
@@ -117,6 +118,8 @@ model ModelFile {
   updatedAt     DateTime @updatedAt
 
   @@index([modelId])
+  @@index([format])
+  @@index([fileHash])
 }
 
 model ModelAsset {
@@ -235,6 +238,7 @@ model PrintBudget {
   @@index([productName])
   @@index([customerName])
   @@index([isSale])
+  @@index([isSale, soldAt])
   @@index([createdAt])
 }
 

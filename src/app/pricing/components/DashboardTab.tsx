@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { DashboardMetrics, BudgetRecord } from "@/lib/pricing/types";
 import { formatBRL } from "@/lib/pricing/calculator";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface DashboardTabProps {
   onOpenDetailModal: (budget: BudgetRecord) => void;
 }
 
 export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
+  const { toast } = useToast();
   const [period, setPeriod] = useState<"month" | "30days" | "all">("all");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentSales, setRecentSales] = useState<BudgetRecord[]>([]);
@@ -32,9 +34,10 @@ export default function DashboardTab({ onOpenDetailModal }: DashboardTabProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success("Vendas exportadas com sucesso!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
-      alert(`Erro ao exportar vendas: ${message}`);
+      toast.error(`Erro ao exportar vendas: ${message}`);
     } finally {
       setExporting(false);
     }

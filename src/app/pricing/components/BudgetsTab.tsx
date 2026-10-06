@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from "react";
 import { formatBRL, formatMinutes } from "@/lib/pricing/calculator";
 import { BudgetRecord } from "@/lib/pricing/types";
+import { useToast } from "@/components/ui/ToastContext";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface BudgetsTabProps {
   budgets: BudgetRecord[];
@@ -25,9 +27,11 @@ export default function BudgetsTab({
   onOpenDetailModal,
   onDeleteBudget,
 }: BudgetsTabProps) {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "budgets" | "sales">("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [budgetToDelete, setBudgetToDelete] = useState<BudgetRecord | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const handleExportSales = async () => {
@@ -47,9 +51,10 @@ export default function BudgetsTab({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success("Vendas exportadas com sucesso!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
-      alert(`Erro ao exportar vendas: ${message}`);
+      toast.error(`Erro ao exportar vendas: ${message}`);
     } finally {
       setExporting(false);
     }
@@ -74,17 +79,6 @@ export default function BudgetsTab({
   const totalCount = budgets.length;
   const salesCount = budgets.filter((b) => b.isSale).length;
   const openBudgetsCount = totalCount - salesCount;
-
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Tem certeza que deseja excluir o orçamento/venda "${name}"?`)) {
-      setDeletingId(id);
-      try {
-        await onDeleteBudget(id);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   return (
     <div className="space-y-5 animate-fadeIn">
@@ -352,7 +346,7 @@ export default function BudgetsTab({
 
                   {/* Excluir */}
                   <button
-                    onClick={() => handleDelete(b.id, b.productName)}
+                    onClick={() => setBudgetToDelete(b)}
                     disabled={deletingId === b.id}
                     className="p-2 rounded-xl bg-surface-container hover:bg-red-500/15 text-on-surface-variant hover:text-red-500 transition-colors border border-outline-variant/20 disabled:opacity-50 min-w-[36px] min-h-[36px] flex items-center justify-center"
                     title="Excluir orçamento"
@@ -365,6 +359,31 @@ export default function BudgetsTab({
           })}
         </div>
       )}
+
+      {/* Confirmação de Exclusão */}
+      <ConfirmDialog
+        isOpen={!!budgetToDelete}
+        title="Excluir Orçamento / Venda"
+        message={`Tem certeza que deseja excluir o registro "${budgetToDelete?.productName}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        variant="danger"
+        loading={deletingId === budgetToDelete?.id}
+        onConfirm={async () => {
+          if (!budgetToDelete) return;
+          const id = budgetToDelete.id;
+          setDeletingId(id);
+          try {
+            await onDeleteBudget(id);
+            toast.success("Registro excluído com sucesso.");
+            setBudgetToDelete(null);
+          } catch {
+            toast.error("Falha ao excluir registro.");
+          } finally {
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setBudgetToDelete(null)}
+      />
     </div>
   );
 }

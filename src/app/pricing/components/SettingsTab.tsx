@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { PrinterConfig, MaterialConfig } from "@/lib/pricing/types";
 import { formatBRL } from "@/lib/pricing/calculator";
+import { useToast } from "@/components/ui/ToastContext";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface SettingsTabProps {
   printerConfig: PrinterConfig;
@@ -17,6 +19,7 @@ export default function SettingsTab({
   onSettingsUpdated,
   onMaterialsUpdated,
 }: SettingsTabProps) {
+  const { toast } = useToast();
   // Configurações
   const [printerName, setPrinterName] = useState(printerConfig.printerName || "Impressora 3D Principal");
   const [printerCost, setPrinterCost] = useState<number | string>(printerConfig.printerCost);
@@ -36,6 +39,8 @@ export default function SettingsTab({
   const [materialDensity, setMaterialDensity] = useState<number | string>(1.24);
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [materialFeedback, setMaterialFeedback] = useState<string | null>(null);
+  const [materialToDelete, setMaterialToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingMaterial, setDeletingMaterial] = useState(false);
 
   // Cálculos derivados da máquina por hora
   const hourlyEnergy =
@@ -135,14 +140,26 @@ export default function SettingsTab({
     setMaterialDensity(1.24);
   };
 
-  const handleDeleteMaterial = async (id: string, name: string) => {
-    if (confirm(`Deseja excluir o material "${name}"?`)) {
-      try {
-        await fetch(`/api/pricing/materials/${id}`, { method: "DELETE" });
+  const handleDeleteMaterial = (id: string, name: string) => {
+    setMaterialToDelete({ id, name });
+  };
+
+  const handleConfirmDeleteMaterial = async () => {
+    if (!materialToDelete) return;
+    setDeletingMaterial(true);
+    try {
+      const res = await fetch(`/api/pricing/materials/${materialToDelete.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success(`Material "${materialToDelete.name}" excluído com sucesso.`);
         onMaterialsUpdated();
-      } catch (err) {
-        console.error("Erro ao excluir material:", err);
+        setMaterialToDelete(null);
+      } else {
+        toast.error("Erro ao excluir material.");
       }
+    } catch {
+      toast.error("Erro ao conectar ao servidor para excluir material.");
+    } finally {
+      setDeletingMaterial(false);
     }
   };
 
@@ -439,6 +456,17 @@ export default function SettingsTab({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!materialToDelete}
+        title="Excluir Material"
+        message={`Deseja excluir permanentemente o material "${materialToDelete?.name}" da lista de insumos de precificação?`}
+        confirmLabel="Excluir Material"
+        variant="danger"
+        loading={deletingMaterial}
+        onConfirm={handleConfirmDeleteMaterial}
+        onCancel={() => setMaterialToDelete(null)}
+      />
     </div>
   );
 }

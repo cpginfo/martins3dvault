@@ -193,15 +193,23 @@ export async function DELETE(
       return NextResponse.json({ error: "Coleção não encontrada" }, { status: 404 });
     }
 
-    // 1. Exclui a pasta física no disco da biblioteca com segurança
-    await deleteCollectionFolder(existing.id);
+    const { searchParams } = new URL(request.url);
+    const deletePhysicalFiles = searchParams.get("deleteFiles") === "true";
+
+    // 1. Exclui a pasta física no disco apenas se explicitamente solicitado pelo operador
+    if (deletePhysicalFiles) {
+      await deleteCollectionFolder(existing.id);
+    }
 
     // 2. Remove a coleção do banco de dados (Prisma cuida dos modelos com SetNull)
     await prisma.collection.delete({
       where: { id: existing.id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      physicalFilesDeleted: deletePhysicalFiles,
+    });
   } catch (err: any) {
     const authRes = handleAuthError(err);
     if (authRes) return authRes;

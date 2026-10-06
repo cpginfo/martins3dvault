@@ -7,7 +7,14 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [1.17.0] - 2026-10-06
 
-### Adicionado / Download em Lote (ZIP), Ações em Massa & Backup
+### Adicionado / Backup, Restauração & Confiabilidade do Banco de Dados
+- **Restauração Completa e Segura do Banco de Dados (`src/app/api/database/restore/route.ts`)**:
+  - Novo endpoint REST `POST /api/database/restore` que processa snapshots estruturados em JSON e executa sincronização idempotente via `upsert` com resolução de dependências em duas etapas para hierarquias de pastas e coleções pai/filho.
+  - Suporte a restauração a partir de arquivos existentes no volume local (`/data/backups`) ou por envio direto de payload JSON.
+- **Painel Interativo de Instantâneos de Banco de Dados (`src/app/metrics/page.tsx`, `/api/database/backups`)**:
+  - Tabela responsiva em tempo real listando todos os backups salvos em `/data/backups/` com tamanho formatado e data de criação.
+  - Ações com 1 clique para **Download Direto**, **Restauração Imediata** (com diálogo modal de aviso) e **Exclusão Segura** de arquivos obsoletos (`DELETE /api/database/backups/[filename]`).
+  - Polyfill de serialização JSON para campos `BigInt` (`fileSize`), prevenindo exceções durante a exportação de malhas e arquivos grandes.
 - **Download de Modelos Multi-Peças em ZIP Único (`src/app/api/models/[id]/download-zip/route.ts`)**:
   - Novo endpoint REST para empacotar automaticamente todos os arquivos vinculados a um modelo 3D (malhas `.stl`, `.3mf`, `.obj`, `.step`, manuais em PDF e imagens de capa) em um único arquivo compactado `.zip`.
   - Nome do arquivo sanitizado no formato `{nome_modelo}_{data}.zip`.
@@ -22,20 +29,40 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
     - **Mover para Coleção**: modal interativo com lista hierárquica de coleções e subpastas para realocação instantânea de dezenas de modelos.
     - **Excluir Selecionados**: modal de confirmação de segurança com contagem de itens para remoção em massa.
   - Endpoint transacional robusto `POST /api/models/batch` com controle rigoroso de permissões RBAC (`ADMIN`/`OPERATOR`).
-- **Backup e Exportação Completa do Banco de Dados PostgreSQL (`/api/database/backup`, `/api/metrics`)**:
-  - Novo módulo de backup com persistência automática de snapshots estruturados em JSON no disco em `/data/backups/`.
-  - Exportação completa e consistente de todas as tabelas: Usuários, Coleções, Modelos, Arquivos de Modelo, Manuais, Estatísticas de Scanner, Histórico de Downloads e Métricas de Filamento.
-  - Download direto do arquivo de snapshot com 1 clique (`3dvault_backup_{timestamp}.json`).
-  - Card dedicado **"Backup & Segurança do Banco de Dados"** integrado na tela de Métricas e Telemetria (`/metrics`) com status do volume de persistência e botão de backup imediato.
+- **Varredura Global Assíncrona em Segundo Plano (`src/app/api/scan/all/route.ts`)**:
+  - Novo endpoint assíncrono que dispara a sincronização de todas as bibliotecas ativas em segundo plano no servidor retornando imediatamente `HTTP 202 (Accepted)`.
+  - Elimina travamentos do cliente e timeouts de requisições causados por loops sequenciais no navegador.
 
-### Otimização & Performance
-- **Índices Estruturais no Banco de Dados PostgreSQL (`prisma/schema.prisma`)**:
-  - Adição de índices estratégicos de alta seletividade na tabela `Model`: `@@index([collectionId])`, `@@index([isFavorite])`, `@@index([isPrinted])`, `@@index([createdAt])`.
-  - Adição de índice por nome na tabela `Collection`: `@@index([name])`.
-  - Redução drástica do custo de consultas frequentes e paginações na galeria principal e filtros rápidos.
+### Segurança & Integridade de Dados
+- **Proteção Crítica contra Exclusão Acidental de Arquivos de Coleções (P0)**:
+  - Rota de exclusão (`/api/collections/[id]`) corrigida para desvincular modelos por padrão e exigir o parâmetro explícito `?deleteFiles=true` para apagar pastas físicas do disco.
+  - Interface do usuário (`/collections`) atualizada com modal Stitch com confirmação explícita e checkbox de exclusão física no disco desmarcado por padrão.
+
+### Experiência do Usuário (UX) & Design System
+- **Sistema Global de Notificações Toast (`src/components/ui/ToastContext.tsx`, `layout.tsx`)**:
+  - Provedor e hook `useToast()` com suporte a feedback `success`, `error`, `warning` e `info` com tema escuro glassmorphism.
+  - **Eliminação de 100% dos `alert()` nativos** do navegador em toda a aplicação.
+- **Componente Global de Confirmação Modal (`src/components/ui/ConfirmDialog.tsx`)**:
+  - Modal acessível com variantes `danger`, `warning` e `primary`, eliminando 100% dos diálogos nativos `window.confirm()`.
+- **Otimismo e Resiliência Visual (`ModelCard.tsx`)**:
+  - Rollback otimista de estado visual ao favoritar ou marcar como impresso caso ocorram falhas de conexão com o servidor.
+
+### Responsividade & Mobile
+- **Contenção de Quebra de Grid na Galeria (`src/app/page.tsx`)**:
+  - Dimensionamento responsivo de colunas com `minmax(min(100%, 200px), 1fr)` e `minmax(min(100%, 260px), 1fr)`, impedindo estouro horizontal em celulares.
+- **Skeleton Loaders Animados (`src/app/page.tsx`)**:
+  - Substituição de spinners por cards esqueleto com efeito shimmer pulse na galeria.
+- **Barra de Ações em Lote Mobile-First**:
+  - Ancoragem ergonômica da `BatchActionBar` no rodapé de dispositivos móveis (`bottom-3 sm:bottom-6`).
+
+### Otimização & Performance de Banco de Dados
+- **Novos Índices Estruturais no PostgreSQL (`prisma/schema.prisma`)**:
+  - `Model`: `@@index([collectionId])`, `@@index([isFavorite])`, `@@index([isPrinted])`, `@@index([filamentType])`, `@@index([createdAt])`.
+  - `ModelFile`: `@@index([format])`, `@@index([fileHash])`.
+  - `PrintBudget`: `@@index([isSale])`, `@@index([isSale, soldAt])`.
+  - `Collection`: `@@index([name])`, `@@index([parentId])`.
 - **Resolução de Subcoleções via CTE Recursiva Nativa (`src/app/api/models/route.ts`)**:
-  - Substituição do loop sequencial em cascata de busca de subpastas por consulta PostgreSQL nativa usando `WITH RECURSIVE`.
-  - Redução de dezenas de viagens de ida e volta ao banco de dados (*round-trips*) para exatamente 1 única consulta SQL instantânea ao navegar ou filtrar por coleções pai.
+  - Substituição do loop sequencial em cascata de busca de subpastas por consulta PostgreSQL nativa usando `WITH RECURSIVE`, condensando buscas em 1 única query SQL instantânea.
 
 ---
 

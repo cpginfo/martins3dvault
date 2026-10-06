@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
+import { useToast } from "@/components/ui/ToastContext";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export interface CurrentScanState {
   isScanning: boolean;
@@ -83,6 +85,116 @@ export default function MetricsPage() {
   const [clearingCache, setClearingCache] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [cacheMessage, setCacheMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const { toast } = useToast();
+  const [backups, setBackups] = useState<
+    Array<{
+      fileName: string;
+      sizeBytes: number;
+      createdAt: string;
+      downloadUrl: string;
+    }>
+  >([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [creatingBackup, setCreatingBackup] = useState(false);
+  const [restoringBackup, setRestoringBackup] = useState(false);
+  const [backupToRestore, setBackupToRestore] = useState<{
+    fileName: string;
+    sizeBytes: number;
+    createdAt: string;
+    downloadUrl: string;
+  } | null>(null);
+  const [backupToDelete, setBackupToDelete] = useState<{
+    fileName: string;
+    sizeBytes: number;
+    createdAt: string;
+    downloadUrl: string;
+  } | null>(null);
+  const [deletingBackup, setDeletingBackup] = useState(false);
+
+  const fetchBackups = async () => {
+    setLoadingBackups(true);
+    try {
+      const res = await fetch("/api/database/backups");
+      if (res.ok) {
+        const data = await res.json();
+        setBackups(data.backups || []);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar backups:", err);
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBackups();
+  }, []);
+
+  const handleCreateBackup = async () => {
+    setCreatingBackup(true);
+    try {
+      const res = await fetch("/api/database/backup?download=false");
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Backup ${data.fileName} criado com sucesso em /data/backups!`);
+        fetchBackups();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Falha ao criar backup.");
+      }
+    } catch {
+      toast.error("Erro de conexão ao criar backup.");
+    } finally {
+      setCreatingBackup(false);
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!backupToRestore) return;
+    setRestoringBackup(true);
+    try {
+      const res = await fetch("/api/database/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: backupToRestore.fileName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success("Banco de dados restaurado com sucesso!");
+        fetchStats();
+        setBackupToRestore(null);
+      } else {
+        toast.error(data.error || "Erro ao restaurar banco de dados.");
+      }
+    } catch {
+      toast.error("Erro ao comunicar com o servidor para restauração.");
+    } finally {
+      setRestoringBackup(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!backupToDelete) return;
+    setDeletingBackup(true);
+    try {
+      const res = await fetch(`/api/database/backups/${encodeURIComponent(backupToDelete.fileName)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success(`Backup ${backupToDelete.fileName} excluído com sucesso.`);
+        fetchBackups();
+        setBackupToDelete(null);
+      } else {
+        toast.error(data.error || "Erro ao excluir backup.");
+      }
+    } catch {
+      toast.error("Erro ao excluir backup.");
+    } finally {
+      setDeletingBackup(false);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -471,7 +583,7 @@ export default function MetricsPage() {
                 </section>
 
                 {/* Seção de Backup e Segurança do Banco de Dados */}
-                <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-4 shadow-sm relative overflow-hidden">
+                <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-5 shadow-sm relative overflow-hidden">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                     <div className="flex items-start gap-3.5">
                       <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
@@ -496,20 +608,127 @@ export default function MetricsPage() {
                           <span className="px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant font-mono text-xs border border-white/5">
                             {stats.totalLibraries} bibliotecas
                           </span>
+                          <span className="px-2.5 py-1 rounded-md bg-surface-container text-indigo-400 font-mono text-xs border border-white/5">
+                            {backups.length} instantâneo(s) salvo(s)
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+                    <div className="flex items-center gap-2.5 self-start md:self-center shrink-0 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleCreateBackup}
+                        disabled={creatingBackup}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold transition-all shadow-md hover:shadow-indigo-500/20 active:scale-95 cursor-pointer"
+                        title="Gerar e salvar um novo instantâneo no disco agora"
+                      >
+                        <span className={`material-symbols-outlined text-[18px] ${creatingBackup ? "animate-spin" : ""}`}>
+                          {creatingBackup ? "progress_activity" : "save"}
+                        </span>
+                        <span>{creatingBackup ? "Criando Backup..." : "Criar Backup Agora"}</span>
+                      </button>
+
                       <a
                         href="/api/database/backup?download=true"
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-md hover:shadow-indigo-500/20 active:scale-95 cursor-pointer"
-                        title="Baixar instantâneo completo do banco de dados agora"
+                        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/10 text-on-surface text-xs font-semibold transition-all cursor-pointer"
+                        title="Baixar instantâneo completo do banco diretamente no navegador"
                       >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span>Fazer Backup Agora</span>
+                        <span className="material-symbols-outlined text-[18px] text-indigo-400">download</span>
+                        <span>Baixar Cópia Direta</span>
                       </a>
                     </div>
+                  </div>
+
+                  {/* Lista de Backups Existentes */}
+                  <div className="mt-2 pt-4 border-t border-white/5 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm text-indigo-400">history</span>
+                        Instantâneos Armazenados (/data/backups)
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={fetchBackups}
+                        disabled={loadingBackups}
+                        className="text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Atualizar lista de backups"
+                      >
+                        <span className={`material-symbols-outlined text-sm ${loadingBackups ? "animate-spin" : ""}`}>
+                          refresh
+                        </span>
+                        Atualizar
+                      </button>
+                    </div>
+
+                    {loadingBackups ? (
+                      <div className="py-6 flex items-center justify-center text-on-surface-variant text-xs gap-2">
+                        <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                        Carregando backups existentes...
+                      </div>
+                    ) : backups.length === 0 ? (
+                      <div className="py-6 px-4 rounded-xl bg-surface-container/50 border border-white/5 text-center text-xs text-on-surface-variant">
+                        Nenhum arquivo de backup encontrado na pasta local <code className="text-indigo-300 font-mono">/data/backups</code>. Clique em &quot;Criar Backup Agora&quot; acima para gerar sua primeira cópia de segurança.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto rounded-xl border border-white/5 bg-surface-container/40">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-white/5 text-[11px] font-semibold text-on-surface-variant bg-surface-container-high/40">
+                              <th className="py-2.5 px-4">Arquivo</th>
+                              <th className="py-2.5 px-4">Tamanho</th>
+                              <th className="py-2.5 px-4">Criado em</th>
+                              <th className="py-2.5 px-4 text-right">Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 font-mono">
+                            {backups.map((b) => (
+                              <tr key={b.fileName} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="py-2.5 px-4 text-on-surface font-semibold flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-sm text-indigo-400">description</span>
+                                  <span className="truncate max-w-xs sm:max-w-md">{b.fileName}</span>
+                                </td>
+                                <td className="py-2.5 px-4 text-on-surface-variant">
+                                  {formatBytes(b.sizeBytes)}
+                                </td>
+                                <td className="py-2.5 px-4 text-on-surface-variant font-sans text-[11px]">
+                                  {new Date(b.createdAt).toLocaleString("pt-BR")}
+                                </td>
+                                <td className="py-2.5 px-4 text-right font-sans">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <a
+                                      href={b.downloadUrl}
+                                      download={b.fileName}
+                                      className="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-indigo-400 border border-white/5 transition-colors"
+                                      title="Baixar arquivo de backup"
+                                    >
+                                      <span className="material-symbols-outlined text-base block">download</span>
+                                    </a>
+                                    <button
+                                      type="button"
+                                      onClick={() => setBackupToRestore(b)}
+                                      className="px-2 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                                      title="Restaurar este instantâneo no banco de dados"
+                                    >
+                                      <span className="material-symbols-outlined text-xs">settings_backup_restore</span>
+                                      Restaurar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setBackupToDelete(b)}
+                                      className="p-1.5 rounded-lg bg-surface-container hover:bg-red-500/15 text-on-surface-variant hover:text-red-400 border border-white/5 transition-colors cursor-pointer"
+                                      title="Excluir arquivo de backup"
+                                    >
+                                      <span className="material-symbols-outlined text-base block">delete</span>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -1003,6 +1222,42 @@ export default function MetricsPage() {
               </>
             )}
           </div>
+
+          {/* Modal de Confirmação para Restauração de Backup */}
+          <ConfirmDialog
+            isOpen={!!backupToRestore}
+            title="Restaurar Banco de Dados"
+            message={
+              <div className="space-y-2 text-xs">
+                <p>
+                  Você está prestes a sincronizar e restaurar o banco de dados a partir do instantâneo:
+                </p>
+                <div className="p-2.5 rounded-lg bg-surface-container font-mono text-[11px] text-indigo-300 break-all border border-white/5">
+                  {backupToRestore?.fileName}
+                </div>
+                <p className="text-amber-400">
+                  Atenção: Os registros atuais serão sincronizados com as tabelas do instantâneo. Deseja prosseguir?
+                </p>
+              </div>
+            }
+            confirmLabel="Sim, Restaurar Banco"
+            variant="warning"
+            loading={restoringBackup}
+            onConfirm={handleConfirmRestore}
+            onCancel={() => setBackupToRestore(null)}
+          />
+
+          {/* Modal de Confirmação para Exclusão de Backup */}
+          <ConfirmDialog
+            isOpen={!!backupToDelete}
+            title="Excluir Arquivo de Backup"
+            message={`Tem certeza que deseja excluir permanentemente o arquivo de backup "${backupToDelete?.fileName}" do disco?`}
+            confirmLabel="Excluir Arquivo"
+            variant="danger"
+            loading={deletingBackup}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setBackupToDelete(null)}
+          />
         </main>
       </div>
     </div>

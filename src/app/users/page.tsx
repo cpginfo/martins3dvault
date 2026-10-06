@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
+import { useToast } from "@/components/ui/ToastContext";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface UserItem {
   id: string;
@@ -17,11 +19,16 @@ export const isOperatorRole = (r: string) =>
   r === "OPERATOR" || r === "USER" || r === "EDITOR";
 
 export default function UsersPage() {
+  const toast = useToast();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Deletion dialog state
+  const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   // Modal de criação
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -81,7 +88,7 @@ export default function UsersPage() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("A imagem selecionada excede o limite máximo de 5MB.");
+      toast.error("A imagem selecionada excede o limite máximo de 5MB.");
       e.target.value = "";
       return;
     }
@@ -135,6 +142,7 @@ export default function UsersPage() {
       setAvatar(null);
       if (createFileInputRef.current) createFileInputRef.current.value = "";
       setShowCreateModal(false);
+      toast.success("Usuário criado com sucesso!");
       await fetchUsers();
     } catch (err: any) {
       setFormError(err.message || "Erro desconhecido");
@@ -193,6 +201,7 @@ export default function UsersPage() {
       }
 
       setEditingUser(null);
+      toast.success("Usuário atualizado com sucesso!");
       await fetchUsers();
     } catch (err: any) {
       setFormError(err.message || "Erro ao salvar alterações");
@@ -201,19 +210,23 @@ export default function UsersPage() {
     }
   };
 
-  const handleDeleteUser = async (id: string, userName: string) => {
-    if (!confirm(`Deseja realmente remover o usuário "${userName}"?`)) return;
-
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeletingUser(true);
     try {
-      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/users/${userToDelete.id}`, { method: "DELETE" });
       if (res.ok) {
+        toast.success(`Usuário "${userToDelete.name}" removido com sucesso.`);
+        setUserToDelete(null);
         await fetchUsers();
       } else {
-        const errData = await res.json();
-        alert(errData.error || "Falha ao remover usuário");
+        const errData = await res.json().catch(() => null);
+        toast.error(errData?.error || "Falha ao remover usuário.");
       }
     } catch {
-      alert("Erro de conexão ao remover usuário");
+      toast.error("Erro de conexão ao remover usuário.");
+    } finally {
+      setDeletingUser(false);
     }
   };
 
@@ -410,7 +423,7 @@ export default function UsersPage() {
                                 <span className="material-symbols-outlined text-[18px]">edit</span>
                               </button>
                               <button
-                                onClick={() => handleDeleteUser(u.id, u.name)}
+                                onClick={() => setUserToDelete(u)}
                                 className="p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-surface-container-highest transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                 title="Excluir usuário"
                               >
@@ -734,6 +747,23 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmação de Exclusão de Usuário */}
+      <ConfirmDialog
+        isOpen={Boolean(userToDelete)}
+        title={`Excluir usuário "${userToDelete?.name}"?`}
+        message={
+          <p>
+            Tem certeza que deseja remover o usuário <strong>{userToDelete?.email}</strong>? Esta ação revogará imediatamente todas as sessões e permissões ativas.
+          </p>
+        }
+        confirmLabel="Sim, Excluir Usuário"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deletingUser}
+        onConfirm={handleConfirmDeleteUser}
+        onCancel={() => setUserToDelete(null)}
+      />
     </div>
   );
 }

@@ -46,13 +46,20 @@
   - Barra de ações flutuante (`BatchActionBar`) com suporte a marcar/desmarcar impressos, favoritar/desfavoritar, mover em massa para outra coleção/subpasta e exclusão conjunta segura.
   - Checkboxes visuais e seleção ágil em Grade Grande, Grade Compacta e Modo Tabela.
 
-- 🗄️ **Backup Completo & Exportação do Banco de Dados PostgreSQL**:
-  - Snapshot de segurança exportável em JSON cobrindo todas as tabelas essenciais (coleções, modelos, manuais, usuários e histórico).
-  - Persistência automática em `/data/backups/` e card dedicado para download direto na página de Métricas (`/metrics`).
+- 🗄️ **Backup, Restauração & Gestão de Instantâneos PostgreSQL**:
+  - Exportação e restauração completa de snapshots do banco de dados em formato JSON diretamente pelo painel de Métricas (`/metrics`).
+  - Sincronização e restauração inteligente via `upsert` com resolução hierárquica para coleções e modelos sem quebra de integridade referencial.
+  - Tabela interativa com download direto, restauração em 1 clique e exclusão de arquivos de backup salvos em `/data/backups/`.
 
-- 🚀 **Otimização Extrema de Banco & CTEs Recursivas**:
+- 🔔 **Sistema Global de Notificações Toast & Confirmação Glassmorphic**:
+  - Eliminação de 100% dos `alert()` e `confirm()` nativos do navegador, substituídos pelo `ToastProvider` e `<ConfirmDialog>` integrados ao design system dark Stitch.
+  - Proteção crítica P0 na exclusão de coleções: os arquivos no disco são mantidos seguros por padrão, exigindo confirmação explícita para deleção física.
+  - Skeletons animados com efeito shimmer pulse e layout mobile responsivo na galeria principal.
+
+- 🚀 **Otimização Extrema de Banco, CTEs Recursivas & Índices**:
   - Consultas de coleções e subpastas aceleradas via `WITH RECURSIVE` nativo no PostgreSQL (1 única query ao invés de N requisições sequenciais).
-  - Índices compostos de alta seletividade em `collectionId`, `isFavorite`, `isPrinted`, `createdAt` e `name`.
+  - Índices de alta performance em `Model(collectionId, isFavorite, isPrinted, filamentType, createdAt)`, `ModelFile(format, fileHash)` e `PrintBudget(isSale, soldAt)`.
+  - Disparo assíncrono de varredura global (`POST /api/scan/all`) liberando a interface imediatamente sem risco de timeout.
 
 - 🖼️ **Extração de Capas no Padrão Oficial OPC / Windows Explorer (.3mf)**:
   - Total conformidade com a especificação ISO/IEC 29500-2 (Open Packaging Conventions) e padrões 3MF oficiais via parsing do relacionamento `_rels/.rels` (`metadata/thumbnail`).
