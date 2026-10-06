@@ -40,6 +40,9 @@ interface ModelCardProps {
   onFavoriteToggle?: (modelId: string, newState: boolean) => void;
   onPrintedToggle?: (modelId: string, newState: boolean) => void;
   viewMode?: "large" | "compact" | "table";
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectToggle?: (modelId: string, e: React.MouseEvent) => void;
 }
 
 export default function ModelCard({
@@ -48,6 +51,9 @@ export default function ModelCard({
   onFavoriteToggle,
   onPrintedToggle,
   viewMode = "large",
+  selectable = false,
+  selected = false,
+  onSelectToggle,
 }: ModelCardProps) {
   const [favorite, setFavorite] = useState(model.isFavorite);
   const [isPrinted, setIsPrinted] = useState(Boolean(model.isPrinted));
@@ -118,9 +124,27 @@ export default function ModelCard({
   if (viewMode === "table") {
     return (
       <tr
-        onClick={onClick}
-        className="group hover:bg-surface-container-high transition-colors cursor-pointer border-b border-white/5 text-xs text-on-surface"
+        onClick={selectable ? (e) => onSelectToggle?.(model.id, e) : onClick}
+        className={`group transition-colors cursor-pointer border-b border-white/5 text-xs text-on-surface ${
+          selected
+            ? "bg-primary-container/15 hover:bg-primary-container/20"
+            : "hover:bg-surface-container-high"
+        }`}
       >
+        {selectable && (
+          <td className="py-2.5 pl-3 pr-1 w-8" onClick={(e) => { e.stopPropagation(); onSelectToggle?.(model.id, e); }}>
+            <button
+              type="button"
+              className={`w-5 h-5 rounded flex items-center justify-center border transition-all cursor-pointer ${
+                selected
+                  ? "bg-primary-container border-primary-container text-on-primary-container"
+                  : "border-white/20 hover:border-white/40 bg-surface-container-lowest text-transparent"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">check</span>
+            </button>
+          </td>
+        )}
         <td className="py-2.5 px-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-surface-container-lowest overflow-hidden flex-shrink-0 relative border border-white/5">
@@ -222,10 +246,12 @@ export default function ModelCard({
   // Render Grid Card (Large or Compact)
   return (
     <div
-      onClick={onClick}
-      className={`group relative flex flex-col rounded-xl bg-surface-container-low border border-white/5 hover:border-primary-container/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden ${
-        viewMode === "compact" ? "gap-2 p-2" : "gap-3 p-3"
-      }`}
+      onClick={selectable ? (e) => onSelectToggle?.(model.id, e) : onClick}
+      className={`group relative flex flex-col rounded-xl transition-all duration-200 cursor-pointer overflow-hidden ${
+        selected
+          ? "bg-surface-container-high border-2 border-primary ring-2 ring-primary/40 shadow-xl"
+          : "bg-surface-container-low border border-white/5 hover:border-primary-container/40 hover:shadow-xl hover:-translate-y-1"
+      } ${viewMode === "compact" ? "gap-2 p-2" : "gap-3 p-3"}`}
     >
       {/* Thumbnail Area */}
       <div
@@ -248,8 +274,33 @@ export default function ModelCard({
           </div>
         )}
 
+        {/* Checkbox de Seleção em Lote */}
+        {selectable && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectToggle?.(model.id, e);
+            }}
+            className="absolute top-2 left-2 z-30 pointer-events-auto"
+          >
+            <button
+              type="button"
+              className={`w-6 h-6 rounded-lg flex items-center justify-center border shadow-lg transition-all cursor-pointer ${
+                selected
+                  ? "bg-primary-container border-primary-container text-on-primary-container scale-105"
+                  : "bg-black/60 backdrop-blur-md border-white/30 text-white/50 hover:border-white hover:text-white"
+              }`}
+              title={selected ? "Desmarcar modelo" : "Selecionar modelo"}
+            >
+              <span className="material-symbols-outlined text-[16px] font-bold">
+                {selected ? "check" : ""}
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Top Badges Overlay: Formats & Favorite */}
-        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+        <div className={`absolute top-2 right-2 flex items-center justify-between pointer-events-none ${selectable ? "left-10" : "left-2"}`}>
           <div className="flex items-center gap-1 flex-wrap">
             {formats.map((fmt) => (
               <span

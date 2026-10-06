@@ -8,6 +8,7 @@ import ModelCard, { ModelCardData } from "@/components/gallery/ModelCard";
 import ModelDetailModal, { ModelDetailData } from "@/components/model/ModelDetailModal";
 import UploadModal from "@/components/upload/UploadModal";
 import PaginationBar from "@/components/gallery/PaginationBar";
+import BatchActionBar from "@/components/gallery/BatchActionBar";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -32,6 +33,8 @@ export default function HomePage() {
   const [zoomSize, setZoomSize] = useState(280);
   const [viewMode, setViewMode] = useState<ViewMode>("large");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
 
   // Sync initial query parameter ?q=... if present
   useEffect(() => {
@@ -166,6 +169,26 @@ export default function HomePage() {
     }
   };
 
+  const handleToggleSelectModel = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedModelIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllVisible = () => {
+    setSelectedModelIds(models.map((m) => m.id));
+  };
+
+  const handleClearSelection = () => {
+    setSelectedModelIds([]);
+  };
+
+  const handleCloseBatchMode = () => {
+    setIsBatchMode(false);
+    setSelectedModelIds([]);
+  };
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Persistent Sidebar */}
@@ -291,6 +314,12 @@ export default function HomePage() {
               onViewModeChange={setViewMode}
               selectedPolymer={selectedPolymer}
               onPolymerSelect={handlePolymerChange}
+              isBatchMode={isBatchMode}
+              onToggleBatchMode={() => {
+                setIsBatchMode((prev) => !prev);
+                if (isBatchMode) setSelectedModelIds([]);
+              }}
+              selectedCount={selectedModelIds.length}
             />
 
             {/* Gallery View (Grid or Table) */}
@@ -325,6 +354,7 @@ export default function HomePage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[11px] font-mono uppercase tracking-wider text-outline bg-surface-container-lowest">
+                      {isBatchMode && <th className="py-3 px-3 w-8"></th>}
                       <th className="py-3 px-3">Modelo / Biblioteca</th>
                       <th className="py-3 px-3">Extensão</th>
                       <th className="py-3 px-3">Dimensões (XYZ)</th>
@@ -340,6 +370,9 @@ export default function HomePage() {
                         model={model}
                         onClick={() => handleOpenModel(model.id)}
                         viewMode="table"
+                        selectable={isBatchMode}
+                        selected={selectedModelIds.includes(model.id)}
+                        onSelectToggle={handleToggleSelectModel}
                         onFavoriteToggle={(id, state) => {
                           setModels((prev) =>
                             prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
@@ -370,6 +403,9 @@ export default function HomePage() {
                     model={model}
                     onClick={() => handleOpenModel(model.id)}
                     viewMode={viewMode}
+                    selectable={isBatchMode}
+                    selected={selectedModelIds.includes(model.id)}
+                    onSelectToggle={handleToggleSelectModel}
                     onFavoriteToggle={(id, state) => {
                       setModels((prev) =>
                         prev.map((m) => (m.id === id ? { ...m, isFavorite: state } : m))
@@ -398,6 +434,22 @@ export default function HomePage() {
           </div>
         </main>
       </div>
+
+      {/* Floating Batch Action Bar */}
+      {isBatchMode && (
+        <BatchActionBar
+          selectedIds={selectedModelIds}
+          totalVisible={models.length}
+          collections={collections}
+          onSelectAll={handleSelectAllVisible}
+          onClearSelection={handleClearSelection}
+          onCloseBatchMode={handleCloseBatchMode}
+          onSuccess={() => {
+            setSelectedModelIds([]);
+            fetchModels();
+          }}
+        />
+      )}
 
       {/* Model Detail Modal with 3D Viewer */}
       {selectedModel && (

@@ -1,4 +1,4 @@
-# Martins3DVault 🖨️✨ (v1.16.1)
+# Martins3DVault 🖨️✨ (v1.17.0)
 
 <div align="center">
 
@@ -36,6 +36,23 @@
 ---
 
 ## 🌟 Principais Recursos
+
+- 📦 **Download Completo em Lote (.ZIP) de Modelos Multi-Peças**:
+  - Empacotamento instantâneo via streaming de todos os arquivos de um modelo 3D (malhas `.stl`, `.3mf`, `.obj`, `.step`, manuais em PDF e imagens de capa) em um único arquivo compactado `.zip` com 1 clique.
+  - Integrado ao modal de detalhes rápido (`ModelDetailModal`) e à tela completa do Studio 3D (`/models/[id]`).
+
+- ⚡ **Ações em Massa & Seleção em Lote na Galeria**:
+  - Modo de seleção múltipla integrado com atalho na barra de filtros (`FilterBar`).
+  - Barra de ações flutuante (`BatchActionBar`) com suporte a marcar/desmarcar impressos, favoritar/desfavoritar, mover em massa para outra coleção/subpasta e exclusão conjunta segura.
+  - Checkboxes visuais e seleção ágil em Grade Grande, Grade Compacta e Modo Tabela.
+
+- 🗄️ **Backup Completo & Exportação do Banco de Dados PostgreSQL**:
+  - Snapshot de segurança exportável em JSON cobrindo todas as tabelas essenciais (coleções, modelos, manuais, usuários e histórico).
+  - Persistência automática em `/data/backups/` e card dedicado para download direto na página de Métricas (`/metrics`).
+
+- 🚀 **Otimização Extrema de Banco & CTEs Recursivas**:
+  - Consultas de coleções e subpastas aceleradas via `WITH RECURSIVE` nativo no PostgreSQL (1 única query ao invés de N requisições sequenciais).
+  - Índices compostos de alta seletividade em `collectionId`, `isFavorite`, `isPrinted`, `createdAt` e `name`.
 
 - 🖼️ **Extração de Capas no Padrão Oficial OPC / Windows Explorer (.3mf)**:
   - Total conformidade com a especificação ISO/IEC 29500-2 (Open Packaging Conventions) e padrões 3MF oficiais via parsing do relacionamento `_rels/.rels` (`metadata/thumbnail`).

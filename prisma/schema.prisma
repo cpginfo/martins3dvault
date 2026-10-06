@@ -51,6 +51,7 @@ model Collection {
   models Model[]
 
   @@index([parentId])
+  @@index([name])
 }
 
 model Model {
@@ -89,6 +90,10 @@ model Model {
 
   @@unique([libraryId, folderPath])
   @@index([name])
+  @@index([collectionId])
+  @@index([isFavorite])
+  @@index([isPrinted])
+  @@index([createdAt])
 }
 
 model ModelFile {

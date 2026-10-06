@@ -25,6 +25,9 @@ interface FilterBarProps {
   onViewModeChange?: (mode: ViewMode) => void;
   selectedPolymer?: string;
   onPolymerSelect?: (polymer: string) => void;
+  isBatchMode?: boolean;
+  onToggleBatchMode?: () => void;
+  selectedCount?: number;
 }
 
 export default function FilterBar({
@@ -48,6 +51,9 @@ export default function FilterBar({
   onViewModeChange,
   selectedPolymer = "",
   onPolymerSelect,
+  isBatchMode = false,
+  onToggleBatchMode,
+  selectedCount = 0,
 }: FilterBarProps) {
   const formats = [
     { label: "TODOS", value: "" },
@@ -109,6 +115,30 @@ export default function FilterBar({
             <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
           </button>
         </div>
+
+        {/* Toggle Seleção em Lote */}
+        {onToggleBatchMode && (
+          <button
+            type="button"
+            onClick={onToggleBatchMode}
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-all cursor-pointer ${
+              isBatchMode
+                ? "bg-primary-container text-on-primary-container shadow-md ring-1 ring-primary/40 font-semibold"
+                : "bg-surface-container-lowest text-on-surface-variant hover:text-white hover:bg-surface-container-high border border-white/5"
+            }`}
+            title={isBatchMode ? "Sair da seleção em lote" : "Ativar seleção em lote"}
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {isBatchMode ? "check_box" : "check_box_outline_blank"}
+            </span>
+            <span className="hidden sm:inline">Seleção</span>
+            {isBatchMode && selectedCount > 0 ? (
+              <span className="px-1.5 py-0.2 bg-black/40 rounded-full text-[10px] font-mono text-white">
+                {selectedCount}
+              </span>
+            ) : null}
+          </button>
+        )}
 
         {/* Thumbnail Zoom Slider (Eagle Style) */}
         {viewMode !== "table" && onZoomChange && (

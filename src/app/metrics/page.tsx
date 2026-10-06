@@ -470,6 +470,49 @@ export default function MetricsPage() {
                   )}
                 </section>
 
+                {/* Seção de Backup e Segurança do Banco de Dados */}
+                <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-4 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="flex items-start gap-3.5">
+                      <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
+                        <span className="material-symbols-outlined text-[26px]">database</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-base font-bold text-on-surface tracking-tight">
+                            Backup & Segurança do Banco de Dados
+                          </h2>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-surface-container-highest text-on-surface-variant border border-white/5">
+                            PostgreSQL 16
+                          </span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant max-w-xl">
+                          Exporta e salva um instantâneo completo em JSON de todas as tabelas (contas, bibliotecas, coleções, modelos, tags, histórico de precificação e orçamentos). Salvo automaticamente em <code className="text-indigo-300 font-mono">/data/backups</code>.
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-md bg-surface-container text-indigo-300 font-mono text-xs font-semibold border border-white/5">
+                            {stats.totalModels} modelos indexados
+                          </span>
+                          <span className="px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant font-mono text-xs border border-white/5">
+                            {stats.totalLibraries} bibliotecas
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+                      <a
+                        href="/api/database/backup?download=true"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-md hover:shadow-indigo-500/20 active:scale-95 cursor-pointer"
+                        title="Baixar instantâneo completo do banco de dados agora"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">download</span>
+                        <span>Fazer Backup Agora</span>
+                      </a>
+                    </div>
+                  </div>
+                </section>
+
                 {/* Seção de Segurança, Concorrência e Observabilidade de Downloads */}
                 <section className="p-5 rounded-xl bg-surface-container-low border border-white/5 flex flex-col gap-5 shadow-sm">
                   <div className="flex items-center justify-between">

@@ -330,6 +330,23 @@ O visualizador rápido de modelos ([`ModelDetailModal.tsx`](file:///swarm/stl/sr
 4. **Re-scan Diferencial com Atualização Automática de Capas Legadas (`src/lib/scanner/crawler.ts`)**:
    - O crawler identifica miniaturas legadas sem versionamento (`isLegacyThumb`) e re-extrai automaticamente as capas no novo padrão de alta definição durante os scans diferenciais normais.
 
+### U. Download ZIP, Ações em Massa, Índices e Backup do Banco (`v1.17.0`)
+1. **Download de Modelos Multi-Peças em ZIP Único (`src/app/api/models/[id]/download-zip/route.ts`)**:
+   - Compactador em memória baseado em `adm-zip` com buffer convertido para `Uint8Array` para compatibilidade com Web Fetch API do Next.js.
+   - Empacota todos os arquivos de malhas, PDFs manuais e imagens de capa vinculadas.
+   - Integrado ao semáforo de concorrência (`acquireDownloadSlot`) e audit log de downloads.
+   - Botões na UI em `ModelDetailModal.tsx` e Studio 3D (`/models/[id]/page.tsx`).
+2. **Ações em Massa e Seleção em Lote na Galeria (`/api/models/batch`, `BatchActionBar.tsx`)**:
+   - Modo de seleção ativado no botão da `FilterBar` com checkboxes e seleção nos modos Grade e Tabela (`ModelCard.tsx`).
+   - Barra flutuante `BatchActionBar` com contador de seleção, marcar impresso/não impresso, favoritar/desfavoritar, mover para coleção (com modal hierárquico) e exclusão em lote.
+   - Endpoint transacional `POST /api/models/batch` com validação de permissões RBAC (`ADMIN`/`OPERATOR`).
+3. **Otimização Extrema de Banco de Dados PostgreSQL & CTE Recursiva**:
+   - Índices adicionados no `schema.prisma`: `Model(collectionId, isFavorite, isPrinted, createdAt)` e `Collection(name)`.
+   - Consulta de subcoleções em `src/app/api/models/route.ts` migrada para CTE PostgreSQL nativo `WITH RECURSIVE subcolls AS (...)`, reduzindo N queries para 1 round-trip.
+4. **Backup e Exportação do PostgreSQL (`/api/database/backup`, `/api/metrics`)**:
+   - Exportação completa em JSON de todas as tabelas (Users, Collections, Models, ModelFiles, ModelManuals, ScanStats, DownloadLogs, FilamentMetrics) com salvamento no volume `/data/backups/`.
+   - Painel integrado na página `/metrics` com botão de download imediato do snapshot de segurança.
+
 ---
 
 ## 4. Como Executar e Testar o Projeto
@@ -355,9 +372,10 @@ docker compose ps
 1. **Integração com Fatiadores e Impressoras 3D**:
    - Conectar os endpoints REST do **Moonraker (Klipper)** e **OctoPrint** aos componentes de telemetria já criados em `/metrics`.
    - Conector **Bambu Lab MQTT** para envio de `.3mf` para impressoras X1C, P1S, A1.
-2. **Download em Lote (ZIP)**:
-   - Rota `/api/models/[id]/download-zip` para empacotar modelos multi-peças.
-3. **Filtro Avançado de Medidas**:
+2. **Filtro Avançado de Medidas**:
    - Filtro na galeria por volume máximo de impressão (ex: até 256x256x256mm).
-4. **Histórico de Impressões & Consumo de Filamento**:
+3. **Histórico de Impressões & Consumo de Filamento**:
    - Registrar datas em que o modelo foi impresso, filamento gasto em gramas e custo estimado integrado à fila de bancada.
+4. **Restauração de Backup do Banco**:
+   - Endpoint e modal para upload e importação de arquivo `.json` de backup para restauração em banco limpo.
+

@@ -29,6 +29,7 @@ import {
   Wrench,
   TrendingUp,
   Box,
+  Archive,
 } from "lucide-react";
 import ModelViewer3D, { ModelFileItem } from "@/components/viewer3d/ModelViewer3D";
 import { calculatePrintCost, formatBRL } from "@/lib/pricing/calculator";
@@ -984,6 +985,19 @@ export default function ModelDetailModal({
               <div className="flex flex-col gap-4">
                 {/* Files List */}
                 <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between pb-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Arquivos 3D ({model.files.length})
+                    </span>
+                    <a
+                      href={`/api/models/${model.id}/download-zip`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 border border-orange-500/30 text-xs font-medium transition cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                      title="Baixar projeto completo e anexos em um único arquivo .ZIP"
+                    >
+                      <Archive className="w-3.5 h-3.5 text-orange-400" />
+                      <span>Baixar .ZIP Completo</span>
+                    </a>
+                  </div>
                   {model.files.map((file) => (
                     <div
                       key={file.id}

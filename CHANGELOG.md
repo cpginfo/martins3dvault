@@ -5,6 +5,40 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.17.0] - 2026-10-06
+
+### Adicionado / Download em Lote (ZIP), Ações em Massa & Backup
+- **Download de Modelos Multi-Peças em ZIP Único (`src/app/api/models/[id]/download-zip/route.ts`)**:
+  - Novo endpoint REST para empacotar automaticamente todos os arquivos vinculados a um modelo 3D (malhas `.stl`, `.3mf`, `.obj`, `.step`, manuais em PDF e imagens de capa) em um único arquivo compactado `.zip`.
+  - Nome do arquivo sanitizado no formato `{nome_modelo}_{data}.zip`.
+  - Integrado ao limitador de concorrência (`acquireDownloadSlot`) e registro de telemetria de downloads no banco de dados.
+  - Botão **"Baixar .ZIP Completo"** integrado no modal de detalhes do modelo (`ModelDetailModal.tsx`) e **"Baixar Pacote .ZIP"** na tela dedicada do Studio 3D (`/models/[id]`).
+- **Ações em Massa e Seleção em Lote na Galeria (`/api/models/batch`, `BatchActionBar.tsx`, `ModelCard.tsx`, `FilterBar.tsx`, `page.tsx`)**:
+  - Novo modo de seleção em massa acionado pelo botão **"Seleção em Lote"** na barra de ferramentas (`FilterBar`).
+  - Checkboxes visuais de seleção individual em todos os cards da galeria (Grade Grande, Grade Compacta e Tabela), com suporte a clique direto no card no modo de seleção.
+  - Barra de ações flutuante (`BatchActionBar`) com estilo visual Stitch (glassmorphism), contador de itens selecionados, atalho "Selecionar Todos" e ações rápidas:
+    - **Marcar/Desmarcar como Impresso**: atualização em lote de flag `isPrinted`.
+    - **Favoritar/Desfavoritar**: atualização em lote de flag `isFavorite`.
+    - **Mover para Coleção**: modal interativo com lista hierárquica de coleções e subpastas para realocação instantânea de dezenas de modelos.
+    - **Excluir Selecionados**: modal de confirmação de segurança com contagem de itens para remoção em massa.
+  - Endpoint transacional robusto `POST /api/models/batch` com controle rigoroso de permissões RBAC (`ADMIN`/`OPERATOR`).
+- **Backup e Exportação Completa do Banco de Dados PostgreSQL (`/api/database/backup`, `/api/metrics`)**:
+  - Novo módulo de backup com persistência automática de snapshots estruturados em JSON no disco em `/data/backups/`.
+  - Exportação completa e consistente de todas as tabelas: Usuários, Coleções, Modelos, Arquivos de Modelo, Manuais, Estatísticas de Scanner, Histórico de Downloads e Métricas de Filamento.
+  - Download direto do arquivo de snapshot com 1 clique (`3dvault_backup_{timestamp}.json`).
+  - Card dedicado **"Backup & Segurança do Banco de Dados"** integrado na tela de Métricas e Telemetria (`/metrics`) com status do volume de persistência e botão de backup imediato.
+
+### Otimização & Performance
+- **Índices Estruturais no Banco de Dados PostgreSQL (`prisma/schema.prisma`)**:
+  - Adição de índices estratégicos de alta seletividade na tabela `Model`: `@@index([collectionId])`, `@@index([isFavorite])`, `@@index([isPrinted])`, `@@index([createdAt])`.
+  - Adição de índice por nome na tabela `Collection`: `@@index([name])`.
+  - Redução drástica do custo de consultas frequentes e paginações na galeria principal e filtros rápidos.
+- **Resolução de Subcoleções via CTE Recursiva Nativa (`src/app/api/models/route.ts`)**:
+  - Substituição do loop sequencial em cascata de busca de subpastas por consulta PostgreSQL nativa usando `WITH RECURSIVE`.
+  - Redução de dezenas de viagens de ida e volta ao banco de dados (*round-trips*) para exatamente 1 única consulta SQL instantânea ao navegar ou filtrar por coleções pai.
+
+---
+
 ## [1.16.1] - 2026-10-05
 
 ### Segurança & Dependências

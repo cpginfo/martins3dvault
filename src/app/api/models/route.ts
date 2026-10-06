@@ -55,19 +55,22 @@ export async function GET(request: Request) {
     if (collectionId) {
       const includeSubs = searchParams.get("includeSubcollections") !== "false";
       if (includeSubs) {
-        const colIds = [collectionId];
-        let currentLevel = [collectionId];
-        while (currentLevel.length > 0) {
-          const children = await prisma.collection.findMany({
-            where: { parentId: { in: currentLevel } },
-            select: { id: true },
-          });
-          if (children.length === 0) break;
-          const childIds = children.map((c) => c.id);
-          colIds.push(...childIds);
-          currentLevel = childIds;
+        try {
+          const rows = await prisma.$queryRaw<{ id: string }[]>`
+            WITH RECURSIVE subcolls AS (
+              SELECT id FROM "Collection" WHERE id = ${collectionId}
+              UNION ALL
+              SELECT c.id FROM "Collection" c
+              INNER JOIN subcolls s ON c."parentId" = s.id
+            )
+            SELECT id FROM subcolls;
+          `;
+          const colIds = rows.map((r) => r.id);
+          andConditions.push({ collectionId: { in: colIds.length > 0 ? colIds : [collectionId] } });
+        } catch {
+          // Fallback seguro caso o banco ainda nao tenha suporte
+          andConditions.push({ collectionId });
         }
-        andConditions.push({ collectionId: { in: colIds } });
       } else {
         andConditions.push({ collectionId });
       }
